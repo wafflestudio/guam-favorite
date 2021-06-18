@@ -1,0 +1,28 @@
+spring:
+  profiles:
+    active: dev, prod
+
+---
+spring.profiles.include:
+  - service
+
+---
+spring:
+  profiles: test
+
+server:
+  port: 9000
+
+---
+spring:
+  profiles: dev
+
+server:
+  port: 9000
+
+---
+spring:
+  profiles: prod
+
+server:
+  port: 9000
