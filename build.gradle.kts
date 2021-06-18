@@ -1,40 +1,25 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "2.3.4.RELEASE" apply false
-    id("io.spring.dependency-management") version "1.0.10.RELEASE"
-    kotlin("jvm") version "1.4.20"
-    kotlin("plugin.spring") version "1.4.20"
-    kotlin("plugin.jpa") version "1.4.20" apply false
-   // kotlin("kapt") version "1.4.20"
+    kotlin("jvm") version "1.5.10"
+    id("org.springframework.boot") version "2.5.0" apply false
+    id("io.spring.dependency-management") version "1.0.11.RELEASE" apply false
+    kotlin("plugin.spring") version "1.5.10" apply false
+    id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
+    kotlin("kapt") version "1.5.10"
 }
 
 group = "waffle.guam"
 version = "1.0-SNAPSHOT"
+java.sourceCompatibility = JavaVersion.VERSION_11
 
-allprojects {
-    repositories {
-        jcenter()
-    }
+repositories {
+    mavenCentral()
 }
 
-subprojects{
-    apply {
-        plugin("org.jetbrains.kotlin.jvm")
-    }
-
+subprojects {
     repositories {
         mavenCentral()
-    }
-
-    tasks.withType<JavaCompile> {
-        sourceCompatibility = "1.8"
-        targetCompatibility = "1.8"
-    }
-
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions {
-            jvmTarget = "1.8"
-        }
     }
 
     tasks.withType<Test> {
@@ -42,21 +27,40 @@ subprojects{
     }
 
     apply {
-        plugin("kotlin")
-        plugin("kotlin-spring")
+        plugin("org.jetbrains.kotlin.jvm")
         plugin("org.springframework.boot")
         plugin("io.spring.dependency-management")
-        plugin( "kotlin-allopen")
+        plugin("kotlin-allopen")
+        plugin("org.jlleitschuh.gradle.ktlint")
     }
 
     dependencies {
         implementation(kotlin("stdlib-jdk8"))
         implementation(kotlin("reflect"))
-        implementation("io.springfox:springfox-swagger2:2.9.2")
-        implementation("io.springfox:springfox-swagger-ui:2.9.2")
-        implementation("com.squareup.okhttp3:okhttp:3.12.0")
-        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.0")
+        implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+        testImplementation("org.springframework.boot:spring-boot-starter-test")
+    }
+
+    val kotestVersion = "4.4.+"
+    val mockkVersion = "1.10.+"
+
+    dependencies {
+        testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+        testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+        testImplementation("io.kotest:kotest-property:$kotestVersion")
+        testImplementation("io.kotest:kotest-extensions-spring:$kotestVersion")
+        testImplementation("io.mockk:mockk:$mockkVersion")
+        testImplementation("org.springframework.boot:spring-boot-starter-test")
     }
 }
 
+tasks.withType<KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs = listOf("-Xjsr305=strict")
+        jvmTarget = "11"
+    }
+}
 
+tasks.withType<Test> {
+    useJUnitPlatform()
+}

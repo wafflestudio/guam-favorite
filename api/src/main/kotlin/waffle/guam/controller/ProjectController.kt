@@ -1,71 +1,86 @@
 package waffle.guam.controller
 
-import org.springframework.web.bind.annotation.*
-import waffle.guam.db.DevType.TechStack
-import waffle.guam.db.DevType.TechStackDTO
-import waffle.guam.db.Project.*
-import waffle.guam.service.ApiService
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
+import org.springframework.data.web.PageableDefault
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseBody
+import org.springframework.web.bind.annotation.RestController
+import waffle.guam.controller.response.GuamResponse
+import waffle.guam.controller.response.SuccessResponse
+import waffle.guam.model.Project
 import waffle.guam.service.ProjectService
-import waffle.guam.service.StackService
+import waffle.guam.service.command.CreateProject
 
 @RestController
-@RequestMapping()
+@RequestMapping
 class ProjectController(
     private val projectService: ProjectService,
-    private val stackService: StackService,
-    private val apiService: ApiService
 ) {
 
-    // 1. Create Project
     @PostMapping("/projects")
     @ResponseBody
-    fun createProject(@RequestBody projectCreateDTO: ProjectCreateDTO, @RequestHeader("USER-ID") id: Long): Boolean{
-        val devIdList = projectCreateDTO.techStacks.map { stackService.searchIdByDTO(it) }
-        val devList = devIdList.map {stackService.searchById(it) }
-        return projectService.createProject(projectCreateDTO, devList, id)
-    }
+    fun createProject(
+        @RequestBody createProject: CreateProject,
+        @RequestHeader("USER-ID") id: Long
+    ): GuamResponse =
+        SuccessResponse(
+            data = projectService.createProject(createProject, id)
+        )
 
     @GetMapping("/projects")
     @ResponseBody
-    fun getAllProjects(): List<ProjectReadDTO> {
-        return projectService.getAllProjects()
-    }
+    fun getAllProjects(
+        @PageableDefault(size = 10, sort = ["id"], direction = Sort.Direction.DESC) pageable: Pageable
+    ): GuamResponse =
+        SuccessResponse(
+            data = projectService.getAllProjects(pageable)
+        )
 
-    // 2. Find Project by Id
     @GetMapping("/projects/{id}")
     @ResponseBody
-    fun findProject(@PathVariable id: Long): ProjectReadDTO {
-        return projectService.findProject(id)
-    }
+    fun findProject(
+        @PathVariable id: Long
+    ): GuamResponse =
+        SuccessResponse(
+            data = projectService.findProject(id)
+        )
 
-    // 3. 마감 임박 프로젝트 목록
     @GetMapping("/projects/tab")
-    fun imminentProjects(): List<ProjectReadDTO>{
-        return projectService.imminentProjects()
-    }
+    fun imminentProjects(): GuamResponse =
+        SuccessResponse(
+            data = projectService.imminentProjects()
+        )
 
-    // 4. 프로젝트 검색 - 활동기간? 잔여 포지션??
     @GetMapping("/projects/search")
     @ResponseBody
-    fun searchProject(@RequestParam keyword: String, @RequestBody(required=false) body: Pair<Int, List<TechStackDTO>>?): List<ProjectReadDTO> {
-        return projectService.searchByKeyword(keyword)
-    }
+    fun searchProject(
+        @RequestParam keyword: String,
+    ): GuamResponse =
+        SuccessResponse(
+            data = projectService.searchByKeyword(keyword)
+        )
 
-    //U
     @PutMapping("/projects/{id}")
     @ResponseBody
-    fun updateProject(@PathVariable id: Long, @RequestBody projectReadDTO: ProjectReadDTO): ProjectReadDTO{
-        val devIdList = projectReadDTO.techStacks.map { stackService.searchIdByDTO(it) }
-        val devList = devIdList.map {stackService.searchById(it) }
-        return projectService.updateProject(id, projectReadDTO, devList)
+    fun updateProject(): Project {
+        TODO("Update는 언제?")
     }
 
-    //D
     @DeleteMapping("/projects/{id}")
     @ResponseBody
-    fun deleteProject(@PathVariable id: Long): Boolean {
-        return projectService.deleteProject(id)
-    }
-
+    fun deleteProject(
+        @PathVariable id: Long
+    ): GuamResponse =
+        SuccessResponse(
+            data = projectService.deleteProject(id)
+        )
 }
-

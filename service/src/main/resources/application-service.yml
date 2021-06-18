@@ -1,31 +1,31 @@
-spring.profiles: test
-
----
-spring.profiles: dev
-
-spring:
-
-  datasource:
-    url: "jdbc:mysql://35.188.128.219:3306/GUAM_DB"
-    username: root
-    password: guam
-
-  jpa:
-    properties:
-      hibernate:
-        show_sql: true
-
----
-spring.profiles: prod
-
-spring:
-
-  datasource:
-    url: "jdbc:mysql://localhost:3306/GUAM_DB"
-    username: root
-    password: guam
-
-  jpa:
-    properties:
-      hibernate:
-        show_sql: true
+#spring.profiles: test
+#
+#---
+#spring.profiles: dev
+#
+#spring:
+#
+#  datasource:
+#    url: "jdbc:mysql://35.188.128.219:3306/GUAM_DB"
+#    username: root
+#    password: guam
+#
+#  jpa:
+#    properties:
+#      hibernate:
+#        show_sql: true
+#
+#---
+#spring.profiles: prod
+#
+#spring:
+#
+#  datasource:
+#    url: "jdbc:mysql://localhost:3306/GUAM_DB"
+#    username: root
+#    password: guam
+#
+#  jpa:
+#    properties:
+#      hibernate:
+#        show_sql: true

@@ -1,9 +1,9 @@
 package waffle.guam.service
 
 import org.springframework.stereotype.Service
-import waffle.guam.db.DevType.TechStack
-import waffle.guam.db.DevType.TechStackDTO
-import waffle.guam.repository.StackRepository
+import waffle.guam.db.entity.TechStackEntity
+import waffle.guam.db.repository.StackRepository
+import waffle.guam.model.TechStack
 import javax.persistence.EntityNotFoundException
 
 @Service
@@ -18,52 +18,50 @@ class StackService(
         val reader = java.io.InputStreamReader(stream)
         reader.forEachLine {
             val idx = it.indexOf(",")
-            stackRepository.save( (TechStackDTO( it.dropLast( it.length - (idx) ), (it.drop(idx+2)).dropLast(1), "")).toEntity() )
+            stackRepository.save((TechStack(it.dropLast(it.length - (idx)), (it.drop(idx + 2)).dropLast(1), "")).toEntity())
         }
     }
 
-    fun create(o: TechStackDTO): Boolean{
+    fun create(o: TechStack): Boolean {
         stackRepository.save(o.toEntity())
         return true
     }
 
-    fun getAll(): List<TechStackDTO> {
+    fun getAll(): List<TechStack> {
         val target = stackRepository.findAll()
-        return target.map { TechStackDTO.of(it) }
+        return target.map { TechStack.of(it) }
     }
 
     /*
      # 여러가지 키워드로 검색했을 경우: 검색어마다 OR 처리 -> AND 위주로 보여줌
      # case Insensitive
     */
-    fun searchByKeyword(query: String): List<TechStackDTO> {
-        val map = mutableMapOf<TechStackDTO, Int>()
+    fun searchByKeyword(query: String): List<TechStack> {
+        val map = mutableMapOf<TechStack, Int>()
 
         val devTypes = getAll()
         for (dev in devTypes) {
             val mappings = dev.aliases.split(", ")
             val cnt = searchEngine.search(mappings, query)
-            if ( cnt > 0 ) map[dev] = cnt
+            if (cnt > 0) map[dev] = cnt
         }
-        return map.toList().sortedWith(compareBy { -it.second }).map {it.first}
+        return map.toList().sortedWith(compareBy { -it.second }).map { it.first }
     }
 
     // fixme : throw an error? or create one?
-    fun searchIdByDTO(o: TechStackDTO): Long {
-        val target = stackRepository.findAll().filter { TechStackDTO.of(it) == o }
+    fun searchIdByDTO(o: TechStack): Long {
+        val target = stackRepository.findAll().filter { TechStack.of(it) == o }
         return if (target.isNotEmpty()) target[0].id else {
-            //make new entity
-            //val res = o.toEntity()
-            //stackRepository.save(res)
-            //res.id
+            // make new entity
+            // val res = o.toEntity()
+            // stackRepository.save(res)
+            // res.id
             throw EntityNotFoundException()
         }
     }
 
-    fun searchById(id: Long): TechStack {
+    fun searchById(id: Long): TechStackEntity {
         val res = stackRepository.findById(id)
         return res.get()
     }
-
-
 }

@@ -1,8 +1,12 @@
 package waffle.guam.controller
 
 import org.springframework.stereotype.Controller
-import org.springframework.web.bind.annotation.*
-import waffle.guam.db.DevType.TechStackDTO
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseBody
+import waffle.guam.model.TechStack
 import waffle.guam.service.StackService
 
 @Controller
@@ -12,21 +16,21 @@ class StackController(
 
     @GetMapping("/stackinit")
     @ResponseBody
-    fun createInitialStack(){
+    fun createInitialStack() {
         stackService.init()
     }
 
     // C
     @PostMapping("/stack")
     @ResponseBody
-    fun createStack(@RequestBody techStackDTO: TechStackDTO): Boolean{
-        return stackService.create(techStackDTO)
+    fun createStack(@RequestBody techStack: TechStack): Boolean {
+        return stackService.create(techStack)
     }
 
-    //R
+    // R
     @GetMapping("/stacks")
     @ResponseBody
-    fun getAllProjects(): List<TechStackDTO> {
+    fun getAllProjects(): List<TechStack> {
         return stackService.getAll()
     }
 
@@ -34,10 +38,10 @@ class StackController(
 
     @GetMapping("/stacks/search")
     @ResponseBody
-    fun findByName(@RequestParam query: String): List<TechStackDTO> {
+    fun findByName(@RequestParam query: String): List<TechStack> {
         return stackService.searchByKeyword(query)
     }
 
-    //U
-    //D
+    // U
+    // D
 }
