@@ -18,7 +18,7 @@ data class UserEntity(
 
     val status: Status = Status.ACTIVE,
 
-    val name: String,
+    val name: String = "",
 
     val imageUrl: String? = null,
 
