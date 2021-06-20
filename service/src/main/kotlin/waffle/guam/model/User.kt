@@ -1,6 +1,5 @@
 package waffle.guam.model
 
-import waffle.guam.db.entity.Status
 import waffle.guam.db.entity.UserEntity
 import java.time.Instant
 
@@ -16,6 +15,9 @@ data class User(
     val createdAt: Instant,
     val updatedAt: Instant,
 ) {
+    val isProfileSet: Boolean =
+        name.isNotEmpty() && createdAt != updatedAt
+
     companion object {
         fun of(e: UserEntity): User =
             User(
