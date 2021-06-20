@@ -20,13 +20,13 @@ class ProjectService(
     private val projectRepository: ProjectRepository,
     private val projectViewRepository: ProjectViewRepository,
     private val projectStackRepository: ProjectStackRepository,
-    private val taskRepository: TaskRepository,
+    private val taskRepository: TaskRepository
 ) {
 
     private val searchEngine: SearchEngine = SearchEngine()
 
     @Transactional
-    fun createProject(command: CreateProject, userId: Long): Boolean {
+    fun createProject(command: CreateProject, userId: Long): Project =
         projectRepository.save(command.toEntity()).let { project ->
             projectStackRepository.saveAll(
                 command.techStackIds.map { stackId ->
@@ -36,18 +36,26 @@ class ProjectService(
             taskRepository.save(
                 TaskEntity(projectId = project.id, userId = userId, position = Position.UNKNOWN)
             )
+            project.id
+        }.let { projectId ->
+            projectViewRepository.findById(projectId).orElseThrow(::DataNotFoundException)
+                .let {
+                    Project.of(entity = it, fetchTasks = true)
+                }
         }
-        return true
-    }
 
     fun getAllProjects(pageable: Pageable): Page<Project> =
         projectViewRepository.findAll(pageable).map { Project.of(it) }
 
     fun findProject(id: Long): Project =
-        projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).let { Project.of(entity = it, fetchTasks = true) }
+        projectViewRepository.findById(id).orElseThrow(::DataNotFoundException)
+            .let { Project.of(entity = it, fetchTasks = true) }
 
     fun imminentProjects(): List<Project> =
-        projectViewRepository.findImminent().map { Project.of(it) }
+        projectViewRepository
+            .findByFrontHeadcountIsLessThanOrBackHeadcountIsLessThanOrDesignerHeadcountIsLessThan()
+            .filter { it.isRecruiting }
+            .map { Project.of(it) }
 
     // FIXME: 효율성 문제
     fun searchByKeyword(query: String): List<Project> =
