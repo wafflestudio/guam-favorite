@@ -6,7 +6,7 @@ import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.Table
 
-@Table(name = "techstacks")
+@Table(name = "tech_stacks")
 @Entity
 data class TechStackEntity(
     @Id
