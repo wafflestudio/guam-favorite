@@ -28,7 +28,7 @@ data class ProjectEntity(
 
     val designerHeadcount: Int,
 
-    val isRecruiting: Boolean = true,
+    val recruiting: Boolean = true,
 
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
@@ -54,7 +54,7 @@ data class ProjectView(
 
     val designerHeadcount: Int,
 
-    val isRecruiting: Boolean,
+    val recruiting: Boolean,
 
     val createdAt: LocalDateTime,
 

@@ -27,7 +27,7 @@ data class Project(
                 frontLeftCnt = entity.frontHeadcount,
                 backLeftCnt = entity.backHeadcount,
                 designLeftCnt = entity.designerHeadcount,
-                isRecruiting = entity.isRecruiting,
+                isRecruiting = entity.recruiting,
                 techStacks = entity.techStacks.map { TechStack.of(it.techStack) },
                 tasks = when (fetchTasks) {
                     true -> entity.tasks.map { Task.of(it) }
