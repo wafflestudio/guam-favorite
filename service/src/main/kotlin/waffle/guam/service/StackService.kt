@@ -18,7 +18,12 @@ class StackService(
         val reader = java.io.InputStreamReader(stream)
         reader.forEachLine {
             val idx = it.indexOf(",")
-            stackRepository.save((TechStack(it.dropLast(it.length - (idx)), (it.drop(idx + 2)).dropLast(1), "")).toEntity())
+            stackRepository.save(
+                TechStackEntity(
+                    name = it.dropLast(it.length - (idx)),
+                    aliases = (it.drop(idx + 2)).dropLast(1)
+                )
+            )
         }
     }
 

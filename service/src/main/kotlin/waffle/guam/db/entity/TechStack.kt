@@ -17,5 +17,5 @@ data class TechStackEntity(
 
     val aliases: String,
 
-    val thumbnail: String
+    val thumbnail: String? = null
 )
