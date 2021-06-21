@@ -24,8 +24,8 @@ class UserService(
         )
 
     @Transactional
-    fun update(command: UpdateUser): User =
-        userRepository.findById(command.userId).orElseThrow(::DataNotFoundException).let {
+    fun update(command: UpdateUser, userId: Long): User =
+        userRepository.findById(userId).orElseThrow(::DataNotFoundException).let {
             userRepository.save(
                 it.copy(
                     name = command.name ?: it.name,
