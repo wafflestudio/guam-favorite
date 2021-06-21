@@ -20,7 +20,7 @@ data class ProjectEntity(
 
     val description: String,
 
-    val thumbnail: String,
+    val thumbnail: String?,
 
     val frontHeadcount: Int,
 
@@ -46,7 +46,7 @@ data class ProjectView(
 
     val description: String,
 
-    val thumbnail: String,
+    val thumbnail: String?,
 
     val frontHeadcount: Int,
 

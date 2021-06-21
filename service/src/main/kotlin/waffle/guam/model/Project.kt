@@ -7,7 +7,7 @@ data class Project(
     val id: Long,
     val title: String,
     val description: String,
-    val thumbnail: String,
+    val thumbnail: String?,
     val frontLeftCnt: Int,
     val backLeftCnt: Int,
     val designLeftCnt: Int,

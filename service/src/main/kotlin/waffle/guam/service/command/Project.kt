@@ -7,7 +7,7 @@ sealed class ProjectCommand
 data class CreateProject(
     val title: String,
     val description: String,
-    val thumbnail: String,
+    val thumbnail: String?,
     val frontLeftCnt: Int,
     val backLeftCnt: Int,
     val designLeftCnt: Int,
