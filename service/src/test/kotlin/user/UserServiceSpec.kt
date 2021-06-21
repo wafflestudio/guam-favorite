@@ -55,7 +55,7 @@ class UserServiceSpec(
                 val userId = userRepository.save(UserEntity(firebaseUid = "jon.snow.test")).id
                 val result = userService.update(
                     command = UpdateUser(
-                        name = "jony",
+                        nickname = "jony",
                         imageUrl = "s.s",
                         skills = "kotlin",
                         githubUrl = "s.s",
@@ -66,7 +66,7 @@ class UserServiceSpec(
                 )
 
                 result.id shouldBe userId
-                result.name shouldBe "jony"
+                result.nickname shouldBe "jony"
                 result.introduction shouldBe null
             }
 

@@ -1,7 +1,7 @@
 package waffle.guam.service.command
 
 data class UpdateUser(
-    val name: String? = null,
+    val nickname: String? = null,
     val imageUrl: String? = null,
     val skills: String? = null,
     val githubUrl: String? = null,

@@ -62,7 +62,7 @@ object DefaultDataInfo {
     val user = UserEntity(
         firebaseUid = "test",
         status = Status.ACTIVE,
-        name = "jon",
+        nickname = "jon",
         skills = "kotlin,python",
     )
 

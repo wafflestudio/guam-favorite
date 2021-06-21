@@ -6,7 +6,7 @@ import java.time.Instant
 data class User(
     val id: Long,
     val status: String,
-    val name: String,
+    val nickname: String,
     val imageUrl: String?,
     val skills: List<String>,
     val githubUrl: String?,
@@ -16,14 +16,14 @@ data class User(
     val updatedAt: Instant,
 ) {
     val isProfileSet: Boolean =
-        name.isNotEmpty() && createdAt != updatedAt
+        nickname.isNotEmpty() && createdAt != updatedAt
 
     companion object {
         fun of(e: UserEntity): User =
             User(
                 id = e.id,
                 status = e.status.name,
-                name = e.name,
+                nickname = e.nickname,
                 imageUrl = e.imageUrl,
                 skills = e.skills?.split(",") ?: emptyList(),
                 githubUrl = e.githubUrl,

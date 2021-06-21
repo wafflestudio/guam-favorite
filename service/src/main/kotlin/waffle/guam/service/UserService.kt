@@ -28,7 +28,7 @@ class UserService(
         userRepository.findById(userId).orElseThrow(::DataNotFoundException).let {
             userRepository.save(
                 it.copy(
-                    name = command.name ?: it.name,
+                    nickname = command.nickname ?: it.nickname,
                     imageUrl = command.imageUrl ?: it.imageUrl,
                     skills = command.skills ?: it.skills,
                     githubUrl = command.githubUrl ?: it.githubUrl,
