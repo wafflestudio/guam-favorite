@@ -54,15 +54,15 @@ class UserServiceSpec(
             scenario("id에 해당하는 유저가 있다면 정보를 수정한다.") {
                 val userId = userRepository.save(UserEntity(firebaseUid = "jon.snow.test")).id
                 val result = userService.update(
-                    UpdateUser(
-                        userId = userId,
+                    command = UpdateUser(
                         name = "jony",
                         imageUrl = "s.s",
                         skills = "kotlin",
                         githubUrl = "s.s",
                         blogUrl = "s.s",
                         introduction = null
-                    )
+                    ),
+                    userId = userId
                 )
 
                 result.id shouldBe userId
@@ -73,7 +73,8 @@ class UserServiceSpec(
             scenario("id에 해당하는 유저가 없다면 예외가 발생한다.") {
                 shouldThrowExactly<DataNotFoundException> {
                     userService.update(
-                        UpdateUser(userId = 404, introduction = null)
+                        command = UpdateUser(introduction = null),
+                        userId = 404
                     )
                 }
             }
