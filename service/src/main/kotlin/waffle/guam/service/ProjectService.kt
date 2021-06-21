@@ -54,7 +54,7 @@ class ProjectService(
     fun imminentProjects(): List<Project> =
         projectViewRepository
             .findByFrontHeadcountIsLessThanOrBackHeadcountIsLessThanOrDesignerHeadcountIsLessThan()
-            .filter { it.isRecruiting }
+            .filter { it.recruiting }
             .map { Project.of(it) }
 
     // FIXME: 효율성 문제

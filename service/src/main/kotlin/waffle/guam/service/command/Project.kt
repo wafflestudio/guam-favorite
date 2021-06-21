@@ -21,6 +21,6 @@ data class CreateProject(
             frontHeadcount = frontLeftCnt,
             backHeadcount = backLeftCnt,
             designerHeadcount = designLeftCnt,
-            isRecruiting = true
+            recruiting = true
         )
 }

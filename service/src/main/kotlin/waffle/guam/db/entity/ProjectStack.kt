@@ -2,6 +2,8 @@ package waffle.guam.db.entity
 
 import javax.persistence.Column
 import javax.persistence.Entity
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
@@ -16,7 +18,8 @@ data class ProjectStackEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
 
-    val positionInfo: Int = 0,
+    @Enumerated(EnumType.STRING)
+    val position: Position = Position.UNKNOWN,
 
     val projectId: Long,
 
@@ -31,7 +34,8 @@ data class ProjectStackView(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
 
-    val positionInfo: Int = 0,
+    @Enumerated(EnumType.STRING)
+    val position: Position,
 
     val projectId: Long,
 
