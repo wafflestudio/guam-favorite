@@ -39,9 +39,7 @@ class ProjectService(
             project.id
         }.let { projectId ->
             projectViewRepository.findById(projectId).orElseThrow(::DataNotFoundException)
-                .let {
-                    Project.of(entity = it, fetchTasks = true)
-                }
+                .let { Project.of(entity = it, fetchTasks = true) }
         }
 
     fun getAllProjects(pageable: Pageable): Page<Project> =

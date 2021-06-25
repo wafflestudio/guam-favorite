@@ -1,8 +1,6 @@
 package waffle.guam.controller
 
-import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Sort
-import org.springframework.data.web.PageableDefault
+import org.springframework.data.domain.PageRequest
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -14,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.RestController
 import waffle.guam.common.UserContext
-import waffle.guam.controller.response.GuamResponse
+import waffle.guam.controller.response.PageableResponse
 import waffle.guam.controller.response.SuccessResponse
 import waffle.guam.model.Project
 import waffle.guam.service.ProjectService
@@ -31,7 +29,7 @@ class ProjectController(
     fun createProject(
         @RequestBody createProject: CreateProject,
         userContext: UserContext
-    ): GuamResponse =
+    ): SuccessResponse<Project> =
         SuccessResponse(
             data = projectService.createProject(createProject, userContext.id)
         )
@@ -39,23 +37,30 @@ class ProjectController(
     @GetMapping("/project/list")
     @ResponseBody
     fun getAllProjects(
-        @PageableDefault(size = 10, sort = ["id"], direction = Sort.Direction.DESC) pageable: Pageable
-    ): GuamResponse =
-        SuccessResponse(
-            data = projectService.getAllProjects(pageable)
-        )
+        @RequestParam(required = true, defaultValue = "0") page: Int,
+        @RequestParam(required = false, defaultValue = "20") size: Int,
+    ): PageableResponse<Project> =
+        projectService.getAllProjects(PageRequest.of(page, size)).let {
+            PageableResponse(
+                data = it.content,
+                size = it.content.size,
+                offset = page * size,
+                totalCount = it.totalElements.toInt(),
+                hasNext = page * size + it.size < it.totalElements
+            )
+        }
 
     @GetMapping("/project/{id}")
     @ResponseBody
     fun findProject(
         @PathVariable id: Long
-    ): GuamResponse =
+    ): SuccessResponse<Project> =
         SuccessResponse(
             data = projectService.findProject(id)
         )
 
     @GetMapping("/project/tab")
-    fun imminentProjects(): GuamResponse =
+    fun imminentProjects(): SuccessResponse<List<Project>> =
         SuccessResponse(
             data = projectService.imminentProjects()
         )
@@ -64,7 +69,7 @@ class ProjectController(
     @ResponseBody
     fun searchProject(
         @RequestParam keyword: String,
-    ): GuamResponse =
+    ): SuccessResponse<List<Project>> =
         SuccessResponse(
             data = projectService.searchByKeyword(keyword)
         )
@@ -79,7 +84,7 @@ class ProjectController(
     @ResponseBody
     fun deleteProject(
         @PathVariable id: Long
-    ): GuamResponse =
+    ): SuccessResponse<Boolean> =
         SuccessResponse(
             data = projectService.deleteProject(id)
         )

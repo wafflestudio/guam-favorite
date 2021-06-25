@@ -23,6 +23,7 @@ class Swagger2Config {
             .build()
             .apiInfo(apiInfo())
     }
+
     private fun apiInfo(): ApiInfo {
         return ApiInfoBuilder().apply {
             title("UploadFileBoot API")
