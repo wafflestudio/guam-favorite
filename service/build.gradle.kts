@@ -1,16 +1,5 @@
-tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
-    enabled = false
-}
-
-tasks.getByName<Jar>("jar") {
-    enabled = true
-}
-
 plugins {
-    id("org.springframework.boot")
-    id("io.spring.dependency-management")
-    id("org.jetbrains.kotlin.plugin.jpa") version "1.5.10"
-    kotlin("plugin.spring")
+    id("io.github.wafflestudio.base")
 }
 
 dependencies {

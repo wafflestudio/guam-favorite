@@ -1,8 +1,5 @@
 plugins {
-    id("org.springframework.boot")
-    id("io.spring.dependency-management")
-    kotlin("plugin.spring")
-    id("waffle.guam.waffle-plugin")
+    id("io.github.wafflestudio.springboot")
 }
 
 dependencies {
