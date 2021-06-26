@@ -1,4 +1,4 @@
-package waffle.guam.user
+package waffle.guam.test
 
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.core.spec.style.FeatureSpec
@@ -13,7 +13,7 @@ import waffle.guam.service.UserService
 import waffle.guam.service.command.UpdateUser
 
 @DatabaseTest
-class UserServiceSpec(
+class UserServiceSpec (
     private val userRepository: UserRepository,
     private val database: Database
 ) : FeatureSpec() {

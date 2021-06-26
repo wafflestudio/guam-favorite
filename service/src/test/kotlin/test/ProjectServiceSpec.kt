@@ -1,4 +1,4 @@
-package waffle.guam.user
+package waffle.guam.test
 
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe

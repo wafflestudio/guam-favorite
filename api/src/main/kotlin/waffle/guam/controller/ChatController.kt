@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import waffle.guam.controller.request.Content
 import waffle.guam.controller.response.GuamResponse
+import waffle.guam.controller.response.PageableResponse
 import waffle.guam.controller.response.SuccessResponse
+import waffle.guam.model.ThreadDetail
+import waffle.guam.model.ThreadOverView
 import waffle.guam.service.ChatService
 import waffle.guam.service.command.CreateComment
 import waffle.guam.service.command.CreateThread
@@ -31,16 +34,22 @@ class ChatController(
     @GetMapping("/project/{projectId}/threads")
     fun getThreads(
         @PathVariable projectId: Long,
-        @PageableDefault(size = 10, sort = ["id"], direction = Sort.Direction.DESC) pageable: Pageable
-    ): GuamResponse =
-        SuccessResponse(
-            chatService.getThreads(projectId, pageable)
-        )
+        @PageableDefault(size = 10, page = 0, sort = ["id"], direction = Sort.Direction.DESC) pageable: Pageable
+    ): PageableResponse<ThreadOverView> =
+        chatService.getThreads(projectId, pageable).let{
+            PageableResponse(
+                data = it.content,
+                size = it.content.size,
+                offset = it.pageable.offset.toInt(),
+                totalCount = it.totalElements.toInt(),
+                hasNext = it.pageable.offset + it.size < it.totalElements
+           )
+        }
 
     @GetMapping("/thread/{threadId}")
     fun getFullThread(
         @PathVariable threadId: Long
-    ): GuamResponse =
+    ): SuccessResponse<ThreadDetail> =
         SuccessResponse(
             chatService.getFullThread(threadId)
         )
@@ -50,7 +59,7 @@ class ChatController(
         @PathVariable projectId: Long,
         @RequestBody content: Content,
         @RequestHeader("USER-ID") userId: Long
-    ): GuamResponse =
+    ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.createThread(
                 command = CreateThread(projectId = projectId, userId = userId, content = content.value)
@@ -62,7 +71,7 @@ class ChatController(
         @PathVariable threadId: Long,
         @RequestBody content: Content,
         @RequestHeader("USER-ID") userId: Long
-    ): GuamResponse =
+    ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.editThread(
                 command = EditThread(threadId = threadId, userId = userId, content = content.value)
@@ -73,7 +82,7 @@ class ChatController(
     fun deleteThread(
         @PathVariable threadId: Long,
         @RequestHeader("USER-ID") userId: Long
-    ): GuamResponse =
+    ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.deleteThread(
                 command = DeleteThread(threadId = threadId, userId = userId)
@@ -86,7 +95,7 @@ class ChatController(
         @RequestBody content: Content,
         @RequestHeader("USER-ID") userId: Long
     ): GuamResponse =
-        SuccessResponse(
+        SuccessResponse<Boolean>(
             chatService.createComment(
                 command = CreateComment(threadId = threadId, userId = userId, content = content.value)
             )
@@ -97,7 +106,7 @@ class ChatController(
         @PathVariable commentId: Long,
         @RequestBody content: Content,
         @RequestHeader("USER-ID") userId: Long
-    ): GuamResponse =
+    ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.editComment(
                 command = EditComment(commentId = commentId, userId = userId, content = content.value)
@@ -108,7 +117,7 @@ class ChatController(
     fun deleteComment(
         @PathVariable commentId: Long,
         @RequestHeader("USER-ID") userId: Long
-    ): GuamResponse =
+    ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.deleteComment(
                 command = DeleteComment(commentId = commentId, userId = userId)
