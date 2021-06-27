@@ -1,5 +1,5 @@
 plugins {
-    id("io.github.wafflestudio.base") version "1.0.1"
+    id("io.github.wafflestudio.base") version "1.0.5"
     id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
 }
 
@@ -24,6 +24,5 @@ subprojects {
         testImplementation("io.kotest:kotest-property:$kotestVersion")
         testImplementation("io.kotest:kotest-extensions-spring:$kotestVersion")
         testImplementation("io.mockk:mockk:$mockkVersion")
-        testImplementation("org.springframework.boot:spring-boot-starter-test")
     }
 }
