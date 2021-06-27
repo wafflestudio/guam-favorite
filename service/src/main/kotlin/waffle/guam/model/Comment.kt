@@ -7,7 +7,6 @@ data class Comment(
     val id: Long,
     val threadId: Long,
     val content: String,
-    // val creator: User,
     val creatorId: Long,
     val creatorNickname: String,
     val creatorImageUrl: String?,
@@ -15,17 +14,16 @@ data class Comment(
     val modifiedAt: LocalDateTime
 ) {
     companion object {
-        fun of(e: CommentView): Comment = User.of(e.user).let {
+        fun of(e: CommentView): Comment =
             Comment(
                 id = e.id,
                 threadId = e.threadId,
                 content = e.content,
-                creatorId = it.id,
-                creatorNickname = it.nickname,
-                creatorImageUrl = it.imageUrl,
+                creatorId = e.user.id,
+                creatorNickname = e.user.nickname,
+                creatorImageUrl = e.user.imageUrl,
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )
         }
-    }
 }

@@ -190,9 +190,7 @@ class ChatServiceSpec(
                 val editedThread = threadRepository.findById(1).get()
 
                 result shouldBe true
-                createdThread.isEdited shouldBe false
                 createdThread.content shouldBe "New Thread"
-                editedThread.isEdited shouldBe true
                 editedThread.content shouldBe "edited Content"
                 editedThread.createdAt shouldNotBe editedThread.modifiedAt
             }
@@ -354,9 +352,7 @@ class ChatServiceSpec(
                 val editedComment = commentRepository.findById(1).get()
 
                 result shouldBe true
-                createdComment.isEdited shouldBe false
                 createdComment.content shouldBe "New Comment"
-                editedComment.isEdited shouldBe true
                 editedComment.content shouldBe "edited Content"
                 editedComment.createdAt shouldNotBe editedComment.modifiedAt
             }

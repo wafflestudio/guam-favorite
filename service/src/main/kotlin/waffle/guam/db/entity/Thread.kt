@@ -25,8 +25,6 @@ data class ThreadEntity(
 
     val content: String = "",
 
-    val isEdited: Boolean = false,
-
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
     val modifiedAt: LocalDateTime = createdAt,
@@ -48,8 +46,6 @@ data class ThreadView(
     val comments: List<CommentView>,
 
     val content: String,
-
-    val isEdited: Boolean,
 
     val createdAt: LocalDateTime,
 

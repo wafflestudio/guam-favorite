@@ -52,7 +52,7 @@ class ChatService(
             if (it.content == command.content) throw InvalidRequestException("수정 전과 동일한 내용입니다.")
 
             threadRepository.save(
-                it.copy(content = command.content, modifiedAt = LocalDateTime.now(), isEdited = true)
+                it.copy(content = command.content, modifiedAt = LocalDateTime.now())
             )
         }
         return true
@@ -82,7 +82,7 @@ class ChatService(
             if (it.content == command.content) throw InvalidRequestException("수정 전과 동일한 내용입니다.")
 
             commentRepository.save(
-                it.copy(content = command.content, modifiedAt = LocalDateTime.now(), isEdited = true)
+                it.copy(content = command.content, modifiedAt = LocalDateTime.now())
             )
         }
         return true

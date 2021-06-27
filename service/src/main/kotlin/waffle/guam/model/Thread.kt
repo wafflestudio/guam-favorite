@@ -6,7 +6,6 @@ import java.time.LocalDateTime
 data class ThreadOverView(
     val id: Long,
     val content: String,
-    // val creator: User,
     val creatorId: Long,
     val creatorNickname: String,
     val creatorImageUrl: String?,
@@ -16,25 +15,22 @@ data class ThreadOverView(
 ) {
     companion object {
         fun of(e: ThreadView, countComments: (Long) -> Long): ThreadOverView =
-            User.of(e.user).let { user ->
                 ThreadOverView(
                     id = e.id,
                     content = e.content,
-                    creatorId = user.id,
-                    creatorNickname = user.nickname,
-                    creatorImageUrl = user.imageUrl,
+                    creatorId = e.user.id,
+                    creatorNickname = e.user.nickname,
+                    creatorImageUrl = e.user.imageUrl,
                     commentSize = countComments.invoke(e.id),
                     createdAt = e.createdAt,
                     modifiedAt = e.modifiedAt
                 )
             }
-    }
 }
 
 data class ThreadDetail(
     val id: Long,
     val content: String,
-    // val creator: User,
     val creatorId: Long,
     val creatorNickname: String,
     val creatorImageUrl: String?,
@@ -43,17 +39,16 @@ data class ThreadDetail(
     val modifiedAt: LocalDateTime
 ) {
     companion object {
-        fun of(e: ThreadView): ThreadDetail = User.of(e.user).let { user ->
+        fun of(e: ThreadView): ThreadDetail =
             ThreadDetail(
                 id = e.id,
                 content = e.content,
-                creatorId = user.id,
-                creatorNickname = user.nickname,
-                creatorImageUrl = user.imageUrl,
+                creatorId = e.user.id,
+                creatorNickname = e.user.nickname,
+                creatorImageUrl = e.user.imageUrl,
                 comments = e.comments.map { Comment.of(it) },
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )
         }
-    }
 }
