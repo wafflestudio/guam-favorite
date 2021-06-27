@@ -7,7 +7,9 @@ data class Comment(
     val id: Long,
     val threadId: Long,
     val content: String,
-    val creator: User,
+    val creatorId: Long,
+    val creatorNickname: String,
+    val creatorImageUrl: String?,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime
 ) {
@@ -17,9 +19,11 @@ data class Comment(
                 id = e.id,
                 threadId = e.threadId,
                 content = e.content,
-                creator = User.of(e.user),
+                creatorId = e.user.id,
+                creatorNickname = e.user.nickname,
+                creatorImageUrl = e.user.imageUrl,
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )
-    }
+        }
 }

@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.db.repository.CommentRepository
+import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.ThreadRepository
 import waffle.guam.db.repository.ThreadViewRepository
 import waffle.guam.exception.DataNotFoundException
@@ -24,6 +25,7 @@ class ChatService(
     private val threadRepository: ThreadRepository,
     private val threadViewRepository: ThreadViewRepository,
     private val commentRepository: CommentRepository,
+    private val projectRepository: ProjectRepository,
 ) {
 
     fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> =
@@ -38,6 +40,7 @@ class ChatService(
 
     @Transactional
     fun createThread(command: CreateThread): Boolean {
+        projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
         threadRepository.save(command.toEntity())
         return true
     }

@@ -42,7 +42,7 @@ data class ThreadView(
     @JoinColumn(name = "user_id")
     val user: UserEntity,
 
-    @OneToMany(mappedBy = "threadId", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "threadId", fetch = FetchType.EAGER)
     val comments: List<CommentView>,
 
     val content: String,
