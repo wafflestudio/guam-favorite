@@ -17,16 +17,16 @@ import waffle.guam.exception.InvalidRequestException
 import waffle.guam.model.ThreadDetail
 import waffle.guam.model.ThreadOverView
 import waffle.guam.service.ChatService
-import waffle.guam.service.command.CreateThread
-import waffle.guam.service.command.EditThread
-import waffle.guam.service.command.DeleteThread
 import waffle.guam.service.command.CreateComment
+import waffle.guam.service.command.CreateThread
+import waffle.guam.service.command.DeleteComment
+import waffle.guam.service.command.DeleteThread
 import waffle.guam.service.command.EditComment
-import  waffle.guam.service.command.DeleteComment
+import waffle.guam.service.command.EditThread
 import java.util.Optional
 
 @DatabaseTest
-class ChatServiceSpec (
+class ChatServiceSpec(
     private val threadRepository: ThreadRepository,
     private val threadViewRepository: ThreadViewRepository,
     private val commentRepository: CommentRepository,
@@ -49,12 +49,12 @@ class ChatServiceSpec (
             scenario("projectId에 해당하는 프로젝트에 달린 쓰레드들을 찾아준다") {
                 database.getUser()
                 val project = database.getProject()
-                for (i in 0 until 15){
+                for (i in 0 until 15) {
                     chatService.createThread(
                         command = DefaultCommand.CreateThread.copy(content = "Thread Number $i")
                     )
                 }
-                for (i in 0 until 5){
+                for (i in 0 until 5) {
                     chatService.createComment(
                         command = DefaultCommand.CreateComment.copy(threadId = 1, content = "Comment Number $i")
                     )
@@ -83,7 +83,7 @@ class ChatServiceSpec (
                 val size = 100
                 database.getUser()
                 val project = database.getProject()
-                for (i in 0 until totalThreadNum){
+                for (i in 0 until totalThreadNum) {
                     chatService.createThread(command = DefaultCommand.CreateThread)
                 }
                 val result = chatService.getThreads(
@@ -120,7 +120,7 @@ class ChatServiceSpec (
             scenario("threadId에 해당하는 쓰레드를 찾아준다") {
                 val user = database.getUser()
                 val project = database.getProject()
-                 chatService.createThread(
+                chatService.createThread(
                     command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
                 )
                 chatService.createComment(
@@ -131,15 +131,15 @@ class ChatServiceSpec (
                 )
                 val result: ThreadDetail = chatService.getFullThread(1)
                 result.id shouldBe 1
-                result.creator.id shouldBe user.id
+                result.creatorId shouldBe user.id
                 // TODO(result.creator.status shouldBe user.status)
-                result.creator.imageUrl shouldBe null
-                result.creator.nickname shouldBe user.nickname
+                result.creatorImageUrl shouldBe null
+                result.creatorNickname shouldBe user.nickname
                 result.content shouldBe DefaultCommand.CreateThread.content
                 result.comments[0].content shouldBe "First"
-                result.comments[0].creator.nickname shouldBe user.nickname
+                result.comments[0].creatorNickname shouldBe user.nickname
                 result.comments[1].content shouldBe "Second"
-                result.comments[1].creator.nickname shouldBe user.nickname
+                result.comments[1].creatorNickname shouldBe user.nickname
             }
             scenario("threadId에 해당하는 쓰레드가 없다면 예외가 발생한다") {
                 shouldThrowExactly<RuntimeException> {
@@ -180,6 +180,7 @@ class ChatServiceSpec (
                 chatService.createThread(
                     command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
                 )
+                val createdThread = threadRepository.findById(1).get()
                 val result = chatService.editThread(
                     command = DefaultCommand.EditThread.copy(
                         threadId = 1,
@@ -187,7 +188,11 @@ class ChatServiceSpec (
                     )
                 )
                 val editedThread = threadRepository.findById(1).get()
+
                 result shouldBe true
+                createdThread.isEdited shouldBe false
+                createdThread.content shouldBe "New Thread"
+                editedThread.isEdited shouldBe true
                 editedThread.content shouldBe "edited Content"
                 editedThread.createdAt shouldNotBe editedThread.modifiedAt
             }
@@ -260,7 +265,7 @@ class ChatServiceSpec (
                 chatService.createThread(
                     command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
                 )
-                for (i in 0 until 3){
+                for (i in 0 until 3) {
                     chatService.createComment(
                         command = DefaultCommand.CreateComment.copy(
                             threadId = 1, userId = 1, content = "Should be Deleted"
@@ -339,6 +344,7 @@ class ChatServiceSpec (
                 chatService.createComment(
                     command = DefaultCommand.CreateComment.copy(threadId = thread.id, userId = user.id)
                 )
+                val createdComment = commentRepository.findById(1).get()
                 val result = chatService.editComment(
                     command = DefaultCommand.EditComment.copy(
                         commentId = 1,
@@ -346,7 +352,11 @@ class ChatServiceSpec (
                     )
                 )
                 val editedComment = commentRepository.findById(1).get()
+
                 result shouldBe true
+                createdComment.isEdited shouldBe false
+                createdComment.content shouldBe "New Comment"
+                editedComment.isEdited shouldBe true
                 editedComment.content shouldBe "edited Content"
                 editedComment.createdAt shouldNotBe editedComment.modifiedAt
             }

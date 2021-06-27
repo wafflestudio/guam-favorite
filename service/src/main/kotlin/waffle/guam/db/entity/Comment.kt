@@ -24,6 +24,8 @@ data class CommentEntity(
 
     val content: String = "",
 
+    val isEdited: Boolean = false,
+
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
     val modifiedAt: LocalDateTime = createdAt,
@@ -43,6 +45,8 @@ data class CommentView(
     val user: UserEntity,
 
     val content: String,
+
+    val isEdited: Boolean,
 
     val createdAt: LocalDateTime = LocalDateTime.now(),
 

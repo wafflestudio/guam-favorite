@@ -36,14 +36,14 @@ class ChatController(
         @PathVariable projectId: Long,
         @PageableDefault(size = 10, page = 0, sort = ["id"], direction = Sort.Direction.DESC) pageable: Pageable
     ): PageableResponse<ThreadOverView> =
-        chatService.getThreads(projectId, pageable).let{
+        chatService.getThreads(projectId, pageable).let {
             PageableResponse(
                 data = it.content,
                 size = it.content.size,
                 offset = it.pageable.offset.toInt(),
                 totalCount = it.totalElements.toInt(),
                 hasNext = it.pageable.offset + it.size < it.totalElements
-           )
+            )
         }
 
     @GetMapping("/thread/{threadId}")
