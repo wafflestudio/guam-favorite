@@ -1,6 +1,7 @@
 package waffle.guam.db.repository
 
 import org.springframework.data.jpa.repository.JpaRepository
+import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.ProjectEntity
 import waffle.guam.db.entity.ProjectView
 
@@ -11,5 +12,9 @@ interface ProjectViewRepository : JpaRepository<ProjectView, Long> {
         frontHeadcount: Int = 2,
         backHeadcount: Int = 2,
         designerHeadcount: Int = 2
+    ): List<ProjectView>
+
+    fun findByDueEquals(
+        due: Due
     ): List<ProjectView>
 }
