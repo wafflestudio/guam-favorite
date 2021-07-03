@@ -12,21 +12,18 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.Database
 import waffle.guam.DatabaseTest
+import waffle.guam.db.entity.ImageType
 import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.ThreadRepository
 import waffle.guam.db.repository.ThreadViewRepository
+import waffle.guam.db.repository.ImageRepository
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.exception.InvalidRequestException
 import waffle.guam.model.ThreadDetail
 import waffle.guam.model.ThreadOverView
 import waffle.guam.service.ChatService
-import waffle.guam.service.command.CreateComment
-import waffle.guam.service.command.CreateThread
-import waffle.guam.service.command.DeleteComment
-import waffle.guam.service.command.DeleteThread
-import waffle.guam.service.command.EditCommentContent
-import waffle.guam.service.command.EditThreadContent
+import waffle.guam.service.command.*
 import java.util.Optional
 
 @DatabaseTest
@@ -35,6 +32,7 @@ class ChatServiceSpec @Autowired constructor(
     private val threadViewRepository: ThreadViewRepository,
     private val commentRepository: CommentRepository,
     private val projectRepository: ProjectRepository,
+    private val imageRepository: ImageRepository,
     private val database: Database
 ) {
     private val chatService = ChatService(
@@ -42,7 +40,9 @@ class ChatServiceSpec @Autowired constructor(
         threadViewRepository = threadViewRepository,
         commentRepository = commentRepository,
         projectRepository = projectRepository,
+        imageRepository = imageRepository
     )
+
 
     @BeforeEach
     fun clearDatabase() {
@@ -526,12 +526,18 @@ object DefaultCommand {
     val CreateThread = CreateThread(
         projectId = 1,
         userId = 1,
-        content = "New Thread"
+        content = "New Thread",
+        imageUrls = listOf("imageUrl1", "imageUrl2", "imageUrl3")
     )
     val EditThread = EditThreadContent(
         threadId = 1,
         userId = 1,
         content = "edited Content"
+    )
+    val DeleteThreadImage = DeleteThreadImage(
+        imageId = 1,
+        threadId = 1,
+        userId = 1,
     )
     val DeleteThread = DeleteThread(
         threadId = 1,
@@ -540,12 +546,18 @@ object DefaultCommand {
     val CreateComment = CreateComment(
         threadId = 1,
         userId = 1,
-        content = "New Comment"
+        content = "New Comment",
+        imageUrls = listOf("imageUrl1", "imageUrl2", "imageUrl3")
     )
     val EditComment = EditCommentContent(
         commentId = 1,
         userId = 1,
         content = "edited Content"
+    )
+    val DeleteCommentImage = DeleteCommentImage(
+        imageId = 1,
+        commentId = 1,
+        userId = 1,
     )
     val DeleteComment = DeleteComment(
         commentId = 1,

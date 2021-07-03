@@ -43,10 +43,10 @@ data class ThreadView(
     @JoinColumn(name = "user_id")
     val user: UserEntity,
 
-    @OneToMany(mappedBy = "threadId", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "threadId", fetch = FetchType.LAZY)
     val comments: List<CommentView>,
 
-    @OneToMany(mappedBy = "parentId", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
     val images: List<ImageEntity>,
 
     val content: String,

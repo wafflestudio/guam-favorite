@@ -35,7 +35,7 @@ data class CommentView(
     @JoinColumn(name = "user_id")
     val user: UserEntity,
 
-    @OneToMany(mappedBy = "parentId", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
     val images: List<ImageEntity>,
 
     val content: String,

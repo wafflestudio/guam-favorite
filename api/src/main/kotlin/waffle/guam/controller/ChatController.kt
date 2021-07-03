@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import waffle.guam.common.UserContext
 import waffle.guam.controller.request.EditChatInput
 import waffle.guam.controller.request.CreateChatInput
 import waffle.guam.controller.response.PageableResponse
@@ -29,7 +30,7 @@ class ChatController(
     @GetMapping("/project/{projectId}/threads")
     fun getThreads(
         @PathVariable projectId: Long,
-        @PageableDefault(size = 10, page = 0, sort = ["id"], direction = Sort.Direction.DESC) pageable: Pageable
+        @PageableDefault(size = 10, page = 0, sort = ["id"], direction = Sort.Direction.ASC) pageable: Pageable
     ): PageableResponse<ThreadOverView> =
         chatService.getThreads(projectId, pageable).let {
             PageableResponse(
@@ -53,14 +54,13 @@ class ChatController(
     fun createThread(
         @PathVariable projectId: Long,
         @RequestBody createChatInput: CreateChatInput,
-        @RequestHeader("USER-ID") userId: Long
-
+        userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.createThread(
                 command = CreateThread(
                     projectId = projectId,
-                    userId = userId,
+                    userId = userContext.id,
                     content = createChatInput.content,
                     imageUrls = createChatInput.imageUrls
                 )
@@ -71,11 +71,11 @@ class ChatController(
     fun editThreadContent(
         @PathVariable threadId: Long,
         @RequestBody editChatInput: EditChatInput,
-        @RequestHeader("USER-ID") userId: Long
+        userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.editThreadContent(
-                command = EditThreadContent(threadId = threadId, userId = userId, content = editChatInput.content)
+                command = EditThreadContent(threadId = threadId, userId = userContext.id, content = editChatInput.content)
             )
         )
 
@@ -83,22 +83,22 @@ class ChatController(
     fun deleteThreadImage(
         @PathVariable threadId: Long,
         @PathVariable imageId: Long,
-        @RequestHeader("USER-ID") userId: Long
+        userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.deleteThreadImage(
-                command = DeleteThreadImage(imageId = imageId, threadId = threadId, userId = userId)
+                command = DeleteThreadImage(imageId = imageId, threadId = threadId, userId = userContext.id)
             )
         )
 
     @DeleteMapping("/thread/{threadId}")
     fun deleteThread(
         @PathVariable threadId: Long,
-        @RequestHeader("USER-ID") userId: Long
+        userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.deleteThread(
-                command = DeleteThread(threadId = threadId, userId = userId)
+                command = DeleteThread(threadId = threadId, userId = userContext.id)
             )
         )
 
@@ -106,13 +106,13 @@ class ChatController(
     fun createComment(
         @PathVariable threadId: Long,
         @RequestBody createChatInput: CreateChatInput,
-        @RequestHeader("USER-ID") userId: Long
+        userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.createComment(
                 command = CreateComment(
                     threadId = threadId,
-                    userId = userId,
+                    userId = userContext.id,
                     content = createChatInput.content,
                     imageUrls = createChatInput.imageUrls
                 )
@@ -123,11 +123,11 @@ class ChatController(
     fun editCommentContent(
         @PathVariable commentId: Long,
         @RequestBody editChatInput: EditChatInput,
-        @RequestHeader("USER-ID") userId: Long
+        userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.editCommentContent(
-                command = EditCommentContent(commentId = commentId, userId = userId, content = editChatInput.content)
+                command = EditCommentContent(commentId = commentId, userId = userContext.id, content = editChatInput.content)
             )
         )
 
@@ -135,23 +135,22 @@ class ChatController(
     fun deleteCommentImage(
         @PathVariable commentId: Long,
         @PathVariable imageId: Long,
-        @RequestHeader("USER-ID") userId: Long
+        userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.deleteCommentImage(
-                command = DeleteCommentImage(imageId = imageId, commentId = commentId, userId = userId)
+                command = DeleteCommentImage(imageId = imageId, commentId = commentId, userId = userContext.id)
             )
         )
-
 
     @DeleteMapping("/comment/{commentId}")
     fun deleteComment(
         @PathVariable commentId: Long,
-        @RequestHeader("USER-ID") userId: Long
+        userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.deleteComment(
-                command = DeleteComment(commentId = commentId, userId = userId)
+                command = DeleteComment(commentId = commentId, userId = userContext.id)
             )
         )
 }
