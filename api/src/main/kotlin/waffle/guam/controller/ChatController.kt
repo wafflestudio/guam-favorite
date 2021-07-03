@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import waffle.guam.controller.request.Content
+import waffle.guam.controller.request.EditChatInput
 import waffle.guam.controller.request.CreateChatInput
 import waffle.guam.controller.response.PageableResponse
 import waffle.guam.controller.response.SuccessResponse
@@ -54,6 +54,7 @@ class ChatController(
         @PathVariable projectId: Long,
         @RequestBody createChatInput: CreateChatInput,
         @RequestHeader("USER-ID") userId: Long
+
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.createThread(
@@ -69,12 +70,12 @@ class ChatController(
     @PutMapping("/thread/{threadId}/content")
     fun editThreadContent(
         @PathVariable threadId: Long,
-        @RequestBody content: Content,
+        @RequestBody editChatInput: EditChatInput,
         @RequestHeader("USER-ID") userId: Long
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.editThreadContent(
-                command = EditThreadContent(threadId = threadId, userId = userId, content = content.value)
+                command = EditThreadContent(threadId = threadId, userId = userId, content = editChatInput.content)
             )
         )
 
@@ -121,12 +122,12 @@ class ChatController(
     @PutMapping("/comment/{commentId}/content")
     fun editCommentContent(
         @PathVariable commentId: Long,
-        @RequestBody content: Content,
+        @RequestBody editChatInput: EditChatInput,
         @RequestHeader("USER-ID") userId: Long
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.editCommentContent(
-                command = EditCommentContent(commentId = commentId, userId = userId, content = content.value)
+                command = EditCommentContent(commentId = commentId, userId = userId, content = editChatInput.content)
             )
         )
 

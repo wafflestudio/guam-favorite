@@ -15,6 +15,7 @@ import waffle.guam.db.repository.ThreadViewRepository
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.exception.InvalidRequestException
 import waffle.guam.model.Comment
+import waffle.guam.model.Image
 import waffle.guam.model.ThreadDetail
 import waffle.guam.model.ThreadOverView
 import waffle.guam.service.command.*
@@ -40,7 +41,7 @@ class ChatService(
                     foundUserProfiles[creatorId]
                 },
                 { threadId -> commentRepository.countByThreadId(threadId) },
-                { threadId -> imageRepository.findByParentIdAndType(threadId, ImageType.THREAD).map { image -> image.url } }
+                { threadId -> imageRepository.findByParentIdAndType(threadId, ImageType.THREAD).map { image -> Image.of(image) } }
             )
         }
     }
@@ -54,7 +55,7 @@ class ChatService(
                     foundUserProfiles[creatorId] = imageRepository.findByParentIdAndType(creatorId, ImageType.USER_PROFILE)[0].url
                     foundUserProfiles[creatorId]
                 },
-                { threadId -> imageRepository.findByParentIdAndType(threadId, ImageType.THREAD).map { image -> image.url } },
+                { threadId -> imageRepository.findByParentIdAndType(threadId, ImageType.THREAD).map { image -> Image.of(image) } },
                 comments = threadView.comments.map { Comment.of(
                     it,
                     { creatorId ->
@@ -62,8 +63,8 @@ class ChatService(
                             foundUserProfiles[creatorId] = imageRepository.findByParentIdAndType(creatorId, ImageType.USER_PROFILE)[0].url
                         foundUserProfiles[creatorId]
                     },
-                    { commentId -> imageRepository.findByParentIdAndType(commentId, ImageType.THREAD).map { image -> image.url } },
-                )
+                    { commentId -> imageRepository.findByParentIdAndType(commentId, ImageType.THREAD).map { image -> Image.of(image) } },
+                    )
                 },
             )
         }
