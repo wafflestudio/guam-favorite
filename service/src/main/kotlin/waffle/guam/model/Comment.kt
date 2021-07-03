@@ -25,5 +25,5 @@ data class Comment(
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )
-        }
+    }
 }

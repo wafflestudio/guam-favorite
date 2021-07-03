@@ -1,7 +1,11 @@
 package waffle.guam.db.entity
 
+import org.hibernate.annotations.Cascade
+import org.hibernate.annotations.CascadeType
 import java.time.LocalDateTime
 import javax.persistence.Entity
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
 import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
@@ -32,7 +36,10 @@ data class ProjectEntity(
 
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
-    val modifiedAt: LocalDateTime = createdAt
+    val modifiedAt: LocalDateTime = createdAt,
+
+    @Enumerated(EnumType.ORDINAL)
+    val due: Due
 )
 
 @Table(name = "projects")
@@ -60,9 +67,16 @@ data class ProjectView(
 
     val modifiedAt: LocalDateTime,
 
-    @OneToMany(mappedBy = "projectId", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "projectId", fetch = FetchType.EAGER, orphanRemoval = true )
     val techStacks: Set<ProjectStackView>,
 
-    @OneToMany(mappedBy = "projectId", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "projectId", fetch = FetchType.LAZY, orphanRemoval = true)
     val tasks: Set<TaskView>,
+
+    @Enumerated(EnumType.ORDINAL)
+    val due: Due
 )
+
+enum class Due {
+    ONE, THREE, SIX, MORE, UNDEFINED
+}
