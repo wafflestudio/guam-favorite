@@ -11,7 +11,5 @@ import javax.persistence.OneToOne
 interface CommentRepository : JpaRepository<CommentEntity, Long> {
     fun findByThreadId(threadId: Long): List<CommentEntity>
     fun countByThreadId(threadId: Long): Long
-
-    @Transactional
-    fun removeByThreadId(threadId: Long): Long
+//    fun removeByThreadId(threadId: Long): Long
 }

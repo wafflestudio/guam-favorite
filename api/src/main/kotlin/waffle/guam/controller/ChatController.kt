@@ -13,18 +13,13 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import waffle.guam.controller.request.Content
-import waffle.guam.controller.response.GuamResponse
+import waffle.guam.controller.request.CreateChatInput
 import waffle.guam.controller.response.PageableResponse
 import waffle.guam.controller.response.SuccessResponse
 import waffle.guam.model.ThreadDetail
 import waffle.guam.model.ThreadOverView
 import waffle.guam.service.ChatService
-import waffle.guam.service.command.CreateComment
-import waffle.guam.service.command.CreateThread
-import waffle.guam.service.command.DeleteComment
-import waffle.guam.service.command.DeleteThread
-import waffle.guam.service.command.EditComment
-import waffle.guam.service.command.EditThread
+import waffle.guam.service.command.*
 
 @RestController
 @RequestMapping
@@ -57,24 +52,41 @@ class ChatController(
     @PostMapping("/thread/create/{projectId}")
     fun createThread(
         @PathVariable projectId: Long,
-        @RequestBody content: Content,
+        @RequestBody createChatInput: CreateChatInput,
         @RequestHeader("USER-ID") userId: Long
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.createThread(
-                command = CreateThread(projectId = projectId, userId = userId, content = content.value)
+                command = CreateThread(
+                    projectId = projectId,
+                    userId = userId,
+                    content = createChatInput.content,
+                    imageUrls = createChatInput.imageUrls
+                )
             )
         )
 
-    @PutMapping("/thread/{threadId}")
-    fun editThread(
+    @PutMapping("/thread/{threadId}/content")
+    fun editThreadContent(
         @PathVariable threadId: Long,
         @RequestBody content: Content,
         @RequestHeader("USER-ID") userId: Long
     ): SuccessResponse<Boolean> =
         SuccessResponse(
-            chatService.editThread(
-                command = EditThread(threadId = threadId, userId = userId, content = content.value)
+            chatService.editThreadContent(
+                command = EditThreadContent(threadId = threadId, userId = userId, content = content.value)
+            )
+        )
+
+    @DeleteMapping("/thread/{threadId}/image/{imageId}")
+    fun deleteThreadImage(
+        @PathVariable threadId: Long,
+        @PathVariable imageId: Long,
+        @RequestHeader("USER-ID") userId: Long
+    ): SuccessResponse<Boolean> =
+        SuccessResponse(
+            chatService.deleteThreadImage(
+                command = DeleteThreadImage(imageId = imageId, threadId = threadId, userId = userId)
             )
         )
 
@@ -92,26 +104,44 @@ class ChatController(
     @PostMapping("/comment/create/{threadId}")
     fun createComment(
         @PathVariable threadId: Long,
-        @RequestBody content: Content,
+        @RequestBody createChatInput: CreateChatInput,
         @RequestHeader("USER-ID") userId: Long
-    ): GuamResponse =
-        SuccessResponse<Boolean>(
+    ): SuccessResponse<Boolean> =
+        SuccessResponse(
             chatService.createComment(
-                command = CreateComment(threadId = threadId, userId = userId, content = content.value)
+                command = CreateComment(
+                    threadId = threadId,
+                    userId = userId,
+                    content = createChatInput.content,
+                    imageUrls = createChatInput.imageUrls
+                )
             )
         )
 
-    @PutMapping("/comment/{commentId}")
-    fun editComment(
+    @PutMapping("/comment/{commentId}/content")
+    fun editCommentContent(
         @PathVariable commentId: Long,
         @RequestBody content: Content,
         @RequestHeader("USER-ID") userId: Long
     ): SuccessResponse<Boolean> =
         SuccessResponse(
-            chatService.editComment(
-                command = EditComment(commentId = commentId, userId = userId, content = content.value)
+            chatService.editCommentContent(
+                command = EditCommentContent(commentId = commentId, userId = userId, content = content.value)
             )
         )
+
+    @DeleteMapping("/comment/{commentId}/image/{imageId}")
+    fun deleteCommentImage(
+        @PathVariable commentId: Long,
+        @PathVariable imageId: Long,
+        @RequestHeader("USER-ID") userId: Long
+    ): SuccessResponse<Boolean> =
+        SuccessResponse(
+            chatService.deleteCommentImage(
+                command = DeleteCommentImage(imageId = imageId, commentId = commentId, userId = userId)
+            )
+        )
+
 
     @DeleteMapping("/comment/{commentId}")
     fun deleteComment(

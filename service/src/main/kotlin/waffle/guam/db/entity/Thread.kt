@@ -15,7 +15,8 @@ import javax.persistence.Table
 @Table(name = "threads")
 @Entity
 data class ThreadEntity(
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
 
     val projectId: Long,
@@ -23,7 +24,7 @@ data class ThreadEntity(
     @Column(name = "user_id")
     val userId: Long,
 
-    val content: String = "",
+    val content: String?,
 
     val createdAt: LocalDateTime = LocalDateTime.now(),
 

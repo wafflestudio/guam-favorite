@@ -7,11 +7,14 @@ import javax.persistence.Id
 
 @Entity
 data class ImageEntity(
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
-    val id: Long,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long = 0L,
+
     val type: ImageType,
+
     val parentId: Long,
+
     val url: String
 )
 
