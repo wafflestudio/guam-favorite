@@ -12,5 +12,5 @@ interface TaskRepository : JpaRepository<TaskEntity, Long> {
 
     fun countByUserId(userId: Long): Int
 
-    fun countByProjectIdEqualsAndPositionLike(projectId: Long, position: Position): Int
+    fun countByProjectIdAndPosition(projectId: Long, position: Position): Int
 }

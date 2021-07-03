@@ -33,11 +33,18 @@ class ProjectService(
     private val searchEngine: SearchEngine = SearchEngine()
 
     @Transactional
-    fun createProject(command: CreateProject, userId: Long): Project =
-        projectRepository.save(command.toEntity()).let { project ->
+    fun createProject(command: CreateProject, userId: Long): Project {
+
+        if (taskRepository.countByUserId(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
+
+        return projectRepository.save(command.toEntity()).let { project ->
             projectStackRepository.saveAll(
                 command.techStackIds.map { stackInfo ->
-                    ProjectStackEntity(projectId = project.id, techStackId = stackInfo.first, position = stackInfo.second)
+                    ProjectStackEntity(
+                        projectId = project.id,
+                        techStackId = stackInfo.first,
+                        position = stackInfo.second
+                    )
                 }
             )
             taskRepository.save(
@@ -48,6 +55,7 @@ class ProjectService(
             projectViewRepository.findById(projectId).orElseThrow(::DataNotFoundException)
                 .let { Project.of(entity = it, fetchTasks = true) }
         }
+    }
 
     fun getAllProjects(pageable: Pageable): Page<Project> =
         projectViewRepository.findAll(pageable).map { Project.of(it) }
@@ -85,7 +93,7 @@ class ProjectService(
         taskRepository.findByUserIdAndProjectId(id, userId).let {
             if (it.state != State.LEADER) throw NotAllowedException("프로젝트 수정 권한이 없습니다.")
         }.run {
-            projectStackRepository.findByProjectIdEquals(id).map {
+            projectStackRepository.findByProjectId(id).map {
                 projectStackRepository.deleteByProjectIdEqualsAndTechStackIdEquals(id, it.techStackId)
             }.let {
                 projectStackRepository.saveAll(
@@ -128,7 +136,7 @@ class ProjectService(
                     Position.BACKEND -> it!!.backHeadcount
                     Position.FRONTEND -> it!!.frontHeadcount
                 }
-            val currCnt = taskRepository.countByProjectIdEqualsAndPositionLike(id, position)
+            val currCnt = taskRepository.countByProjectIdAndPosition(id, position)
 
             if (currCnt >= headCnt) throw JoinException("해당 포지션에는 남은 정원이 없습니다.")
 
@@ -144,7 +152,7 @@ class ProjectService(
 
     @Transactional
     fun deleteProject(id: Long): Boolean {
-        projectRepository.deleteById(id)
+        projectViewRepository.deleteById(id)
         return true
     }
 }

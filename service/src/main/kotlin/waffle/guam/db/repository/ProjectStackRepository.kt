@@ -5,7 +5,7 @@ import waffle.guam.db.entity.ProjectStackEntity
 
 interface ProjectStackRepository : JpaRepository<ProjectStackEntity, Long> {
 
-    fun findByProjectIdEquals(
+    fun findByProjectId(
         id: Long
     ): List<ProjectStackEntity>
 
