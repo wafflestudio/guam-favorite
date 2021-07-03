@@ -10,6 +10,7 @@ data class ThreadOverView(
     val creatorNickname: String,
     val creatorImageUrl: String?,
     val commentSize: Long,
+    val images: List<Image>,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime
 ) {
@@ -34,6 +35,7 @@ data class ThreadDetail(
     val creatorId: Long,
     val creatorNickname: String,
     val creatorImageUrl: String?,
+    val images: List<Image>,
     val comments: List<Comment>,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime

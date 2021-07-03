@@ -45,6 +45,9 @@ data class ThreadView(
     @OneToMany(mappedBy = "threadId", fetch = FetchType.EAGER)
     val comments: List<CommentView>,
 
+    @OneToMany(mappedBy = "parentId", fetch = FetchType.EAGER)
+    val images: List<ImageEntity>,
+
     val content: String,
 
     val createdAt: LocalDateTime,

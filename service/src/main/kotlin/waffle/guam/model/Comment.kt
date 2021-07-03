@@ -10,6 +10,7 @@ data class Comment(
     val creatorId: Long,
     val creatorNickname: String,
     val creatorImageUrl: String?,
+    val images: List<Image>,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime
 ) {
