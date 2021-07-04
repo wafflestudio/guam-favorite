@@ -48,7 +48,7 @@ class ProjectService(
                 }
             )
             taskRepository.save(
-                TaskEntity(projectId = project.id, userId = userId, position = Position.UNKNOWN, state = State.LEADER)
+                TaskEntity(projectId = project.id, userId = userId, position = Position.WHATEVER, state = State.LEADER)
             )
             project.id
         }.let { projectId ->
@@ -131,7 +131,7 @@ class ProjectService(
 
             val headCnt =
                 when (position) {
-                    Position.UNKNOWN -> throw JoinException("포지션을 입력해주세요.")
+                    Position.WHATEVER -> throw JoinException("포지션을 입력해주세요.")
                     Position.DESIGNER -> it!!.designerHeadcount
                     Position.BACKEND -> it!!.backHeadcount
                     Position.FRONTEND -> it!!.frontHeadcount

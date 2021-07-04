@@ -5,6 +5,7 @@ import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.TechStackEntity
 import waffle.guam.db.repository.StackRepository
 import waffle.guam.model.TechStack
+import javax.annotation.PostConstruct
 import javax.persistence.EntityNotFoundException
 
 @Service
@@ -14,17 +15,17 @@ class StackService(
 
     private val searchEngine: SearchEngine = SearchEngine()
 
+    @PostConstruct
     fun init() {
         val stream = this.javaClass.getResourceAsStream("/stacks.csv")
         val reader = java.io.InputStreamReader(stream)
         reader.forEachLine {
-            val idx = it.indexOf(",")
-            val p = Position.values().random()
+            val idx = it.split(";")
             stackRepository.save(
                 TechStackEntity(
-                    name = it.dropLast(it.length - (idx)),
-                    aliases = (it.drop(idx + 2)).dropLast(1),
-                    position = p
+                    name = idx[0],
+                    aliases = (idx[1].drop(1)).dropLast(1),
+                    position = Position.valueOf(idx[2])
                 )
             )
         }
