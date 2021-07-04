@@ -9,8 +9,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 @SpringBootApplication
 class TestApplication
 
-@EntityScan(basePackages = ["waffle.guam.db"])
-@EnableJpaRepositories(basePackages = ["waffle.guam.db"])
-@ComponentScan(basePackages = ["waffle.guam.db"])
+@EntityScan(basePackages = ["waffle.guam"])
+@EnableJpaRepositories(basePackages = ["waffle.guam"])
+@ComponentScan(basePackages = ["waffle.guam"])
 @SpringBootTest
 annotation class DatabaseTest
