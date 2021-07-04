@@ -11,3 +11,7 @@ dependencies {
     runtimeOnly("com.h2database:h2")
 //    implementation("mysql:mysql-connector-java")
 }
+
+dependencies {
+    implementation("org.springframework.cloud:spring-cloud-starter-aws:2.2.1.RELEASE")
+}

@@ -21,7 +21,7 @@ data class Comment(
                 content = e.content,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
-                creatorImageUrl = e.user.imageUrl,
+                creatorImageUrl = e.user.image?.path,
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )
