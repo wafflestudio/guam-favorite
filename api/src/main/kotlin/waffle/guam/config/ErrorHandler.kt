@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import waffle.guam.common.InvalidFirebaseTokenException
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.exception.InvalidRequestException
+import waffle.guam.exception.JoinException
+import waffle.guam.exception.NotAllowedException
 
 @ControllerAdvice
 class ErrorHandler {
@@ -17,6 +19,10 @@ class ErrorHandler {
     @ExceptionHandler(value = [InvalidFirebaseTokenException::class, InvalidRequestException::class])
     fun baeRequest(e: RuntimeException) =
         ResponseEntity(ErrorResponse(e.message ?: ""), HttpStatus.BAD_REQUEST)
+
+    @ExceptionHandler(value = [JoinException::class, NotAllowedException::class])
+    fun notAllowed(e: RuntimeException) =
+        ResponseEntity(ErrorResponse(e.message ?: ""), HttpStatus.FORBIDDEN)
 }
 
 data class ErrorResponse(

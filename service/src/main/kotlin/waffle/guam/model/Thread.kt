@@ -23,7 +23,7 @@ data class ThreadOverView(
                     isEdited = e.createdAt != e.modifiedAt,
                     creatorId = e.user.id,
                     creatorNickname = e.user.nickname,
-                    creatorImageUrl = creatorImage.invoke(e.user.id),
+                    creatorImageUrl = creatorImageUrl = e.user.image?.path,
                     commentSize = countComments.invoke(e.id),
                     images =  threadImages.invoke(e.id),
                     createdAt = e.createdAt,
@@ -55,6 +55,8 @@ data class ThreadDetail(
                 creatorImageUrl = creatorImage.invoke(e.user.id),
                 images =  threadImages.invoke(e.id),
                 comments = comments,
+                // creatorImageUrl = null,
+                // comments = e.comments.map { Comment.of(it) },
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )

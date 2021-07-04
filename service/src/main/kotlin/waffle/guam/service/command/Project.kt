@@ -1,5 +1,7 @@
 package waffle.guam.service.command
 
+import waffle.guam.db.entity.Due
+import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectEntity
 
 sealed class ProjectCommand
@@ -11,7 +13,8 @@ data class CreateProject(
     val frontLeftCnt: Int,
     val backLeftCnt: Int,
     val designLeftCnt: Int,
-    val techStackIds: List<Long>,
+    val techStackIds: List<Pair<Long, Position>>,
+    val due: Due
 ) : ProjectCommand() {
     fun toEntity(): ProjectEntity =
         ProjectEntity(
@@ -21,6 +24,7 @@ data class CreateProject(
             frontHeadcount = frontLeftCnt,
             backHeadcount = backLeftCnt,
             designerHeadcount = designLeftCnt,
-            recruiting = true
+            recruiting = true,
+            due = due
         )
 }

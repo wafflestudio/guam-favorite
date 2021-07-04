@@ -1,5 +1,8 @@
 package waffle.guam.model
 
+import waffle.guam.db.entity.Due
+import waffle.guam.db.entity.Position
+import waffle.guam.db.entity.ProjectEntity
 import waffle.guam.db.entity.ProjectView
 import java.time.LocalDateTime
 
@@ -16,6 +19,7 @@ data class Project(
     val tasks: List<Task>?,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime,
+    val due: Due
 ) {
     companion object {
         fun of(entity: ProjectView, fetchTasks: Boolean = false): Project =
@@ -34,7 +38,9 @@ data class Project(
                     else -> null
                 },
                 createdAt = entity.createdAt,
-                modifiedAt = entity.modifiedAt
+                modifiedAt = entity.modifiedAt,
+                due = entity.due
             )
+
     }
 }

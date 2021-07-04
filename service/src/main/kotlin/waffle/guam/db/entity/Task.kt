@@ -32,6 +32,9 @@ data class TaskEntity(
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
     val modifiedAt: LocalDateTime = createdAt,
+
+    @Enumerated(EnumType.STRING)
+    val state: State
 )
 
 @Table(name = "tasks")
@@ -55,8 +58,15 @@ data class TaskView(
     val createdAt: LocalDateTime,
 
     val modifiedAt: LocalDateTime,
+
+    @Enumerated(EnumType.STRING)
+    val state: State
 )
 
 enum class Position {
     FRONTEND, BACKEND, DESIGNER, UNKNOWN
+}
+
+enum class State {
+    GUEST, MEMBER, LEADER
 }

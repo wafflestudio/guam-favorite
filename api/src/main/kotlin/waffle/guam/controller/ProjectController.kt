@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController
 import waffle.guam.common.UserContext
 import waffle.guam.controller.response.PageableResponse
 import waffle.guam.controller.response.SuccessResponse
+import waffle.guam.db.entity.Due
+import waffle.guam.db.entity.Position
 import waffle.guam.model.Project
 import waffle.guam.service.ProjectService
 import waffle.guam.service.command.CreateProject
@@ -21,7 +23,7 @@ import waffle.guam.service.command.CreateProject
 @RestController
 @RequestMapping
 class ProjectController(
-    private val projectService: ProjectService,
+    private val projectService: ProjectService
 ) {
 
     @PostMapping("/project")
@@ -69,16 +71,36 @@ class ProjectController(
     @ResponseBody
     fun searchProject(
         @RequestParam keyword: String,
+        @RequestParam stackId: Long?,
+        @RequestParam position: Position?,
+        @RequestParam due: Due?
     ): SuccessResponse<List<Project>> =
         SuccessResponse(
-            data = projectService.searchByKeyword(keyword)
+            data = projectService.search(keyword, due, stackId, position)
         )
 
     @PutMapping("/project/{id}")
     @ResponseBody
-    fun updateProject(): Project {
-        TODO("Update는 언제?")
-    }
+    fun updateProject(
+        @PathVariable id: Long,
+        @RequestBody createProject: CreateProject,
+        userContext: UserContext
+    ): SuccessResponse<Project> =
+        SuccessResponse(
+            data = projectService.updateProject(id = id, command = createProject, userId = userContext.id)
+        )
+
+    @PostMapping("/project/{id}")
+    @ResponseBody
+    fun joinProject(
+        @PathVariable id: Long,
+        @RequestParam position: Position,
+        @RequestParam introduction: String,
+        userContext: UserContext
+    ): SuccessResponse<Boolean> =
+        SuccessResponse(
+            data = projectService.join(id, userContext.id, position, introduction)
+        )
 
     @DeleteMapping("/project/{id}")
     @ResponseBody

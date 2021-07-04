@@ -1,10 +1,13 @@
 package waffle.guam.db.entity
 
 import java.time.Instant
+import javax.persistence.CascadeType
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
+import javax.persistence.JoinColumn
+import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Table(name = "users")
@@ -16,23 +19,25 @@ data class UserEntity(
 
     val firebaseUid: String,
 
-    val status: Status = Status.ACTIVE,
+    var status: Status = Status.ACTIVE,
 
-    val nickname: String = "",
+    var nickname: String = "",
 
-    val imageUrl: String? = null,
+    var skills: String? = null,
 
-    val skills: String? = null,
+    var githubUrl: String? = null,
 
-    val githubUrl: String? = null,
+    var blogUrl: String? = null,
 
-    val blogUrl: String? = null,
+    var introduction: String? = null,
 
-    val introduction: String? = null,
+    @OneToOne(cascade = [CascadeType.ALL], orphanRemoval = true)
+    @JoinColumn(name = "image_id")
+    var image: ImageEntity? = null,
 
     val createdAt: Instant = Instant.now(),
 
-    val updatedAt: Instant = createdAt,
+    var updatedAt: Instant = createdAt,
 )
 
 enum class Status {

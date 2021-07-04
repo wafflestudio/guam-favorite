@@ -24,10 +24,10 @@ data class Comment(
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
-                creatorImageUrl = creatorImage.invoke(e.user.id),
                 images =  commentImages.invoke(e.id),
+                creatorImageUrl = e.user.image?.path,
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )
-        }
+    }
 }

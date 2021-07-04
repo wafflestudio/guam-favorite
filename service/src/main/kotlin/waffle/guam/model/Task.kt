@@ -1,5 +1,6 @@
 package waffle.guam.model
 
+import waffle.guam.db.entity.State
 import waffle.guam.db.entity.TaskView
 import java.time.LocalDateTime
 
@@ -11,6 +12,7 @@ data class Task(
     val user: User,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime,
+    val state: State
 ) {
     companion object {
         fun of(e: TaskView) =
@@ -21,7 +23,8 @@ data class Task(
                 projectId = e.projectId,
                 user = User.of(e.user),
                 createdAt = e.createdAt,
-                modifiedAt = e.modifiedAt
+                modifiedAt = e.modifiedAt,
+                state = e.state
             )
     }
 }
