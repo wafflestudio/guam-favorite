@@ -15,17 +15,17 @@ data class ThreadOverView(
 ) {
     companion object {
         fun of(e: ThreadView, countComments: (Long) -> Long): ThreadOverView =
-                ThreadOverView(
-                    id = e.id,
-                    content = e.content,
-                    creatorId = e.user.id,
-                    creatorNickname = e.user.nickname,
-                    creatorImageUrl = e.user.imageUrl,
-                    commentSize = countComments.invoke(e.id),
-                    createdAt = e.createdAt,
-                    modifiedAt = e.modifiedAt
-                )
-            }
+            ThreadOverView(
+                id = e.id,
+                content = e.content,
+                creatorId = e.user.id,
+                creatorNickname = e.user.nickname,
+                creatorImageUrl = e.user.image?.path,
+                commentSize = countComments.invoke(e.id),
+                createdAt = e.createdAt,
+                modifiedAt = e.modifiedAt
+            )
+    }
 }
 
 data class ThreadDetail(
@@ -45,10 +45,10 @@ data class ThreadDetail(
                 content = e.content,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
-                creatorImageUrl = e.user.imageUrl,
+                creatorImageUrl = null,
                 comments = e.comments.map { Comment.of(it) },
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )
-        }
+    }
 }
