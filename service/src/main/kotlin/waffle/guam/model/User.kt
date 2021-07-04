@@ -24,7 +24,7 @@ data class User(
                 id = e.id,
                 status = e.status.name,
                 nickname = e.nickname,
-                imageUrl = e.imageUrl,
+                imageUrl = e.image?.path,
                 skills = e.skills?.split(",") ?: emptyList(),
                 githubUrl = e.githubUrl,
                 blogUrl = e.blogUrl,

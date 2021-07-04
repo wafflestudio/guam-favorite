@@ -20,7 +20,7 @@ data class ThreadOverView(
                 content = e.content,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
-                creatorImageUrl = e.user.imageUrl,
+                creatorImageUrl = e.user.image?.path,
                 commentSize = countComments.invoke(e.id),
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
@@ -45,7 +45,7 @@ data class ThreadDetail(
                 content = e.content,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
-                creatorImageUrl = e.user.imageUrl,
+                creatorImageUrl = null,
                 comments = e.comments.map { Comment.of(it) },
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt

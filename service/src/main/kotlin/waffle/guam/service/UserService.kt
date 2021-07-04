@@ -2,6 +2,8 @@ package waffle.guam.service
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.multipart.MultipartFile
+import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.UserEntity
 import waffle.guam.db.repository.UserRepository
 import waffle.guam.exception.DataNotFoundException
@@ -11,7 +13,8 @@ import java.time.Instant
 
 @Service
 class UserService(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val imageService: ImageService
 ) {
 
     fun get(id: Long): User =
@@ -26,18 +29,28 @@ class UserService(
     @Transactional
     fun update(command: UpdateUser, userId: Long): User =
         userRepository.findById(userId).orElseThrow(::DataNotFoundException).let {
-            userRepository.save(
-                it.copy(
-                    nickname = command.nickname ?: it.nickname,
-                    imageUrl = command.imageUrl ?: it.imageUrl,
-                    skills = command.skills ?: it.skills,
-                    githubUrl = command.githubUrl ?: it.githubUrl,
-                    blogUrl = command.blogUrl ?: it.blogUrl,
-                    introduction = command.introduction ?: it.introduction,
-                    updatedAt = Instant.now()
-                )
-            ).let { updatedUser ->
-                User.of(updatedUser)
-            }
+            it.nickname = command.nickname ?: it.nickname
+            it.skills = command.skills ?: it.skills
+            it.githubUrl = command.githubUrl ?: it.githubUrl
+            it.blogUrl = command.blogUrl ?: it.blogUrl
+            it.introduction = command.introduction ?: it.introduction
+            it.updatedAt = Instant.now()
+            User.of(it)
+        }
+
+    @Transactional
+    fun updateImage(image: MultipartFile, userId: Long) =
+        userRepository.findById(userId).orElseThrow(::DataNotFoundException).also { userEntity ->
+            userEntity.image = imageService.upload(image, ImageInfo(userId, ImageType.PROFILE))
+        }.let {
+            User.of(it)
+        }
+
+    @Transactional
+    fun deleteImage(userId: Long) =
+        userRepository.findById(userId).orElseThrow(::DataNotFoundException).also { userEntity ->
+            userEntity.image = null
+        }.let {
+            User.of(it)
         }
 }
