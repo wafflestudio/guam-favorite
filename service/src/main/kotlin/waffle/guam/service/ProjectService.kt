@@ -58,7 +58,7 @@ class ProjectService(
     }
 
     fun getAllProjects(pageable: Pageable): Page<Project> =
-        projectViewRepository.findAll(pageable).map { Project.of(it) }
+        projectViewRepository.findAll(pageable).map { Project.of(it, true) }
 
     fun findProject(id: Long): Project =
         projectViewRepository.findById(id).orElseThrow(::DataNotFoundException)
@@ -90,30 +90,30 @@ class ProjectService(
     @Transactional
     fun updateProject(id: Long, command: CreateProject, userId: Long) =
 
-        taskRepository.findByUserIdAndProjectId(id, userId).let {
+        taskRepository.findByUserIdAndProjectId(userId, id).let {
             if (it.state != State.LEADER) throw NotAllowedException("프로젝트 수정 권한이 없습니다.")
         }.run {
             projectStackRepository.findByProjectId(id).map {
-                projectStackRepository.deleteByProjectIdEqualsAndTechStackIdEquals(id, it.techStackId)
-            }.let {
-                projectStackRepository.saveAll(
+                projectStackRepository.deleteByProjectIdAndTechStackId(id, it.techStackId)
+            }
+
+
+            projectStackRepository.saveAll(
                     command.techStackIds.map {
                         ProjectStackEntity(projectId = id, techStackId = it.first, position = it.second)
                     }
                 )
-            }.let {
-                projectRepository.save(
-                    projectRepository.getById(id).copy(
+
+            projectViewRepository.save(
+                    projectViewRepository.getById(id).copy(
                         title = command.title, description = command.description,
                         frontHeadcount = command.frontLeftCnt, backHeadcount = command.backLeftCnt,
                         designerHeadcount = command.designLeftCnt, modifiedAt = LocalDateTime.now()
                     )
-                ).let {
-                    projectViewRepository.getById(id).let {
-                        Project.of(it, true)
-                    }
-                }
+            ).let {
+                    Project.of(it, true)
             }
+
         }
 
     @Transactional

@@ -1,8 +1,6 @@
 package waffle.guam.model
 
 import waffle.guam.db.entity.Due
-import waffle.guam.db.entity.Position
-import waffle.guam.db.entity.ProjectEntity
 import waffle.guam.db.entity.ProjectView
 import java.time.LocalDateTime
 
@@ -41,6 +39,5 @@ data class Project(
                 modifiedAt = entity.modifiedAt,
                 due = entity.due
             )
-
     }
 }

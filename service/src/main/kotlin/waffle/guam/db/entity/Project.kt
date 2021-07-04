@@ -1,7 +1,5 @@
 package waffle.guam.db.entity
 
-import org.hibernate.annotations.Cascade
-import org.hibernate.annotations.CascadeType
 import java.time.LocalDateTime
 import javax.persistence.Entity
 import javax.persistence.EnumType
@@ -67,7 +65,7 @@ data class ProjectView(
 
     val modifiedAt: LocalDateTime,
 
-    @OneToMany(mappedBy = "projectId", fetch = FetchType.EAGER, orphanRemoval = true )
+    @OneToMany(mappedBy = "projectId", fetch = FetchType.EAGER, orphanRemoval = true)
     val techStacks: Set<ProjectStackView>,
 
     @OneToMany(mappedBy = "projectId", fetch = FetchType.LAZY, orphanRemoval = true)

@@ -1,6 +1,7 @@
 package waffle.guam.service
 
 import org.springframework.stereotype.Service
+import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.TechStackEntity
 import waffle.guam.db.repository.StackRepository
 import waffle.guam.model.TechStack
@@ -18,10 +19,12 @@ class StackService(
         val reader = java.io.InputStreamReader(stream)
         reader.forEachLine {
             val idx = it.indexOf(",")
+            val p = Position.values().random()
             stackRepository.save(
                 TechStackEntity(
                     name = it.dropLast(it.length - (idx)),
-                    aliases = (it.drop(idx + 2)).dropLast(1)
+                    aliases = (it.drop(idx + 2)).dropLast(1),
+                    position = p
                 )
             )
         }
