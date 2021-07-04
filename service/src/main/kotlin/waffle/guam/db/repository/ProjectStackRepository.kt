@@ -9,7 +9,7 @@ interface ProjectStackRepository : JpaRepository<ProjectStackEntity, Long> {
         id: Long
     ): List<ProjectStackEntity>
 
-    fun deleteByProjectIdEqualsAndTechStackIdEquals(
+    fun deleteByProjectIdAndTechStackId(
         id: Long,
         techStackId: Long
     )
