@@ -23,7 +23,14 @@ import waffle.guam.exception.InvalidRequestException
 import waffle.guam.model.ThreadDetail
 import waffle.guam.model.ThreadOverView
 import waffle.guam.service.ChatService
-import waffle.guam.service.command.*
+import waffle.guam.service.command.CreateThread
+import waffle.guam.service.command.CreateComment
+import waffle.guam.service.command.DeleteThreadImage
+import waffle.guam.service.command.EditThreadContent
+import waffle.guam.service.command.DeleteThread
+import waffle.guam.service.command.EditCommentContent
+import waffle.guam.service.command.DeleteCommentImage
+import waffle.guam.service.command.DeleteComment
 import java.util.Optional
 
 @DatabaseTest
@@ -43,13 +50,12 @@ class ChatServiceSpec @Autowired constructor(
         imageRepository = imageRepository
     )
 
-
     @BeforeEach
     fun clearDatabase() {
         database.cleanUp()
     }
 
-    @DisplayName("projectId에 해당하는 프로젝트에 달린 쓰레드들을 찾아준다")
+    @DisplayName("projectId에 해당하는 프로젝트에 달린 쓰레드들을 조회할 수 있다")
     @Transactional
     @Test
     fun getThreadsOK() {
@@ -57,15 +63,15 @@ class ChatServiceSpec @Autowired constructor(
         val project = database.getProject()
         for (i in 0 until 15) {
             chatService.createThread(
-                command = DefaultCommand.CreateThread.copy(content = "Thread Number $i")
+                command = DefaultCommand.CreateThread.copy(content = "Thread Number $i", imageUrls = listOf("Thread $i imageUrl1", "Thread $i imageUrl2", "Thread $i imageUrl3"))
             )
         }
         for (i in 0 until 5) {
             chatService.createComment(
-                command = DefaultCommand.CreateComment.copy(threadId = 1, content = "Comment Number $i")
+                command = DefaultCommand.CreateComment.copy(threadId = 1, content = "Comment Number $i", imageUrls = listOf("Thread 1 Comment $i imageUrl1", "Thread 1 Comment $i imageUrl2", "Thread 1 Comment $i imageUrl3"))
             )
             chatService.createComment(
-                command = DefaultCommand.CreateComment.copy(threadId = 2, content = "Comment Number $i")
+                command = DefaultCommand.CreateComment.copy(threadId = 2, content = "Comment Number $i", imageUrls = listOf())
             )
         }
         val result: Page<ThreadOverView> = chatService.getThreads(
@@ -75,6 +81,7 @@ class ChatServiceSpec @Autowired constructor(
                 10,
             )
         )
+
         result.content.size shouldBe 10
         result.content[0].content shouldBe "Thread Number 0"
         result.content[0].commentSize shouldBe 5
@@ -83,6 +90,51 @@ class ChatServiceSpec @Autowired constructor(
         result.pageable.offset shouldBe 0
         result.totalElements shouldBe 15
     }
+
+    @DisplayName("projectId, page, size 정보에 해당되는 쓰레드들의 세부 정보를 조회할 수 있다")
+    @Transactional
+    @Test
+    fun getThreadsDetailsOK() {
+
+        // 프로젝트 1개
+        // 사용자 2명 - 프사O vs 프사X
+        // 쓰레드 15개 - 댓글O vs 댓글X
+        // 댓글 5개
+
+//        database.getUser()
+//        database.getUserProfiles()
+//        val project = database.getProject()
+//        for (i in 0 until 15) {
+//            chatService.createThread(
+//                command = DefaultCommand.CreateThread.copy(content = "Thread Number $i", imageUrls = listOf("Thread $i imageUrl1", "Thread $i imageUrl2", "Thread $i imageUrl3"))
+//            )
+//        }
+//        for (i in 0 until 5) {
+//            chatService.createComment(
+//                command = DefaultCommand.CreateComment.copy(threadId = 1, content = "Comment Number $i", imageUrls = listOf("Thread 1 Comment $i imageUrl1", "Thread 1 Comment $i imageUrl2", "Thread 1 Comment $i imageUrl3"))
+//            )
+//            chatService.createComment(
+//                command = DefaultCommand.CreateComment.copy(threadId = 2, content = "Comment Number $i", imageUrls = listOf())
+//            )
+//        }
+//        val result: Page<ThreadOverView> = chatService.getThreads(
+//            projectId = project.id,
+//            pageable = PageRequest.of(
+//                0,
+//                10,
+//            )
+//        )
+//        println(result.content)
+//
+//        result.content.size shouldBe 10
+//        result.content[0].content shouldBe "Thread Number 0"
+//        result.content[0].commentSize shouldBe 5
+//        result.content[5].content shouldBe "Thread Number 5"
+//        result.content[5].commentSize shouldBe 0
+//        result.pageable.offset shouldBe 0
+//        result.totalElements shouldBe 15
+    }
+
 
     @DisplayName("page와 size에 해당되는 범위에 쓰레드가 없어도 예외는 발생하지 않는다")
     @Transactional
@@ -166,10 +218,10 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("projectId에 해당하는 프로젝트에 쓰레드를 생성한다")
+    @DisplayName("projectId에 해당하는 프로젝트에 content 정보로 쓰레드를 생성한다")
     @Transactional
     @Test
-    fun createdThreadOK() {
+    fun createdThreadWithContentOK() {
         val user = database.getUser()
         val project = database.getProject()
 
@@ -183,6 +235,29 @@ class ChatServiceSpec @Autowired constructor(
         createdThread.projectId shouldBe project.id
         createdThread.userId shouldBe user.id
         createdThread.content shouldBe "New Thread"
+    }
+
+    @DisplayName("projectId에 해당하는 프로젝트에 imageUrl 배열 정보로 쓰레드를 생성한다")
+    @Transactional
+    @Test
+    fun createdThreadWithImageUrlsOK() {
+    }
+
+    @DisplayName("projectId에 해당하는 프로젝트에 content와 imageUrl 배열 정보로 쓰레드를 생성한다")
+    @Transactional
+    @Test
+    fun createdThreadWithContentAndImageUrlsOK() {
+    }
+
+    @DisplayName("쓰레드 생성시 content와 imageUrl 배열 정보가 null이라면 예외가 발생한다")
+    @Transactional
+    @Test
+    fun createdThreadNullInputException() {
+        shouldThrowExactly<InvalidRequestException> {
+            chatService.createThread(
+                command = DefaultCommand.CreateThread.copy(content = null, imageUrls = null)
+            )
+        }
     }
 
     @DisplayName("projectId에 해당하는 프로젝트가 없다면 예외가 발생한다")
@@ -208,7 +283,7 @@ class ChatServiceSpec @Autowired constructor(
         val createdThread = threadRepository.findById(1).get().copy()
 
         val result = chatService.editThreadContent(
-            command = DefaultCommand.EditThread.copy(
+            command = DefaultCommand.EditThreadContent.copy(
                 threadId = 1,
                 userId = user.id,
             )
@@ -227,7 +302,7 @@ class ChatServiceSpec @Autowired constructor(
     fun editThreadThreadIdNotFoundException() {
         shouldThrowExactly<DataNotFoundException> {
             chatService.editThreadContent(
-                command = DefaultCommand.EditThread.copy(
+                command = DefaultCommand.EditThreadContent.copy(
                     threadId = 999999,
                 )
             )
@@ -245,7 +320,7 @@ class ChatServiceSpec @Autowired constructor(
         )
         shouldThrowExactly<InvalidRequestException> {
             chatService.editThreadContent(
-                command = DefaultCommand.EditThread.copy(
+                command = DefaultCommand.EditThreadContent.copy(
                     userId = 999999,
                 )
             )
@@ -267,10 +342,36 @@ class ChatServiceSpec @Autowired constructor(
         )
         shouldThrowExactly<InvalidRequestException> {
             chatService.editThreadContent(
-                command = DefaultCommand.EditThread.copy(
+                command = DefaultCommand.EditThreadContent.copy(
                     content = "The Same Content"
                 )
             )
+        }
+    }
+
+    @DisplayName("threadId에 해당하는 쓰레드의 작성자는 imageId에 해당하는 이미지를 쓰레드에서 삭제할 수 있다.")
+    @Transactional
+    @Test
+    fun deleteThreadImageOK() {
+        val user = database.getUser()
+        database.getProject()
+        val thread = database.getThread()
+        val prevDBImages = database.getImages()
+        val prevThreadImages = imageRepository.findByParentIdAndType(thread.id, ImageType.THREAD)
+        chatService.deleteThreadImage(
+            command = DefaultCommand.DeleteThreadImage.copy(
+                imageId = prevThreadImages[0].id,
+                threadId = thread.id,
+                userId = user.id
+            )
+        )
+        val remainingDBImages = imageRepository.findAll()
+        val remainingThreadImages = imageRepository.findByParentIdAndType(thread.id, ImageType.THREAD)
+
+        remainingDBImages.size shouldBe prevDBImages.size - 1
+        remainingThreadImages.size shouldBe prevThreadImages.size - 1
+        for(image in remainingThreadImages){
+            image.id shouldNotBe prevThreadImages[0].id
         }
     }
 
@@ -361,10 +462,10 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("threadId에 해당하는 쓰레드에 댓글을 생성한다.")
+    @DisplayName("threadId에 해당하는 쓰레드에 content 정보로 댓글을 생성한다.")
     @Transactional
     @Test
-    fun createCommentOK() {
+    fun createCommentWithContentOK() {
         val user = database.getUser()
         val thread = database.getThread()
         val result = chatService.createComment(
@@ -390,7 +491,6 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-
     @DisplayName("commentId에 해당하는 댓글의 작성자는 댓글을 수정할 수 있다.")
     @Transactional
     @Test
@@ -402,7 +502,7 @@ class ChatServiceSpec @Autowired constructor(
         )
         val createdComment = commentRepository.findById(1).get().copy()
         val result = chatService.editCommentContent(
-            command = DefaultCommand.EditComment.copy(
+            command = DefaultCommand.EditCommentContent.copy(
                 commentId = 1,
                 userId = user.id,
             )
@@ -421,7 +521,7 @@ class ChatServiceSpec @Autowired constructor(
     fun editCommentCommentNotFoundException() {
         shouldThrowExactly<DataNotFoundException> {
             chatService.editCommentContent(
-                command = DefaultCommand.EditComment.copy(
+                command = DefaultCommand.EditCommentContent.copy(
                     commentId = 999999,
                 )
             )
@@ -439,7 +539,7 @@ class ChatServiceSpec @Autowired constructor(
         )
         shouldThrowExactly<InvalidRequestException> {
             chatService.editCommentContent(
-                command = DefaultCommand.EditComment.copy(
+                command = DefaultCommand.EditCommentContent.copy(
                     commentId = 1,
                     userId = 9999999999,
                 )
@@ -462,12 +562,39 @@ class ChatServiceSpec @Autowired constructor(
         )
         shouldThrowExactly<InvalidRequestException> {
             chatService.editCommentContent(
-                command = DefaultCommand.EditComment.copy(
+                command = DefaultCommand.EditCommentContent.copy(
                     commentId = 1,
                     userId = user.id,
                     content = "The Same Content"
                 )
             )
+        }
+    }
+
+    @DisplayName("commentId에 해당하는 댓글의 작성자는 imageId에 해당하는 이미지를 댓글에서 삭제할 수 있다.")
+    @Transactional
+    @Test
+    fun deleteCommentImageOK() {
+        val user = database.getUser()
+        val thread = database.getThread()
+        chatService.createComment(command = DefaultCommand.CreateComment.copy(threadId = thread.id, userId = user.id))
+        val comment = commentRepository.findById(1).get().copy()
+        val prevDBImages = database.getImages()
+        val prevCommentImages = imageRepository.findByParentIdAndType(comment.id, ImageType.COMMENT)
+        chatService.deleteCommentImage(
+            command = DefaultCommand.DeleteCommentImage.copy(
+                imageId = prevCommentImages[0].id,
+                commentId = comment.id,
+                userId = user.id
+            )
+        )
+        val remainingDBImages = imageRepository.findAll()
+        val remainingCommentImages = imageRepository.findByParentIdAndType(comment.id, ImageType.COMMENT)
+
+        remainingDBImages.size shouldBe prevDBImages.size - 1
+        remainingCommentImages.size shouldBe prevCommentImages.size - 1
+        for(image in remainingCommentImages){
+            image.id shouldNotBe prevCommentImages[0].id
         }
     }
 
@@ -529,7 +656,7 @@ object DefaultCommand {
         content = "New Thread",
         imageUrls = listOf("imageUrl1", "imageUrl2", "imageUrl3")
     )
-    val EditThread = EditThreadContent(
+    val EditThreadContent = EditThreadContent(
         threadId = 1,
         userId = 1,
         content = "edited Content"
@@ -549,7 +676,7 @@ object DefaultCommand {
         content = "New Comment",
         imageUrls = listOf("imageUrl1", "imageUrl2", "imageUrl3")
     )
-    val EditComment = EditCommentContent(
+    val EditCommentContent = EditCommentContent(
         commentId = 1,
         userId = 1,
         content = "edited Content"

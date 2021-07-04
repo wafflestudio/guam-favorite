@@ -18,7 +18,14 @@ import waffle.guam.model.Comment
 import waffle.guam.model.Image
 import waffle.guam.model.ThreadDetail
 import waffle.guam.model.ThreadOverView
-import waffle.guam.service.command.*
+import waffle.guam.service.command.CreateComment
+import waffle.guam.service.command.DeleteComment
+import waffle.guam.service.command.DeleteThreadImage
+import waffle.guam.service.command.CreateThread
+import waffle.guam.service.command.EditThreadContent
+import waffle.guam.service.command.DeleteThread
+import waffle.guam.service.command.EditCommentContent
+import waffle.guam.service.command.DeleteCommentImage
 import java.time.LocalDateTime
 
 @Service
@@ -36,8 +43,11 @@ class ChatService(
             ThreadOverView.of(
                 it,
                 { creatorId ->
-                    if(!foundUserProfiles.containsKey(creatorId))
-                        foundUserProfiles[creatorId] = imageRepository.findByParentIdAndType(creatorId, ImageType.USER_PROFILE)[0].url
+                    if(!foundUserProfiles.containsKey(creatorId)) {
+                        val creatorProfile: List<ImageEntity> = imageRepository.findByParentIdAndType(creatorId, ImageType.USER_PROFILE)
+                        if (creatorProfile.isNotEmpty())
+                            foundUserProfiles[creatorId] = creatorProfile[0].url
+                    }
                     foundUserProfiles[creatorId]
                 },
                 { threadId -> commentRepository.countByThreadId(threadId) },
@@ -52,15 +62,22 @@ class ChatService(
             ThreadDetail.of(
                 threadView,
                 { creatorId ->
-                    foundUserProfiles[creatorId] = imageRepository.findByParentIdAndType(creatorId, ImageType.USER_PROFILE)[0].url
+                    if(!foundUserProfiles.containsKey(creatorId)) {
+                        val creatorProfile: List<ImageEntity> = imageRepository.findByParentIdAndType(creatorId, ImageType.USER_PROFILE)
+                        if (creatorProfile.isNotEmpty())
+                            foundUserProfiles[creatorId] = creatorProfile[0].url
+                    }
                     foundUserProfiles[creatorId]
                 },
                 { threadId -> imageRepository.findByParentIdAndType(threadId, ImageType.THREAD).map { image -> Image.of(image) } },
                 comments = threadView.comments.map { Comment.of(
                     it,
                     { creatorId ->
-                        if(!foundUserProfiles.containsKey(creatorId))
-                            foundUserProfiles[creatorId] = imageRepository.findByParentIdAndType(creatorId, ImageType.USER_PROFILE)[0].url
+                        if(!foundUserProfiles.containsKey(creatorId)) {
+                            val creatorProfile: List<ImageEntity> = imageRepository.findByParentIdAndType(creatorId, ImageType.USER_PROFILE)
+                            if (creatorProfile.isNotEmpty())
+                                foundUserProfiles[creatorId] = creatorProfile[0].url
+                        }
                         foundUserProfiles[creatorId]
                     },
                     { commentId -> imageRepository.findByParentIdAndType(commentId, ImageType.THREAD).map { image -> Image.of(image) } },
@@ -75,10 +92,11 @@ class ChatService(
         if (command.content == null && command.imageUrls == null) throw InvalidRequestException("입력된 내용이 없습니다.")
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
 
+        val threadId = threadRepository.save(command.toEntity()).id
+
         if (command.imageUrls != null)
             for (imageUrl in command.imageUrls)
-                imageRepository.save(ImageEntity(type = ImageType.THREAD, parentId = command.projectId, url = imageUrl))
-        threadRepository.save(command.toEntity())
+                imageRepository.save(ImageEntity(type = ImageType.THREAD, parentId = threadId, url = imageUrl))
         return true
     }
 
@@ -127,10 +145,11 @@ class ChatService(
         if (command.content == null && command.imageUrls == null) throw InvalidRequestException("입력된 내용이 없습니다.")
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException)
 
+        val commentId = commentRepository.save(command.toEntity()).id
+
         if (command.imageUrls != null)
             for (imageUrl in command.imageUrls)
-                imageRepository.save(ImageEntity(type = ImageType.COMMENT, parentId = command.threadId, url = imageUrl))
-        commentRepository.save(command.toEntity())
+                imageRepository.save(ImageEntity(type = ImageType.COMMENT, parentId = commentId, url = imageUrl))
         return true
     }
 

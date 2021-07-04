@@ -4,15 +4,18 @@ import org.springframework.beans.factory.ListableBeanFactory
 import org.springframework.data.repository.support.Repositories
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import waffle.guam.db.entity.ProjectEntity
-import waffle.guam.db.entity.Status
-import waffle.guam.db.entity.TechStackEntity
-import waffle.guam.db.entity.ThreadEntity
 import waffle.guam.db.entity.UserEntity
-import waffle.guam.db.repository.ProjectRepository
-import waffle.guam.db.repository.StackRepository
-import waffle.guam.db.repository.ThreadRepository
+import waffle.guam.db.entity.ProjectEntity
+import waffle.guam.db.entity.ThreadEntity
+import waffle.guam.db.entity.ImageEntity
+import waffle.guam.db.entity.TechStackEntity
+import waffle.guam.db.entity.Status
+import waffle.guam.db.entity.ImageType
 import waffle.guam.db.repository.UserRepository
+import waffle.guam.db.repository.ProjectRepository
+import waffle.guam.db.repository.ThreadRepository
+import waffle.guam.db.repository.ImageRepository
+import waffle.guam.db.repository.StackRepository
 import javax.persistence.EntityManager
 import javax.persistence.Table
 
@@ -48,6 +51,17 @@ class Database(
         )
     }
 
+    fun getUserProfiles(): List<ImageEntity> {
+        val imageRepository = repositories.getRepositoryFor(ImageEntity::class.java).get() as ImageRepository
+        return imageRepository.findAll().let {
+            if (it.isEmpty()) {
+                imageRepository.saveAll(DefaultDataInfo.userProfiles)
+            } else {
+                it
+            }
+        }
+    }
+
     fun getProject(): ProjectEntity {
         val projectRepository = repositories.getRepositoryFor(ProjectEntity::class.java).get() as ProjectRepository
         return projectRepository.findById(1L).orElse(
@@ -60,6 +74,17 @@ class Database(
         return threadRepository.findById(1L).orElse(
             threadRepository.save(DefaultDataInfo.thread)
         )
+    }
+
+    fun getImages(): List<ImageEntity> {
+        val imageRepository = repositories.getRepositoryFor(ImageEntity::class.java).get() as ImageRepository
+        return imageRepository.findAll().let {
+            if (it.isEmpty()) {
+                imageRepository.saveAll(DefaultDataInfo.images)
+            } else {
+                it
+            }
+        }
     }
 
     fun getTechStacks(): List<TechStackEntity> {
@@ -83,6 +108,11 @@ object DefaultDataInfo {
         skills = "kotlin,python",
     )
 
+    val userProfiles = listOf(
+        ImageEntity(url = "User1 ImageURL", parentId = 1, type = ImageType.USER_PROFILE),
+        ImageEntity(url = "User2 ImageURL", parentId = 2, type = ImageType.USER_PROFILE),
+    )
+
     val project = ProjectEntity(
         title = "Test Project",
         description = "Test Project Description",
@@ -96,7 +126,21 @@ object DefaultDataInfo {
         projectId = 1,
         userId = 1,
         content = "Test Thread Content",
+    )
 
+    val images = listOf(
+        ImageEntity(url = "User1 ImageURL", parentId = 1, type = ImageType.USER_PROFILE),
+        ImageEntity(url = "User2 ImageURL", parentId = 2, type = ImageType.USER_PROFILE),
+        ImageEntity(url = "thread1 ImageURL1", parentId = 1, type = ImageType.THREAD),
+        ImageEntity(url = "thread1 ImageURL2", parentId = 1, type = ImageType.THREAD),
+        ImageEntity(url = "thread1 ImageURL3", parentId = 1, type = ImageType.THREAD),
+        ImageEntity(url = "thread2 ImageURL1", parentId = 2, type = ImageType.THREAD),
+        ImageEntity(url = "thread2 ImageURL2", parentId = 2, type = ImageType.THREAD),
+        ImageEntity(url = "comment1 ImageURL1", parentId = 1, type = ImageType.COMMENT),
+        ImageEntity(url = "comment1 ImageURL2", parentId = 1, type = ImageType.COMMENT),
+        ImageEntity(url = "comment1 ImageURL3", parentId = 1, type = ImageType.COMMENT),
+        ImageEntity(url = "comment2 ImageURL1", parentId = 2, type = ImageType.COMMENT),
+        ImageEntity(url = "comment2 ImageURL2", parentId = 2, type = ImageType.COMMENT),
     )
 
     val techStacks = listOf(
