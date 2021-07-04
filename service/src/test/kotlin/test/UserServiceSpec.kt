@@ -9,16 +9,18 @@ import waffle.guam.DatabaseTest
 import waffle.guam.db.entity.UserEntity
 import waffle.guam.db.repository.UserRepository
 import waffle.guam.exception.DataNotFoundException
+import waffle.guam.service.ImageService
 import waffle.guam.service.UserService
 import waffle.guam.service.command.UpdateUser
 
 @DatabaseTest
 class UserServiceSpec(
     private val userRepository: UserRepository,
+    private val imageService: ImageService,
     private val database: Database
 ) : FeatureSpec() {
 
-    private val userService = UserService(userRepository)
+    private val userService = UserService(userRepository, imageService)
 
     init {
         beforeEach {
@@ -56,7 +58,6 @@ class UserServiceSpec(
                 val result = userService.update(
                     command = UpdateUser(
                         nickname = "jony",
-                        imageUrl = "s.s",
                         skills = "kotlin",
                         githubUrl = "s.s",
                         blogUrl = "s.s",
