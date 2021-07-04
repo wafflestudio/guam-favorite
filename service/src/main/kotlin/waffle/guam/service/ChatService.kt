@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.multipart.MultipartFile
 import waffle.guam.db.entity.CommentEntity
 import waffle.guam.db.entity.ImageEntity
 import waffle.guam.db.entity.ImageType
@@ -34,54 +35,33 @@ class ChatService(
     private val threadViewRepository: ThreadViewRepository,
     private val commentRepository: CommentRepository,
     private val projectRepository: ProjectRepository,
-    private val imageRepository: ImageRepository
+    private val imageRepository: ImageRepository,
+    private val imageService: ImageService
 ) {
-
     fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> {
-        val foundUserProfiles : HashMap<Long, String> = HashMap()
         return threadViewRepository.findByProjectId(projectId, pageable).map {
             ThreadOverView.of(
                 it,
-                { creatorId ->
-                    if(!foundUserProfiles.containsKey(creatorId)) {
-                        val creatorProfile: List<ImageEntity> = imageRepository.findByParentIdAndType(creatorId, ImageType.USER_PROFILE)
-                        if (creatorProfile.isNotEmpty())
-                            foundUserProfiles[creatorId] = creatorProfile[0].url
-                    }
-                    foundUserProfiles[creatorId]
-                },
                 { threadId -> commentRepository.countByThreadId(threadId) },
-                { threadId -> imageRepository.findByParentIdAndType(threadId, ImageType.THREAD).map { image -> Image.of(image) } }
+                { images ->
+                    images.filter { allImage -> allImage.type == ImageType.THREAD }
+                        .map{ threadImage -> Image.of(threadImage) }
+                }
             )
         }
     }
 
     fun getFullThread(threadId: Long): ThreadDetail {
-        val foundUserProfiles : HashMap<Long, String> = HashMap()
-        return threadViewRepository.findById(threadId).orElseThrow(::RuntimeException).let { threadView ->
+        return threadViewRepository.findById(threadId).orElseThrow(::RuntimeException).let {
             ThreadDetail.of(
-                threadView,
-                { creatorId ->
-                    if(!foundUserProfiles.containsKey(creatorId)) {
-                        val creatorProfile: List<ImageEntity> = imageRepository.findByParentIdAndType(creatorId, ImageType.USER_PROFILE)
-                        if (creatorProfile.isNotEmpty())
-                            foundUserProfiles[creatorId] = creatorProfile[0].url
-                    }
-                    foundUserProfiles[creatorId]
+                it,
+                { images ->
+                    images.filter { allImage -> allImage.type == ImageType.THREAD }
+                        .map{ threadImage -> Image.of(threadImage) }
                 },
-                { threadId -> imageRepository.findByParentIdAndType(threadId, ImageType.THREAD).map { image -> Image.of(image) } },
-                comments = threadView.comments.map { Comment.of(
-                    it,
-                    { creatorId ->
-                        if(!foundUserProfiles.containsKey(creatorId)) {
-                            val creatorProfile: List<ImageEntity> = imageRepository.findByParentIdAndType(creatorId, ImageType.USER_PROFILE)
-                            if (creatorProfile.isNotEmpty())
-                                foundUserProfiles[creatorId] = creatorProfile[0].url
-                        }
-                        foundUserProfiles[creatorId]
-                    },
-                    { commentId -> imageRepository.findByParentIdAndType(commentId, ImageType.THREAD).map { image -> Image.of(image) } },
-                    )
+                { images ->
+                    images.filter { allImage -> allImage.type == ImageType.COMMENT }
+                        .map{ commentImage -> Image.of(commentImage) }
                 },
             )
         }
@@ -89,14 +69,12 @@ class ChatService(
 
     @Transactional
     fun createThread(command: CreateThread): Boolean {
-        if (command.content == null && command.imageUrls == null) throw InvalidRequestException("입력된 내용이 없습니다.")
+        if (command.content.isNullOrBlank() && command.imageFiles.isNullOrEmpty()) throw InvalidRequestException("입력된 내용이 없습니다.")
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
-
         val threadId = threadRepository.save(command.toEntity()).id
-
-        if (command.imageUrls != null)
-            for (imageUrl in command.imageUrls)
-                imageRepository.save(ImageEntity(type = ImageType.THREAD, parentId = threadId, url = imageUrl))
+        if (!command.imageFiles.isNullOrEmpty())
+            for (imageFile in command.imageFiles)
+                imageService.upload(imageFile, ImageInfo(threadId, ImageType.THREAD))
         return true
     }
 
@@ -105,51 +83,45 @@ class ChatService(
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) throw InvalidRequestException()
             if (it.content == command.content) throw InvalidRequestException("수정 전과 동일한 내용입니다.")
-
-            threadRepository.save(
-                it.copy(content = command.content, modifiedAt = LocalDateTime.now())
-            )
+            threadRepository.save(it.copy(content = command.content, modifiedAt = LocalDateTime.now()))
         }
         return true
     }
 
     @Transactional
     fun deleteThreadImage(command: DeleteThreadImage): Boolean {
-        val threadCreatorId = threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).userId
-
-        imageRepository.findById(command.imageId).orElseThrow(::DataNotFoundException).let {
-            if (threadCreatorId != command.userId) throw InvalidRequestException()
-            imageRepository.delete(it)
+        imageRepository.findById(command.imageId).orElseThrow(::DataNotFoundException).let { image ->
+            threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).also {
+                if (it.userId != command.userId) throw InvalidRequestException()
+            }
+            imageRepository.delete(image)
         }
         return true
     }
 
     @Transactional
     fun deleteThread(command: DeleteThread): Boolean {
-        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { threadEntity ->
-            if (threadEntity.userId != command.userId) throw InvalidRequestException()
+        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { thread ->
+            if (thread.userId != command.userId) throw InvalidRequestException()
             val childComments: List<CommentEntity> = commentRepository.findByThreadId(command.threadId)
-
             if (childComments.isNotEmpty()) {
                 imageRepository.deleteByParentIdInAndType(childComments.map { it.id }, ImageType.COMMENT)
                 commentRepository.deleteAll(childComments)
             }
-            imageRepository.deleteByParentIdAndType(threadEntity.id, ImageType.THREAD)
-            threadRepository.delete(threadEntity)
+            imageRepository.deleteByParentIdAndType(thread.id, ImageType.THREAD)
+            threadRepository.delete(thread)
         }
         return true
     }
 
     @Transactional
     fun createComment(command: CreateComment): Boolean {
-        if (command.content == null && command.imageUrls == null) throw InvalidRequestException("입력된 내용이 없습니다.")
+        if (command.content.isNullOrBlank() && command.imageFiles.isNullOrEmpty()) throw InvalidRequestException("입력된 내용이 없습니다.")
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException)
-
         val commentId = commentRepository.save(command.toEntity()).id
-
-        if (command.imageUrls != null)
-            for (imageUrl in command.imageUrls)
-                imageRepository.save(ImageEntity(type = ImageType.COMMENT, parentId = commentId, url = imageUrl))
+        if (!command.imageFiles.isNullOrEmpty())
+            for (imageFile in command.imageFiles)
+                imageService.upload(imageFile, ImageInfo(commentId, ImageType.COMMENT))
         return true
     }
 
@@ -158,21 +130,18 @@ class ChatService(
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) throw InvalidRequestException()
             if (it.content == command.content) throw InvalidRequestException("수정 전과 동일한 내용입니다.")
-
-            commentRepository.save(
-                it.copy(content = command.content, modifiedAt = LocalDateTime.now())
-            )
+            commentRepository.save(it.copy(content = command.content, modifiedAt = LocalDateTime.now()))
         }
         return true
     }
 
     @Transactional
     fun deleteCommentImage(command: DeleteCommentImage): Boolean {
-        val commentCreatorId = commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).userId
-
-        imageRepository.findById(command.imageId).orElseThrow(::DataNotFoundException).let {
-            if (commentCreatorId != command.userId) throw InvalidRequestException()
-            imageRepository.delete(it)
+        imageRepository.findById(command.imageId).orElseThrow(::DataNotFoundException).let { image ->
+            commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).also {
+                if (it.userId != command.userId) throw InvalidRequestException()
+            }
+            imageRepository.delete(image)
         }
         return true
     }

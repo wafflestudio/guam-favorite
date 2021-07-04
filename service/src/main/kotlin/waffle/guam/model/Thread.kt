@@ -1,5 +1,6 @@
 package waffle.guam.model
 
+import waffle.guam.db.entity.ImageEntity
 import waffle.guam.db.entity.ThreadView
 import java.time.LocalDateTime
 
@@ -11,21 +12,24 @@ data class ThreadOverView(
     val creatorNickname: String,
     val creatorImageUrl: String?,
     val commentSize: Long,
-    val images: List<Image>,
+    val threadImages: List<Image>,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime
 ) {
     companion object {
-        fun of(e: ThreadView, creatorImage: (Long) -> String?, countComments: (Long) -> Long, threadImages: (Long) -> List<Image>): ThreadOverView =
+        fun of(e: ThreadView,
+               countComments: (Long) -> Long,
+               filterImages: (List<ImageEntity>) -> List<Image>
+        ): ThreadOverView =
                 ThreadOverView(
                     id = e.id,
                     content = e.content,
                     isEdited = e.createdAt != e.modifiedAt,
                     creatorId = e.user.id,
                     creatorNickname = e.user.nickname,
-                    creatorImageUrl = creatorImageUrl = e.user.image?.path,
+                    creatorImageUrl = e.user.image?.path,
                     commentSize = countComments.invoke(e.id),
-                    images =  threadImages.invoke(e.id),
+                    threadImages = filterImages.invoke(e.images),
                     createdAt = e.createdAt,
                     modifiedAt = e.modifiedAt
                 )
@@ -39,24 +43,25 @@ data class ThreadDetail(
     val creatorId: Long,
     val creatorNickname: String,
     val creatorImageUrl: String?,
-    val images: List<Image>,
+    val threadImages: List<Image>,
     val comments: List<Comment>,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime
 ) {
     companion object {
-        fun of(e: ThreadView, creatorImage: (Long) -> String?, threadImages: (Long) -> List<Image>, comments: List<Comment>): ThreadDetail =
+        fun of(e: ThreadView,
+               filterThreadImages: (List<ImageEntity>) -> List<Image>,
+               filterCommentImages: (List<ImageEntity>) -> List<Image>
+        ): ThreadDetail =
             ThreadDetail(
                 id = e.id,
                 content = e.content,
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
-                creatorImageUrl = creatorImage.invoke(e.user.id),
-                images =  threadImages.invoke(e.id),
-                comments = comments,
-                // creatorImageUrl = null,
-                // comments = e.comments.map { Comment.of(it) },
+                creatorImageUrl = e.user.image?.path,
+                threadImages = filterThreadImages.invoke(e.images),
+                comments = e.comments.map { Comment.of(it, filterCommentImages.invoke(it.images),) },
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )

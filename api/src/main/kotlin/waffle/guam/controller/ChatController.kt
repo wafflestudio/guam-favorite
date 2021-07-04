@@ -3,17 +3,10 @@ package waffle.guam.controller
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import waffle.guam.common.UserContext
-import waffle.guam.controller.request.EditChatInput
-import waffle.guam.controller.request.CreateChatInput
+import waffle.guam.controller.request.ContentInput
 import waffle.guam.controller.response.PageableResponse
 import waffle.guam.controller.response.SuccessResponse
 import waffle.guam.model.ThreadDetail
@@ -52,7 +45,8 @@ class ChatController(
     @PostMapping("/thread/create/{projectId}")
     fun createThread(
         @PathVariable projectId: Long,
-        @RequestBody createChatInput: CreateChatInput,
+        @RequestParam("images") imageFiles: List<MultipartFile>?,
+        @RequestBody contentInput: ContentInput?,
         userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
@@ -60,8 +54,8 @@ class ChatController(
                 command = CreateThread(
                     projectId = projectId,
                     userId = userContext.id,
-                    content = createChatInput.content,
-                    imageUrls = createChatInput.imageUrls
+                    content = contentInput?.content,
+                    imageFiles = imageFiles
                 )
             )
         )
@@ -69,12 +63,12 @@ class ChatController(
     @PutMapping("/thread/{threadId}/content")
     fun editThreadContent(
         @PathVariable threadId: Long,
-        @RequestBody editChatInput: EditChatInput,
+        @RequestBody contentInput: ContentInput,
         userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.editThreadContent(
-                command = EditThreadContent(threadId = threadId, userId = userContext.id, content = editChatInput.content)
+                command = EditThreadContent(threadId = threadId, userId = userContext.id, content = contentInput.content)
             )
         )
 
@@ -104,7 +98,8 @@ class ChatController(
     @PostMapping("/comment/create/{threadId}")
     fun createComment(
         @PathVariable threadId: Long,
-        @RequestBody createChatInput: CreateChatInput,
+        @RequestParam("images") imageFiles: List<MultipartFile>?,
+        @RequestBody contentInput: ContentInput?,
         userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
@@ -112,8 +107,8 @@ class ChatController(
                 command = CreateComment(
                     threadId = threadId,
                     userId = userContext.id,
-                    content = createChatInput.content,
-                    imageUrls = createChatInput.imageUrls
+                    content = contentInput?.content,
+                    imageFiles = imageFiles
                 )
             )
         )
@@ -121,12 +116,12 @@ class ChatController(
     @PutMapping("/comment/{commentId}/content")
     fun editCommentContent(
         @PathVariable commentId: Long,
-        @RequestBody editChatInput: EditChatInput,
+        @RequestBody contentInput: ContentInput,
         userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.editCommentContent(
-                command = EditCommentContent(commentId = commentId, userId = userContext.id, content = editChatInput.content)
+                command = EditCommentContent(commentId = commentId, userId = userContext.id, content = contentInput.content)
             )
         )
 

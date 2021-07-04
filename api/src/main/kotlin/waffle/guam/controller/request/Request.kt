@@ -1,10 +1,5 @@
 package waffle.guam.controller.request
 
-data class EditChatInput(
+data class ContentInput(
     val content: String
-)
-
-data class CreateChatInput(
-    val content: String? = null,
-    val imageUrls: List<String>? = null
 )

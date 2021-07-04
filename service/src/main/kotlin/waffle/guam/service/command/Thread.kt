@@ -1,5 +1,6 @@
 package waffle.guam.service.command
 
+import org.springframework.web.multipart.MultipartFile
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.ThreadEntity
 
@@ -9,7 +10,7 @@ data class CreateThread(
     val projectId: Long,
     val userId: Long,
     val content: String?,
-    val imageUrls: List<String>?
+    val imageFiles: List<MultipartFile>?,
 ) : ThreadCommand() {
     fun toEntity() = ThreadEntity(projectId = projectId, userId = userId, content = content)
 }

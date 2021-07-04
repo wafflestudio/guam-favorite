@@ -1,5 +1,6 @@
 package waffle.guam.service.command
 
+import org.springframework.web.multipart.MultipartFile
 import waffle.guam.db.entity.CommentEntity
 import waffle.guam.db.entity.ImageType
 
@@ -9,7 +10,7 @@ data class CreateComment(
     val threadId: Long,
     val userId: Long,
     val content: String?,
-    val imageUrls: List<String>?
+    val imageFiles: List<MultipartFile>?,
 ) : CommentCommand() {
     fun toEntity() = CommentEntity(threadId = threadId, userId = userId, content = content)
 }

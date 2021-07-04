@@ -1,6 +1,7 @@
 package waffle.guam.model
 
 import waffle.guam.db.entity.CommentView
+import waffle.guam.db.entity.ImageEntity
 import java.time.LocalDateTime
 
 data class Comment(
@@ -11,12 +12,12 @@ data class Comment(
     val creatorId: Long,
     val creatorNickname: String,
     val creatorImageUrl: String?,
-    val images: List<Image>,
+    val commentImages: List<Image>,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime
 ) {
     companion object {
-        fun of(e: CommentView, creatorImage: (Long) -> String?, commentImages: (Long) -> List<Image>): Comment =
+        fun of(e: CommentView, filteredImages: List<Image>): Comment =
             Comment(
                 id = e.id,
                 threadId = e.threadId,
@@ -24,8 +25,8 @@ data class Comment(
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
-                images =  commentImages.invoke(e.id),
                 creatorImageUrl = e.user.image?.path,
+                commentImages = filteredImages,
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )
