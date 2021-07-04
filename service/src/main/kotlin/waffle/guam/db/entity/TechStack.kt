@@ -1,6 +1,8 @@
 package waffle.guam.db.entity
 
 import javax.persistence.Entity
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
@@ -17,5 +19,8 @@ data class TechStackEntity(
 
     val aliases: String,
 
-    val thumbnail: String? = null
+    val thumbnail: String? = null,
+
+    @Enumerated(EnumType.STRING)
+    val position: Position
 )
