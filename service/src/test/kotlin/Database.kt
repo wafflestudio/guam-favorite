@@ -10,10 +10,15 @@ import waffle.guam.db.entity.ThreadEntity
 import waffle.guam.db.entity.ImageEntity
 import waffle.guam.db.entity.TechStackEntity
 import waffle.guam.db.entity.Status
+import waffle.guam.db.entity.Due
+import waffle.guam.db.entity.State
+import waffle.guam.db.entity.Position
+import waffle.guam.db.entity.TaskEntity
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.repository.UserRepository
 import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.ThreadRepository
+import waffle.guam.db.repository.TaskRepository
 import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.StackRepository
 import javax.persistence.EntityManager
@@ -24,7 +29,6 @@ class Database(
     private val entityManager: EntityManager,
     beanFactory: ListableBeanFactory
 ) {
-
     private val tableNames: List<String> =
         entityManager.metamodel.entities.mapNotNull { it.javaType.getAnnotation(Table::class.java)?.name }
 
@@ -51,11 +55,11 @@ class Database(
         )
     }
 
-    fun getUserProfiles(): List<ImageEntity> {
-        val imageRepository = repositories.getRepositoryFor(ImageEntity::class.java).get() as ImageRepository
-        return imageRepository.findAll().let {
+    fun getUsers(): List<UserEntity> {
+        val userRepository = repositories.getRepositoryFor(UserEntity::class.java).get() as UserRepository
+        return userRepository.findAll().let {
             if (it.isEmpty()) {
-                imageRepository.saveAll(DefaultDataInfo.userProfiles)
+                userRepository.saveAll(DefaultDataInfo.users)
             } else {
                 it
             }
@@ -69,6 +73,14 @@ class Database(
         )
     }
 
+    fun getTask(): TaskEntity {
+        val taskRepository = repositories.getRepositoryFor(TaskEntity::class.java).get() as TaskRepository
+
+        return taskRepository.findById(1L).orElse(
+            taskRepository.save(DefaultDataInfo.task)
+        )
+    }
+
     fun getThread(): ThreadEntity {
         val threadRepository = repositories.getRepositoryFor(ThreadEntity::class.java).get() as ThreadRepository
         return threadRepository.findById(1L).orElse(
@@ -76,7 +88,7 @@ class Database(
         )
     }
 
-    fun getImages(): List<ImageEntity> {
+    fun getChatImages(): List<ImageEntity> {
         val imageRepository = repositories.getRepositoryFor(ImageEntity::class.java).get() as ImageRepository
         return imageRepository.findAll().let {
             if (it.isEmpty()) {
@@ -108,10 +120,20 @@ object DefaultDataInfo {
         skills = "kotlin,python",
     )
 
-    val userProfiles = listOf(
-        ImageEntity(url = "User1 ImageURL", parentId = 1, type = ImageType.USER_PROFILE),
-        ImageEntity(url = "User2 ImageURL", parentId = 2, type = ImageType.USER_PROFILE),
+    val users = listOf(
+        UserEntity(
+            firebaseUid = "test 1",
+            nickname = "user1 nickname",
+            image=ImageEntity(parentId = 1, type = ImageType.PROFILE)
+        ),
+        UserEntity(
+            firebaseUid = "test 2",
+            nickname = "user2 nickname",
+            image=ImageEntity(parentId = 2, type = ImageType.PROFILE)
+        ),
+        UserEntity(firebaseUid = "test 3", nickname = "user3 nickname"),
     )
+
 
     val project = ProjectEntity(
         title = "Test Project",
@@ -120,6 +142,14 @@ object DefaultDataInfo {
         frontHeadcount = 0,
         backHeadcount = 0,
         designerHeadcount = 0,
+        due = Due.SIX
+    )
+
+    val task = TaskEntity(
+        position = Position.FRONTEND,
+        projectId = 1,
+        userId = 1,
+        state = State.MEMBER
     )
 
     val thread = ThreadEntity(
@@ -129,18 +159,16 @@ object DefaultDataInfo {
     )
 
     val images = listOf(
-        ImageEntity(url = "User1 ImageURL", parentId = 1, type = ImageType.USER_PROFILE),
-        ImageEntity(url = "User2 ImageURL", parentId = 2, type = ImageType.USER_PROFILE),
-        ImageEntity(url = "thread1 ImageURL1", parentId = 1, type = ImageType.THREAD),
-        ImageEntity(url = "thread1 ImageURL2", parentId = 1, type = ImageType.THREAD),
-        ImageEntity(url = "thread1 ImageURL3", parentId = 1, type = ImageType.THREAD),
-        ImageEntity(url = "thread2 ImageURL1", parentId = 2, type = ImageType.THREAD),
-        ImageEntity(url = "thread2 ImageURL2", parentId = 2, type = ImageType.THREAD),
-        ImageEntity(url = "comment1 ImageURL1", parentId = 1, type = ImageType.COMMENT),
-        ImageEntity(url = "comment1 ImageURL2", parentId = 1, type = ImageType.COMMENT),
-        ImageEntity(url = "comment1 ImageURL3", parentId = 1, type = ImageType.COMMENT),
-        ImageEntity(url = "comment2 ImageURL1", parentId = 2, type = ImageType.COMMENT),
-        ImageEntity(url = "comment2 ImageURL2", parentId = 2, type = ImageType.COMMENT),
+        ImageEntity(parentId = 1, type = ImageType.THREAD),
+        ImageEntity(parentId = 1, type = ImageType.THREAD),
+        ImageEntity(parentId = 1, type = ImageType.THREAD),
+        ImageEntity(parentId = 2, type = ImageType.THREAD),
+        ImageEntity(parentId = 2, type = ImageType.THREAD),
+        ImageEntity(parentId = 1, type = ImageType.COMMENT),
+        ImageEntity(parentId = 1, type = ImageType.COMMENT),
+        ImageEntity(parentId = 1, type = ImageType.COMMENT),
+        ImageEntity(parentId = 2, type = ImageType.COMMENT),
+        ImageEntity(parentId = 2, type = ImageType.COMMENT),
     )
 
     val techStacks = listOf(

@@ -42,6 +42,19 @@ class ChatController(
             chatService.getFullThread(threadId)
         )
 
+    @PutMapping("/project/{projectId}/notice/{threadId}")
+    fun setNoticeThread(
+        @PathVariable projectId: Long,
+        @PathVariable threadId: Long,
+        userContext: UserContext
+    ): SuccessResponse<Boolean> =
+        SuccessResponse(
+            chatService.setNoticeThread(
+                command = SetNoticeThread(projectId = projectId, threadId = threadId, userId = userContext.id)
+            )
+        )
+
+
     @PostMapping("/thread/create/{projectId}")
     fun createThread(
         @PathVariable projectId: Long,

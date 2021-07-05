@@ -6,7 +6,6 @@ import java.time.LocalDateTime
 
 data class Comment(
     val id: Long,
-    val threadId: Long,
     val content: String,
     val isEdited: Boolean,
     val creatorId: Long,
@@ -20,7 +19,6 @@ data class Comment(
         fun of(e: CommentView, filteredImages: List<Image>): Comment =
             Comment(
                 id = e.id,
-                threadId = e.threadId,
                 content = e.content,
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.user.id,

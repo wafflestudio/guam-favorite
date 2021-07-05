@@ -90,7 +90,7 @@ class ProjectService(
     @Transactional
     fun updateProject(id: Long, command: CreateProject, userId: Long) =
 
-        taskRepository.findByUserIdAndProjectId(id, userId).let {
+        taskRepository.findByUserIdAndProjectId(id, userId).orElseThrow(::NotAllowedException).let {
             if (it.state != State.LEADER) throw NotAllowedException("프로젝트 수정 권한이 없습니다.")
         }.run {
             projectStackRepository.findByProjectId(id).map {
@@ -144,7 +144,7 @@ class ProjectService(
                 TaskEntity(projectId = id, userId = userId, position = position, state = State.GUEST)
             )
             chatService.createThread(
-                CreateThread(id, userId, introduction)
+                CreateThread(projectId = id, userId = userId, content = introduction, imageFiles = null)
             )
             true
         }

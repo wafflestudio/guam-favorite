@@ -6,6 +6,12 @@ import waffle.guam.db.entity.ThreadEntity
 
 sealed class ThreadCommand
 
+data class SetNoticeThread(
+    val projectId: Long,
+    val threadId: Long,
+    val userId: Long,
+) : ThreadCommand()
+
 data class CreateThread(
     val projectId: Long,
     val userId: Long,

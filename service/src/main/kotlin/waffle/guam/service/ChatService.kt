@@ -4,29 +4,30 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.multipart.MultipartFile
 import waffle.guam.db.entity.CommentEntity
-import waffle.guam.db.entity.ImageEntity
 import waffle.guam.db.entity.ImageType
+import waffle.guam.db.entity.State
 import waffle.guam.db.repository.ThreadRepository
-import waffle.guam.db.repository.ImageRepository
+import waffle.guam.db.repository.ThreadViewRepository
 import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ProjectRepository
-import waffle.guam.db.repository.ThreadViewRepository
+import waffle.guam.db.repository.TaskRepository
+import waffle.guam.db.repository.ImageRepository
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.exception.InvalidRequestException
-import waffle.guam.model.Comment
+import waffle.guam.exception.NotAllowedException
 import waffle.guam.model.Image
 import waffle.guam.model.ThreadDetail
 import waffle.guam.model.ThreadOverView
-import waffle.guam.service.command.CreateComment
-import waffle.guam.service.command.DeleteComment
-import waffle.guam.service.command.DeleteThreadImage
 import waffle.guam.service.command.CreateThread
+import waffle.guam.service.command.DeleteThreadImage
 import waffle.guam.service.command.EditThreadContent
+import waffle.guam.service.command.SetNoticeThread
 import waffle.guam.service.command.DeleteThread
+import waffle.guam.service.command.CreateComment
 import waffle.guam.service.command.EditCommentContent
 import waffle.guam.service.command.DeleteCommentImage
+import waffle.guam.service.command.DeleteComment
 import java.time.LocalDateTime
 
 @Service
@@ -35,6 +36,7 @@ class ChatService(
     private val threadViewRepository: ThreadViewRepository,
     private val commentRepository: CommentRepository,
     private val projectRepository: ProjectRepository,
+    private val taskRepository: TaskRepository,
     private val imageRepository: ImageRepository,
     private val imageService: ImageService
 ) {
@@ -68,6 +70,19 @@ class ChatService(
     }
 
     @Transactional
+    fun setNoticeThread(command: SetNoticeThread): Boolean {
+        projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
+            taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::NotAllowedException).also {
+                if(it.state == State.GUEST) throw NotAllowedException()
+            }
+            threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { thread ->
+                projectRepository.save(project.copy(noticeThreadId = thread.id, modifiedAt = LocalDateTime.now()))
+            }
+        }
+        return true
+    }
+
+    @Transactional
     fun createThread(command: CreateThread): Boolean {
         if (command.content.isNullOrBlank() && command.imageFiles.isNullOrEmpty()) throw InvalidRequestException("입력된 내용이 없습니다.")
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
@@ -81,7 +96,7 @@ class ChatService(
     @Transactional
     fun editThreadContent(command: EditThreadContent): Boolean {
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
-            if (it.userId != command.userId) throw InvalidRequestException()
+            if (it.userId != command.userId) throw NotAllowedException()
             if (it.content == command.content) throw InvalidRequestException("수정 전과 동일한 내용입니다.")
             threadRepository.save(it.copy(content = command.content, modifiedAt = LocalDateTime.now()))
         }
@@ -92,7 +107,7 @@ class ChatService(
     fun deleteThreadImage(command: DeleteThreadImage): Boolean {
         imageRepository.findById(command.imageId).orElseThrow(::DataNotFoundException).let { image ->
             threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).also {
-                if (it.userId != command.userId) throw InvalidRequestException()
+                if (it.userId != command.userId) throw NotAllowedException()
             }
             imageRepository.delete(image)
         }
@@ -102,7 +117,7 @@ class ChatService(
     @Transactional
     fun deleteThread(command: DeleteThread): Boolean {
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { thread ->
-            if (thread.userId != command.userId) throw InvalidRequestException()
+            if (thread.userId != command.userId) throw NotAllowedException()
             val childComments: List<CommentEntity> = commentRepository.findByThreadId(command.threadId)
             if (childComments.isNotEmpty()) {
                 imageRepository.deleteByParentIdInAndType(childComments.map { it.id }, ImageType.COMMENT)
@@ -128,7 +143,7 @@ class ChatService(
     @Transactional
     fun editCommentContent(command: EditCommentContent): Boolean {
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
-            if (it.userId != command.userId) throw InvalidRequestException()
+            if (it.userId != command.userId) throw NotAllowedException()
             if (it.content == command.content) throw InvalidRequestException("수정 전과 동일한 내용입니다.")
             commentRepository.save(it.copy(content = command.content, modifiedAt = LocalDateTime.now()))
         }
@@ -139,7 +154,7 @@ class ChatService(
     fun deleteCommentImage(command: DeleteCommentImage): Boolean {
         imageRepository.findById(command.imageId).orElseThrow(::DataNotFoundException).let { image ->
             commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).also {
-                if (it.userId != command.userId) throw InvalidRequestException()
+                if (it.userId != command.userId) throw NotAllowedException()
             }
             imageRepository.delete(image)
         }
@@ -149,7 +164,7 @@ class ChatService(
     @Transactional
     fun deleteComment(command: DeleteComment): Boolean {
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
-            if (it.userId != command.userId) throw InvalidRequestException()
+            if (it.userId != command.userId) throw NotAllowedException()
             imageRepository.deleteByParentIdAndType(command.commentId, ImageType.COMMENT)
             commentRepository.delete(it)
         }

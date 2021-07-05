@@ -32,6 +32,8 @@ data class ProjectEntity(
 
     val recruiting: Boolean = true,
 
+    val noticeThreadId: Long? = null,
+
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
     val modifiedAt: LocalDateTime = createdAt,

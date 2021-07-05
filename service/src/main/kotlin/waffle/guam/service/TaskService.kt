@@ -7,7 +7,6 @@ import waffle.guam.db.repository.TaskRepository
 class TaskService(
     private val taskRepository: TaskRepository
 ) {
-
     fun getProjectIds(userId: Long): List<Long> =
         taskRepository.findByUserId(userId).map { it.id }
 }
