@@ -13,15 +13,15 @@ import org.springframework.transaction.annotation.Transactional
 import waffle.guam.Database
 import waffle.guam.DatabaseTest
 import waffle.guam.DefaultDataInfo
-import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.ImageEntity
+import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.State
 import waffle.guam.db.repository.CommentRepository
+import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.ProjectRepository
+import waffle.guam.db.repository.TaskRepository
 import waffle.guam.db.repository.ThreadRepository
 import waffle.guam.db.repository.ThreadViewRepository
-import waffle.guam.db.repository.TaskRepository
-import waffle.guam.db.repository.ImageRepository
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.exception.InvalidRequestException
 import waffle.guam.exception.NotAllowedException
@@ -30,15 +30,15 @@ import waffle.guam.model.ThreadDetail
 import waffle.guam.model.ThreadOverView
 import waffle.guam.service.ChatService
 import waffle.guam.service.ImageService
-import waffle.guam.service.command.SetNoticeThread
-import waffle.guam.service.command.CreateThread
 import waffle.guam.service.command.CreateComment
-import waffle.guam.service.command.DeleteThreadImage
-import waffle.guam.service.command.EditThreadContent
-import waffle.guam.service.command.DeleteThread
-import waffle.guam.service.command.EditCommentContent
-import waffle.guam.service.command.DeleteCommentImage
+import waffle.guam.service.command.CreateThread
 import waffle.guam.service.command.DeleteComment
+import waffle.guam.service.command.DeleteCommentImage
+import waffle.guam.service.command.DeleteThread
+import waffle.guam.service.command.DeleteThreadImage
+import waffle.guam.service.command.EditCommentContent
+import waffle.guam.service.command.EditThreadContent
+import waffle.guam.service.command.SetNoticeThread
 import java.util.Optional
 
 @DatabaseTest
@@ -114,15 +114,15 @@ class ChatServiceSpec @Autowired constructor(
         val project = database.getProject()
         for (i in 1 until 16) {
             chatService.createThread(
-                command = DefaultCommand.CreateThread.copy(userId= users[i%3].id, content = "Thread Number $i")
+                command = DefaultCommand.CreateThread.copy(userId = users[i % 3].id, content = "Thread Number $i")
             )
         }
         for (i in 0 until 7) {
             chatService.createComment(
-                command = DefaultCommand.CreateComment.copy(userId= users[i%3].id, threadId = 10, content = "filterImages test")
+                command = DefaultCommand.CreateComment.copy(userId = users[i % 3].id, threadId = 10, content = "filterImages test")
             )
             chatService.createComment(
-                command = DefaultCommand.CreateComment.copy(userId= users[i%3].id, threadId = 11, content = "filterImages test")
+                command = DefaultCommand.CreateComment.copy(userId = users[i % 3].id, threadId = 11, content = "filterImages test")
             )
         }
         imageRepository.saveAll(
@@ -139,11 +139,13 @@ class ChatServiceSpec @Autowired constructor(
                 ImageEntity(parentId = 13, type = ImageType.COMMENT),
             )
         )
-        chatService.editThreadContent(EditThreadContent(
-            threadId= 13,
-            userId= users[13%3].id,
-            content = "Thread Number 13 that has been edited"
-        ))
+        chatService.editThreadContent(
+            EditThreadContent(
+                threadId = 13,
+                userId = users[13 % 3].id,
+                content = "Thread Number 13 that has been edited"
+            )
+        )
         val result: Page<ThreadOverView> = chatService.getThreads(
             projectId = project.id,
             pageable = PageRequest.of(
@@ -152,14 +154,14 @@ class ChatServiceSpec @Autowired constructor(
             )
         )
         val threadImages = imageRepository.findByParentIdAndType(11, ImageType.THREAD)
-        val emptyImageList = imageRepository.findByParentIdAndType(13, ImageType.THREAD).map { Image.of(it)}
+        val emptyImageList = imageRepository.findByParentIdAndType(13, ImageType.THREAD).map { Image.of(it) }
 
         result.content[0].id shouldBe 11
         result.content[0].content shouldBe "Thread Number 11"
         result.content[0].isEdited shouldBe false
         result.content[0].commentSize shouldBe 7
-        result.content[0].creatorId shouldBe users[11%3].id
-        result.content[0].creatorImageUrl shouldBe users[11%3].image?.path
+        result.content[0].creatorId shouldBe users[11 % 3].id
+        result.content[0].creatorImageUrl shouldBe users[11 % 3].image?.path
         result.content[0].threadImages.size shouldBe threadImages.size
         result.content[0].threadImages[0].id shouldBe threadImages[0].id
         result.content[0].threadImages[0].path shouldBe threadImages[0].path
@@ -168,8 +170,8 @@ class ChatServiceSpec @Autowired constructor(
         result.content[2].commentSize shouldBe 0
         result.content[2].isEdited shouldBe true
         result.content[2].commentSize shouldBe 0
-        result.content[2].creatorId shouldBe users[13%3].id
-        result.content[2].creatorImageUrl shouldBe users[13%3].image?.path
+        result.content[2].creatorId shouldBe users[13 % 3].id
+        result.content[2].creatorImageUrl shouldBe users[13 % 3].image?.path
         result.content[2].threadImages.size shouldBe emptyImageList.size
         result.content[2].threadImages shouldBe emptyImageList
 
@@ -260,11 +262,11 @@ class ChatServiceSpec @Autowired constructor(
         val users = database.getUsers()
         database.getProject()
         chatService.createThread(
-            command = DefaultCommand.CreateThread.copy(userId= users[0].id, content = "Thread Number 1")
+            command = DefaultCommand.CreateThread.copy(userId = users[0].id, content = "Thread Number 1")
         )
         for (i in 1 until 16) {
             chatService.createComment(
-                command = DefaultCommand.CreateComment.copy(threadId = 1, content = "Comment Number $i", userId = users[i%3].id)
+                command = DefaultCommand.CreateComment.copy(threadId = 1, content = "Comment Number $i", userId = users[i % 3].id)
             )
         }
         imageRepository.saveAll(
@@ -279,15 +281,16 @@ class ChatServiceSpec @Autowired constructor(
         )
         chatService.editCommentContent(
             command = DefaultCommand.EditCommentContent.copy(
-                commentId= 2,
-                userId= users[2%3].id,
+                commentId = 2,
+                userId = users[2 % 3].id,
                 content = "Comment Number 2 that has been edited"
-            ))
+            )
+        )
         database.flush()
 
         val threadImages = imageRepository.findByParentIdAndType(1, ImageType.THREAD)
         val commentImages = imageRepository.findByParentIdAndType(1, ImageType.COMMENT)
-        val emptyImageList = imageRepository.findByParentIdAndType(2, ImageType.COMMENT).map { Image.of(it)}
+        val emptyImageList = imageRepository.findByParentIdAndType(2, ImageType.COMMENT).map { Image.of(it) }
 
         val result: ThreadDetail = chatService.getFullThread(1)
 
@@ -304,9 +307,9 @@ class ChatServiceSpec @Autowired constructor(
         result.comments[0].id shouldBe 1
         result.comments[0].content shouldBe "Comment Number 1"
         result.comments[0].isEdited shouldBe false
-        result.comments[0].creatorId shouldBe users[1%3].id
-        result.comments[0].creatorNickname shouldBe users[1%3].nickname
-        result.comments[0].creatorImageUrl shouldBe users[1%3].image?.path
+        result.comments[0].creatorId shouldBe users[1 % 3].id
+        result.comments[0].creatorNickname shouldBe users[1 % 3].nickname
+        result.comments[0].creatorImageUrl shouldBe users[1 % 3].image?.path
         result.comments[0].commentImages.size shouldBe commentImages.size
         result.comments[0].commentImages[0].id shouldBe commentImages[0].id
         result.comments[0].commentImages[0].path shouldBe commentImages[0].path
@@ -314,8 +317,8 @@ class ChatServiceSpec @Autowired constructor(
         result.comments[1].id shouldBe 2
         result.comments[1].content shouldBe "Comment Number 2 that has been edited"
         result.comments[1].isEdited shouldBe true
-        result.comments[1].creatorNickname shouldBe users[2%3].nickname
-        result.comments[1].creatorImageUrl shouldBe users[2%3].image?.path
+        result.comments[1].creatorNickname shouldBe users[2 % 3].nickname
+        result.comments[1].creatorImageUrl shouldBe users[2 % 3].image?.path
         result.comments[1].commentImages.size shouldBe emptyImageList.size
         result.comments[1].commentImages shouldBe emptyImageList
     }
@@ -338,11 +341,13 @@ class ChatServiceSpec @Autowired constructor(
         database.getTask()
         val thread = database.getThread()
 
-        val result = chatService.setNoticeThread(DefaultCommand.SetNoticeThread.copy(
-            projectId = prevProject.id,
-            threadId = thread.id,
-            userId = user.id
-        ))
+        val result = chatService.setNoticeThread(
+            DefaultCommand.SetNoticeThread.copy(
+                projectId = prevProject.id,
+                threadId = thread.id,
+                userId = user.id
+            )
+        )
 
         val updatedProject = database.getProject()
 
@@ -370,10 +375,12 @@ class ChatServiceSpec @Autowired constructor(
     fun setNoticeThreadTaskNotFoundException() {
         val users = database.getUsers()
         val project = database.getProject()
-        taskRepository.saveAll(listOf(
-            DefaultDataInfo.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
-            DefaultDataInfo.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
-        ))
+        taskRepository.saveAll(
+            listOf(
+                DefaultDataInfo.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
+                DefaultDataInfo.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
+            )
+        )
         shouldThrowExactly<NotAllowedException> {
             chatService.setNoticeThread(
                 command = DefaultCommand.SetNoticeThread.copy(
@@ -390,11 +397,13 @@ class ChatServiceSpec @Autowired constructor(
     fun setNoticeThreadGuestTaskNotAllowedException() {
         val users = database.getUsers()
         val project = database.getProject()
-        taskRepository.saveAll(listOf(
-            DefaultDataInfo.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
-            DefaultDataInfo.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
-            DefaultDataInfo.task.copy(projectId = project.id, userId = users[2].id, state = State.GUEST),
-        ))
+        taskRepository.saveAll(
+            listOf(
+                DefaultDataInfo.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
+                DefaultDataInfo.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
+                DefaultDataInfo.task.copy(projectId = project.id, userId = users[2].id, state = State.GUEST),
+            )
+        )
         shouldThrowExactly<NotAllowedException> {
             chatService.setNoticeThread(
                 command = DefaultCommand.SetNoticeThread.copy(
@@ -411,11 +420,13 @@ class ChatServiceSpec @Autowired constructor(
     fun setNoticeThreadThreadNotFoundException() {
         val users = database.getUsers()
         val project = database.getProject()
-        taskRepository.saveAll(listOf(
-            DefaultDataInfo.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
-            DefaultDataInfo.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
-            DefaultDataInfo.task.copy(projectId = project.id, userId = users[2].id, state = State.GUEST),
-        ))
+        taskRepository.saveAll(
+            listOf(
+                DefaultDataInfo.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
+                DefaultDataInfo.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
+                DefaultDataInfo.task.copy(projectId = project.id, userId = users[2].id, state = State.GUEST),
+            )
+        )
         shouldThrowExactly<DataNotFoundException> {
             chatService.setNoticeThread(
                 command = DefaultCommand.SetNoticeThread.copy(
@@ -592,7 +603,7 @@ class ChatServiceSpec @Autowired constructor(
 
         remainingDBImages.size shouldBe prevDBImages.size - 1
         remainingThreadImages.size shouldBe prevThreadImages.size - 1
-        for(image in remainingThreadImages){
+        for (image in remainingThreadImages) {
             image.id shouldNotBe prevThreadImages[0].id
         }
     }
@@ -829,7 +840,7 @@ class ChatServiceSpec @Autowired constructor(
 
         remainingDBImages.size shouldBe prevDBImages.size - 1
         remainingCommentImages.size shouldBe prevCommentImages.size - 1
-        for(image in remainingCommentImages){
+        for (image in remainingCommentImages) {
             image.id shouldNotBe prevCommentImages[0].id
         }
     }

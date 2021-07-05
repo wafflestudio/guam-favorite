@@ -17,23 +17,24 @@ data class ThreadOverView(
     val modifiedAt: LocalDateTime
 ) {
     companion object {
-        fun of(e: ThreadView,
-               countComments: (Long) -> Long,
-               filterImages: (List<ImageEntity>) -> List<Image>
+        fun of(
+            e: ThreadView,
+            countComments: (Long) -> Long,
+            filterImages: (List<ImageEntity>) -> List<Image>
         ): ThreadOverView =
-                ThreadOverView(
-                    id = e.id,
-                    content = e.content,
-                    isEdited = e.createdAt != e.modifiedAt,
-                    creatorId = e.user.id,
-                    creatorNickname = e.user.nickname,
-                    creatorImageUrl = e.user.image?.path,
-                    commentSize = countComments.invoke(e.id),
-                    threadImages = filterImages.invoke(e.images),
-                    createdAt = e.createdAt,
-                    modifiedAt = e.modifiedAt
-                )
-            }
+            ThreadOverView(
+                id = e.id,
+                content = e.content,
+                isEdited = e.createdAt != e.modifiedAt,
+                creatorId = e.user.id,
+                creatorNickname = e.user.nickname,
+                creatorImageUrl = e.user.image?.path,
+                commentSize = countComments.invoke(e.id),
+                threadImages = filterImages.invoke(e.images),
+                createdAt = e.createdAt,
+                modifiedAt = e.modifiedAt
+            )
+    }
 }
 
 data class ThreadDetail(
@@ -49,9 +50,10 @@ data class ThreadDetail(
     val modifiedAt: LocalDateTime
 ) {
     companion object {
-        fun of(e: ThreadView,
-               filterThreadImages: (List<ImageEntity>) -> List<Image>,
-               filterCommentImages: (List<ImageEntity>) -> List<Image>
+        fun of(
+            e: ThreadView,
+            filterThreadImages: (List<ImageEntity>) -> List<Image>,
+            filterCommentImages: (List<ImageEntity>) -> List<Image>
         ): ThreadDetail =
             ThreadDetail(
                 id = e.id,

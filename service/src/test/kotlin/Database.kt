@@ -4,23 +4,23 @@ import org.springframework.beans.factory.ListableBeanFactory
 import org.springframework.data.repository.support.Repositories
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
-import waffle.guam.db.entity.UserEntity
-import waffle.guam.db.entity.ProjectEntity
-import waffle.guam.db.entity.ThreadEntity
-import waffle.guam.db.entity.ImageEntity
-import waffle.guam.db.entity.TechStackEntity
-import waffle.guam.db.entity.Status
 import waffle.guam.db.entity.Due
-import waffle.guam.db.entity.State
-import waffle.guam.db.entity.Position
-import waffle.guam.db.entity.TaskEntity
+import waffle.guam.db.entity.ImageEntity
 import waffle.guam.db.entity.ImageType
-import waffle.guam.db.repository.UserRepository
-import waffle.guam.db.repository.ProjectRepository
-import waffle.guam.db.repository.ThreadRepository
-import waffle.guam.db.repository.TaskRepository
+import waffle.guam.db.entity.Position
+import waffle.guam.db.entity.ProjectEntity
+import waffle.guam.db.entity.State
+import waffle.guam.db.entity.Status
+import waffle.guam.db.entity.TaskEntity
+import waffle.guam.db.entity.TechStackEntity
+import waffle.guam.db.entity.ThreadEntity
+import waffle.guam.db.entity.UserEntity
 import waffle.guam.db.repository.ImageRepository
+import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.StackRepository
+import waffle.guam.db.repository.TaskRepository
+import waffle.guam.db.repository.ThreadRepository
+import waffle.guam.db.repository.UserRepository
 import javax.persistence.EntityManager
 import javax.persistence.Table
 
@@ -47,7 +47,6 @@ class Database(
 
         entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY TRUE").executeUpdate()
     }
-
 
     @Transactional
     fun flush() {
@@ -129,16 +128,15 @@ object DefaultDataInfo {
         UserEntity(
             firebaseUid = "test 1",
             nickname = "user1 nickname",
-            image=ImageEntity(parentId = 1, type = ImageType.PROFILE)
+            image = ImageEntity(parentId = 1, type = ImageType.PROFILE)
         ),
         UserEntity(
             firebaseUid = "test 2",
             nickname = "user2 nickname",
-            image=ImageEntity(parentId = 2, type = ImageType.PROFILE)
+            image = ImageEntity(parentId = 2, type = ImageType.PROFILE)
         ),
         UserEntity(firebaseUid = "test 3", nickname = "user3 nickname"),
     )
-
 
     val project = ProjectEntity(
         title = "Test Project",

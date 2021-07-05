@@ -3,7 +3,15 @@ package waffle.guam.controller
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import waffle.guam.common.UserContext
 import waffle.guam.controller.request.ContentInput
@@ -12,7 +20,15 @@ import waffle.guam.controller.response.SuccessResponse
 import waffle.guam.model.ThreadDetail
 import waffle.guam.model.ThreadOverView
 import waffle.guam.service.ChatService
-import waffle.guam.service.command.*
+import waffle.guam.service.command.CreateComment
+import waffle.guam.service.command.CreateThread
+import waffle.guam.service.command.DeleteComment
+import waffle.guam.service.command.DeleteCommentImage
+import waffle.guam.service.command.DeleteThread
+import waffle.guam.service.command.DeleteThreadImage
+import waffle.guam.service.command.EditCommentContent
+import waffle.guam.service.command.EditThreadContent
+import waffle.guam.service.command.SetNoticeThread
 
 @RestController
 @RequestMapping
@@ -53,7 +69,6 @@ class ChatController(
                 command = SetNoticeThread(projectId = projectId, threadId = threadId, userId = userContext.id)
             )
         )
-
 
     @PostMapping("/thread/create/{projectId}")
     fun createThread(

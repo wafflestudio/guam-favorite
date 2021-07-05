@@ -7,27 +7,27 @@ import org.springframework.transaction.annotation.Transactional
 import waffle.guam.db.entity.CommentEntity
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.State
-import waffle.guam.db.repository.ThreadRepository
-import waffle.guam.db.repository.ThreadViewRepository
 import waffle.guam.db.repository.CommentRepository
+import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.TaskRepository
-import waffle.guam.db.repository.ImageRepository
+import waffle.guam.db.repository.ThreadRepository
+import waffle.guam.db.repository.ThreadViewRepository
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.exception.InvalidRequestException
 import waffle.guam.exception.NotAllowedException
 import waffle.guam.model.Image
 import waffle.guam.model.ThreadDetail
 import waffle.guam.model.ThreadOverView
+import waffle.guam.service.command.CreateComment
 import waffle.guam.service.command.CreateThread
+import waffle.guam.service.command.DeleteComment
+import waffle.guam.service.command.DeleteCommentImage
+import waffle.guam.service.command.DeleteThread
 import waffle.guam.service.command.DeleteThreadImage
+import waffle.guam.service.command.EditCommentContent
 import waffle.guam.service.command.EditThreadContent
 import waffle.guam.service.command.SetNoticeThread
-import waffle.guam.service.command.DeleteThread
-import waffle.guam.service.command.CreateComment
-import waffle.guam.service.command.EditCommentContent
-import waffle.guam.service.command.DeleteCommentImage
-import waffle.guam.service.command.DeleteComment
 import java.time.LocalDateTime
 
 @Service
@@ -47,7 +47,7 @@ class ChatService(
                 { threadId -> commentRepository.countByThreadId(threadId) },
                 { images ->
                     images.filter { allImage -> allImage.type == ImageType.THREAD }
-                        .map{ threadImage -> Image.of(threadImage) }
+                        .map { threadImage -> Image.of(threadImage) }
                 }
             )
         }
@@ -59,11 +59,11 @@ class ChatService(
                 it,
                 { images ->
                     images.filter { allImage -> allImage.type == ImageType.THREAD }
-                        .map{ threadImage -> Image.of(threadImage) }
+                        .map { threadImage -> Image.of(threadImage) }
                 },
                 { images ->
                     images.filter { allImage -> allImage.type == ImageType.COMMENT }
-                        .map{ commentImage -> Image.of(commentImage) }
+                        .map { commentImage -> Image.of(commentImage) }
                 },
             )
         }
@@ -73,7 +73,7 @@ class ChatService(
     fun setNoticeThread(command: SetNoticeThread): Boolean {
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
             taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::NotAllowedException).also {
-                if(it.state == State.GUEST) throw NotAllowedException()
+                if (it.state == State.GUEST) throw NotAllowedException()
             }
             threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { thread ->
                 projectRepository.save(project.copy(noticeThreadId = thread.id, modifiedAt = LocalDateTime.now()))

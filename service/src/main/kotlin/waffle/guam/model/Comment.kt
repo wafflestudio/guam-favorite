@@ -1,7 +1,6 @@
 package waffle.guam.model
 
 import waffle.guam.db.entity.CommentView
-import waffle.guam.db.entity.ImageEntity
 import java.time.LocalDateTime
 
 data class Comment(
