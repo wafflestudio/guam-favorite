@@ -19,7 +19,7 @@ data class ProjectStackEntity(
     val id: Long = 0L,
 
     @Enumerated(EnumType.STRING)
-    val position: Position = Position.UNKNOWN,
+    val position: Position = Position.WHATEVER,
 
     val projectId: Long,
 

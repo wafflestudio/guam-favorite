@@ -67,7 +67,7 @@ data class ProjectView(
 
     val modifiedAt: LocalDateTime,
 
-    @OneToMany(mappedBy = "projectId", fetch = FetchType.EAGER, orphanRemoval = true )
+    @OneToMany(mappedBy = "projectId", fetch = FetchType.EAGER, orphanRemoval = true)
     val techStacks: Set<ProjectStackView>,
 
     @OneToMany(mappedBy = "projectId", fetch = FetchType.LAZY, orphanRemoval = true)

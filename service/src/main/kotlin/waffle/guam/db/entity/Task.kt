@@ -64,7 +64,7 @@ data class TaskView(
 )
 
 enum class Position {
-    FRONTEND, BACKEND, DESIGNER, UNKNOWN
+    FRONTEND, BACKEND, DESIGNER, WHATEVER
 }
 
 enum class State {
