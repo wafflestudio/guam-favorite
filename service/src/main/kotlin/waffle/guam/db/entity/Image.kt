@@ -17,7 +17,7 @@ data class ImageEntity(
 
     val parentId: Long
 ) {
-    val path: String = "${type.name}/$id"
+    fun getPath(): String = "${type.name}/$id"
 }
 
 enum class ImageType {

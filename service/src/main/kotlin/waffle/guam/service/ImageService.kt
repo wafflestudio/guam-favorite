@@ -31,19 +31,19 @@ class ImageServiceImpl(
 
     @Transactional
     override fun upload(multipartFile: MultipartFile, imageInfo: ImageInfo): ImageEntity =
-        imageRepository.save(ImageEntity(type = imageInfo.type, parentId = imageInfo.parentId)).also { savedImage ->
-            internalUpLoad(multipartFile, savedImage).let { req ->
+        imageRepository.save(ImageEntity(type = imageInfo.type, parentId = imageInfo.parentId)).also {
+            internalUpLoad(multipartFile, it).let { req ->
                 client.putObject(req.withCannedAcl(CannedAccessControlList.PublicRead))
                 req.file.delete()
             }
         }
 
     private fun internalUpLoad(multipartFile: MultipartFile, imageEntity: ImageEntity): PutObjectRequest =
-        imageLocation.resolve(imageEntity.path).let { filePath ->
+        imageLocation.resolve(imageEntity.getPath()).let { filePath ->
             multipartFile.inputStream.use { inputStream ->
                 Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING)
             }
-            PutObjectRequest(bucketName, imageEntity.path, filePath.toFile())
+            PutObjectRequest(bucketName, imageEntity.getPath(), filePath.toFile())
         }
 }
 

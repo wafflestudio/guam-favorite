@@ -7,6 +7,6 @@ data class Image(
     val path: String
 ) {
     companion object {
-        fun of(e: ImageEntity): Image = Image(id = e.id, path = e.path)
+        fun of(e: ImageEntity): Image = Image(id = e.id, path = e.getPath())
     }
 }

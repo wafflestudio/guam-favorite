@@ -22,7 +22,7 @@ data class Comment(
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
-                creatorImageUrl = e.user.image?.path,
+                creatorImageUrl = e.user.image?.getPath(),
                 commentImages = filteredImages,
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt

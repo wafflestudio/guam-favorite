@@ -3,12 +3,16 @@ package waffle.guam.test
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.mockk.every
+import io.mockk.spyk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
+import org.springframework.http.MediaType
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.Database
 import waffle.guam.DatabaseTest
@@ -29,6 +33,7 @@ import waffle.guam.model.Image
 import waffle.guam.model.ThreadDetail
 import waffle.guam.model.ThreadOverView
 import waffle.guam.service.ChatService
+import waffle.guam.service.ImageInfo
 import waffle.guam.service.ImageService
 import waffle.guam.service.command.CreateComment
 import waffle.guam.service.command.CreateThread
@@ -41,6 +46,9 @@ import waffle.guam.service.command.EditThreadContent
 import waffle.guam.service.command.SetNoticeThread
 import java.util.Optional
 
+
+
+
 @DatabaseTest
 class ChatServiceSpec @Autowired constructor(
     private val threadRepository: ThreadRepository,
@@ -49,10 +57,7 @@ class ChatServiceSpec @Autowired constructor(
     private val projectRepository: ProjectRepository,
     private val taskRepository: TaskRepository,
     private val imageRepository: ImageRepository,
-
-//    @MockK
     private val imageService: ImageService,
-
     private val database: Database
 ) {
     private val chatService = ChatService(
@@ -67,7 +72,8 @@ class ChatServiceSpec @Autowired constructor(
 
     @BeforeEach
     fun clearDatabase() {
-//        MockKAnnotations.init(this)
+//        mockk<ImageService>()
+//        every { imageService.upload() } returns ImageEntity()
         database.cleanUp()
     }
 
@@ -161,17 +167,17 @@ class ChatServiceSpec @Autowired constructor(
         result.content[0].isEdited shouldBe false
         result.content[0].commentSize shouldBe 7
         result.content[0].creatorId shouldBe users[11 % 3].id
-        result.content[0].creatorImageUrl shouldBe users[11 % 3].image?.path
+        result.content[0].creatorImageUrl shouldBe users[11 % 3].image?.getPath()
         result.content[0].threadImages.size shouldBe threadImages.size
         result.content[0].threadImages[0].id shouldBe threadImages[0].id
-        result.content[0].threadImages[0].path shouldBe threadImages[0].path
+        result.content[0].threadImages[0].path shouldBe threadImages[0].getPath()
 
         result.content[2].content shouldBe "Thread Number 13 that has been edited"
         result.content[2].commentSize shouldBe 0
         result.content[2].isEdited shouldBe true
         result.content[2].commentSize shouldBe 0
         result.content[2].creatorId shouldBe users[13 % 3].id
-        result.content[2].creatorImageUrl shouldBe users[13 % 3].image?.path
+        result.content[2].creatorImageUrl shouldBe users[13 % 3].image?.getPath()
         result.content[2].threadImages.size shouldBe emptyImageList.size
         result.content[2].threadImages shouldBe emptyImageList
 
@@ -246,7 +252,7 @@ class ChatServiceSpec @Autowired constructor(
         val result: ThreadDetail = chatService.getFullThread(threadId)
         result.id shouldBe threadId
         result.creatorId shouldBe users[0].id
-        result.creatorImageUrl shouldBe users[0].image?.path
+        result.creatorImageUrl shouldBe users[0].image?.getPath()
         result.creatorNickname shouldBe users[0].nickname
         result.content shouldBe "Thread Number $threadId"
         result.comments[0].content shouldBe "First"
@@ -298,27 +304,27 @@ class ChatServiceSpec @Autowired constructor(
         result.content shouldBe "Thread Number 1"
         result.isEdited shouldBe false
         result.creatorId shouldBe users[0].id
-        result.creatorImageUrl shouldBe users[0].image?.path
+        result.creatorImageUrl shouldBe users[0].image?.getPath()
         result.creatorNickname shouldBe users[0].nickname
         result.threadImages.size shouldBe threadImages.size
         result.threadImages[0].id shouldBe threadImages[0].id
-        result.threadImages[0].path shouldBe threadImages[0].path
+        result.threadImages[0].path shouldBe threadImages[0].getPath()
 
         result.comments[0].id shouldBe 1
         result.comments[0].content shouldBe "Comment Number 1"
         result.comments[0].isEdited shouldBe false
         result.comments[0].creatorId shouldBe users[1 % 3].id
         result.comments[0].creatorNickname shouldBe users[1 % 3].nickname
-        result.comments[0].creatorImageUrl shouldBe users[1 % 3].image?.path
+        result.comments[0].creatorImageUrl shouldBe users[1 % 3].image?.getPath()
         result.comments[0].commentImages.size shouldBe commentImages.size
         result.comments[0].commentImages[0].id shouldBe commentImages[0].id
-        result.comments[0].commentImages[0].path shouldBe commentImages[0].path
+        result.comments[0].commentImages[0].path shouldBe commentImages[0].getPath()
 
         result.comments[1].id shouldBe 2
         result.comments[1].content shouldBe "Comment Number 2 that has been edited"
         result.comments[1].isEdited shouldBe true
         result.comments[1].creatorNickname shouldBe users[2 % 3].nickname
-        result.comments[1].creatorImageUrl shouldBe users[2 % 3].image?.path
+        result.comments[1].creatorImageUrl shouldBe users[2 % 3].image?.getPath()
         result.comments[1].commentImages.size shouldBe emptyImageList.size
         result.comments[1].commentImages shouldBe emptyImageList
     }
@@ -458,11 +464,49 @@ class ChatServiceSpec @Autowired constructor(
     }
 
 // TODO(createThreadWithImagesOK)
-//    @DisplayName("projectId에 해당하는 프로젝트에 imageUrl 배열 정보로 쓰레드를 생성한다")
-//    @Transactional
-//    @Test
-//    fun createThreadWithImagesOK() {
-//    }
+
+    @DisplayName("projectId에 해당하는 프로젝트에 imageUrl 배열 정보로 쓰레드를 생성한다")
+    @Transactional
+    @Test
+    fun createThreadWithImagesOK() {
+
+
+
+//        mockkConstructor(ImageServiceImpl::class)
+//        every { anyConstructed<ImageServiceImpl>().upload() } returns ImageEntity()
+
+
+        val imageService = spyk(imageService)
+//        every {
+//            imageService.upload(DefaultCommand.imageFiles[0], ImageInfo(1, ImageType.THREAD))
+//        } returns imageRepository.save(ImageEntity(parentId = 1, type = ImageType.THREAD))
+
+        for (imageFile in DefaultCommand.imageFiles){
+            every {
+                imageService.upload(imageFile, ImageInfo(1, ImageType.THREAD))
+            } returns imageRepository.save(ImageEntity(parentId = 1, type = ImageType.THREAD))
+        }
+
+        val user = database.getUser()
+        val project = database.getProject()
+
+        val result = chatService.createThread(
+            command = DefaultCommand.CreateThread.copy(
+                projectId = project.id,
+                userId = user.id,
+                content = null,
+                imageFiles = DefaultCommand.imageFiles
+            )
+        )
+        val createdThread = threadRepository.findById(1).get()
+        val createdImages = database.getImages()
+        result shouldBe true
+        createdThread.id shouldBe 1
+        createdThread.projectId shouldBe project.id
+        createdThread.userId shouldBe user.id
+        createdThread.content shouldBe null
+        println(createdImages)
+    }
 
 // TODO(createThreadWithContentAndImagesOK)
 //    @DisplayName("projectId에 해당하는 프로젝트에 content와 imageUrl 배열 정보로 쓰레드를 생성한다")
@@ -488,7 +532,7 @@ class ChatServiceSpec @Autowired constructor(
     fun createThreadEmptyNoInputException() {
         shouldThrowExactly<InvalidRequestException> {
             chatService.createThread(
-                command = DefaultCommand.CreateThread.copy(content = "", imageFiles = listOf())
+                command = DefaultCommand.CreateThread.copy(content = "    ", imageFiles = listOf())
             )
         }
     }
@@ -942,5 +986,11 @@ object DefaultCommand {
     val DeleteComment = DeleteComment(
         commentId = 1,
         userId = 1,
+    )
+
+    val imageFiles = listOf(
+        MockMultipartFile("파일1", "기존 파일명1.png", MediaType.IMAGE_PNG_VALUE, "파일 1 내용".toByteArray()),
+        MockMultipartFile("파일2", "기존 파일명2.png", MediaType.IMAGE_PNG_VALUE, "파일 2 내용".toByteArray()),
+        MockMultipartFile("파일3", "기존 파일명3.png", MediaType.IMAGE_PNG_VALUE, "파일 3 내용".toByteArray())
     )
 }
