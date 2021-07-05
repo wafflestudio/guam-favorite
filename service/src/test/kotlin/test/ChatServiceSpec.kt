@@ -4,7 +4,7 @@ import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.every
-import io.mockk.spyk
+import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -16,10 +16,11 @@ import org.springframework.mock.web.MockMultipartFile
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.Database
 import waffle.guam.DatabaseTest
-import waffle.guam.DefaultDataInfo
 import waffle.guam.db.entity.ImageEntity
 import waffle.guam.db.entity.ImageType
+import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.State
+import waffle.guam.db.entity.TaskEntity
 import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.ProjectRepository
@@ -46,9 +47,6 @@ import waffle.guam.service.command.EditThreadContent
 import waffle.guam.service.command.SetNoticeThread
 import java.util.Optional
 
-
-
-
 @DatabaseTest
 class ChatServiceSpec @Autowired constructor(
     private val threadRepository: ThreadRepository,
@@ -57,10 +55,12 @@ class ChatServiceSpec @Autowired constructor(
     private val projectRepository: ProjectRepository,
     private val taskRepository: TaskRepository,
     private val imageRepository: ImageRepository,
-    private val imageService: ImageService,
     private val database: Database
 ) {
-    private val chatService = ChatService(
+
+    val imageService = mockk<ImageService>()
+
+    val chatService = ChatService(
         threadRepository = threadRepository,
         threadViewRepository = threadViewRepository,
         commentRepository = commentRepository,
@@ -72,8 +72,6 @@ class ChatServiceSpec @Autowired constructor(
 
     @BeforeEach
     fun clearDatabase() {
-//        mockk<ImageService>()
-//        every { imageService.upload() } returns ImageEntity()
         database.cleanUp()
     }
 
@@ -344,7 +342,7 @@ class ChatServiceSpec @Autowired constructor(
     fun setNoticeThreadOK() {
         val user = database.getUser()
         val prevProject = database.getProject().copy()
-        database.getTask()
+        taskRepository.save(DefaultInput.task.copy())
         val thread = database.getThread()
 
         val result = chatService.setNoticeThread(
@@ -354,8 +352,8 @@ class ChatServiceSpec @Autowired constructor(
                 userId = user.id
             )
         )
-
-        val updatedProject = database.getProject()
+        database.flush()
+        val updatedProject = projectRepository.findById(prevProject.id).get()
 
         result shouldBe true
         updatedProject.id shouldBe prevProject.id
@@ -383,8 +381,8 @@ class ChatServiceSpec @Autowired constructor(
         val project = database.getProject()
         taskRepository.saveAll(
             listOf(
-                DefaultDataInfo.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
-                DefaultDataInfo.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
             )
         )
         shouldThrowExactly<NotAllowedException> {
@@ -405,9 +403,9 @@ class ChatServiceSpec @Autowired constructor(
         val project = database.getProject()
         taskRepository.saveAll(
             listOf(
-                DefaultDataInfo.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
-                DefaultDataInfo.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
-                DefaultDataInfo.task.copy(projectId = project.id, userId = users[2].id, state = State.GUEST),
+                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[2].id, state = State.GUEST),
             )
         )
         shouldThrowExactly<NotAllowedException> {
@@ -428,11 +426,12 @@ class ChatServiceSpec @Autowired constructor(
         val project = database.getProject()
         taskRepository.saveAll(
             listOf(
-                DefaultDataInfo.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
-                DefaultDataInfo.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
-                DefaultDataInfo.task.copy(projectId = project.id, userId = users[2].id, state = State.GUEST),
+                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[2].id, state = State.GUEST),
             )
         )
+        database.flush()
         shouldThrowExactly<DataNotFoundException> {
             chatService.setNoticeThread(
                 command = DefaultCommand.SetNoticeThread.copy(
@@ -463,59 +462,84 @@ class ChatServiceSpec @Autowired constructor(
         createdThread.content shouldBe "New Thread"
     }
 
-// TODO(createThreadWithImagesOK)
-
-    @DisplayName("projectId에 해당하는 프로젝트에 imageUrl 배열 정보로 쓰레드를 생성한다")
+    @DisplayName("projectId에 해당하는 프로젝트에 imageFiles 배열 정보로 쓰레드를 생성한다")
     @Transactional
     @Test
     fun createThreadWithImagesOK() {
-
-
-
-//        mockkConstructor(ImageServiceImpl::class)
-//        every { anyConstructed<ImageServiceImpl>().upload() } returns ImageEntity()
-
-
-        val imageService = spyk(imageService)
-//        every {
-//            imageService.upload(DefaultCommand.imageFiles[0], ImageInfo(1, ImageType.THREAD))
-//        } returns imageRepository.save(ImageEntity(parentId = 1, type = ImageType.THREAD))
-
-        for (imageFile in DefaultCommand.imageFiles){
-            every {
-                imageService.upload(imageFile, ImageInfo(1, ImageType.THREAD))
-            } returns imageRepository.save(ImageEntity(parentId = 1, type = ImageType.THREAD))
-        }
-
+        val targetThreadId = 2L
         val user = database.getUser()
         val project = database.getProject()
 
-        val result = chatService.createThread(
-            command = DefaultCommand.CreateThread.copy(
-                projectId = project.id,
-                userId = user.id,
-                content = null,
-                imageFiles = DefaultCommand.imageFiles
+        for (threadId in listOf(1L, 2L, 3L)) {
+            for (imageFile in DefaultInput.imageFiles) {
+                every {
+                    imageService.upload(imageFile, ImageInfo(threadId, ImageType.THREAD))
+                } returns imageRepository.save(ImageEntity(parentId = threadId, type = ImageType.THREAD))
+            }
+        }
+
+        for (i in listOf(1, 2, 3)) {
+            chatService.createThread(
+                command = DefaultCommand.CreateThread.copy(
+                    projectId = project.id,
+                    userId = user.id,
+                    content = null,
+                    imageFiles = DefaultInput.imageFiles
+                )
             )
-        )
-        val createdThread = threadRepository.findById(1).get()
+        }
+        val createdThread = threadRepository.findById(targetThreadId).get()
         val createdImages = database.getImages()
-        result shouldBe true
-        createdThread.id shouldBe 1
+
+        createdThread.id shouldBe targetThreadId
         createdThread.projectId shouldBe project.id
         createdThread.userId shouldBe user.id
         createdThread.content shouldBe null
-        println(createdImages)
+        createdImages.size shouldBe 9
+        createdImages[3].id shouldBe 4
+        createdImages[3].type shouldBe ImageType.THREAD
+        createdImages[3].parentId shouldBe targetThreadId
     }
 
-// TODO(createThreadWithContentAndImagesOK)
-//    @DisplayName("projectId에 해당하는 프로젝트에 content와 imageUrl 배열 정보로 쓰레드를 생성한다")
-//    @Transactional
-//    @Test
-//    fun createThreadWithContentAndImagesOK() {
-//    }
+    @DisplayName("projectId에 해당하는 프로젝트에 content와 imageFiles 배열 정보로 쓰레드를 생성한다")
+    @Transactional
+    @Test
+    fun createThreadWithContentAndImagesOK() {
+        val targetThreadId = 3L
+        val user = database.getUser()
+        val project = database.getProject()
 
-    @DisplayName("쓰레드 생성시 content와 imageUrl 배열 정보가 null이라면 예외가 발생한다")
+        for (threadId in listOf(1L, 2L, 3L)) {
+            for (imageFile in DefaultInput.imageFiles) {
+                every {
+                    imageService.upload(imageFile, ImageInfo(threadId, ImageType.THREAD))
+                } returns imageRepository.save(ImageEntity(parentId = threadId, type = ImageType.THREAD))
+            }
+        }
+        for (i in listOf(1, 2, 3)) {
+            chatService.createThread(
+                command = DefaultCommand.CreateThread.copy(
+                    projectId = project.id,
+                    userId = user.id,
+                    content = "Content for Comment $i",
+                    imageFiles = DefaultInput.imageFiles
+                )
+            )
+        }
+        val createdThread = threadRepository.findById(targetThreadId).get()
+        val createdImages = database.getImages()
+
+        createdThread.id shouldBe targetThreadId
+        createdThread.projectId shouldBe project.id
+        createdThread.userId shouldBe user.id
+        createdThread.content shouldBe "Content for Comment 3"
+        createdImages.size shouldBe 9
+        createdImages[6].id shouldBe 7
+        createdImages[6].type shouldBe ImageType.THREAD
+        createdImages[6].parentId shouldBe targetThreadId
+    }
+
+    @DisplayName("쓰레드 생성시 content와 imageFiles 배열 정보가 null이라면 예외가 발생한다")
     @Transactional
     @Test
     fun createThreadNullInputException() {
@@ -526,7 +550,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("쓰레드 생성시 content와 imageUrl 배열 정보가 비어있다면 예외가 발생한다")
+    @DisplayName("쓰레드 생성시 content와 imageFiles 배열 정보가 비어있다면 예외가 발생한다")
     @Transactional
     @Test
     fun createThreadEmptyNoInputException() {
@@ -757,19 +781,85 @@ class ChatServiceSpec @Autowired constructor(
         createdComment.content shouldBe "New Comment"
     }
 
-// TODO(createCommentWithImagesOK)
-//    @DisplayName("projectId에 해당하는 프로젝트에 imageUrl 배열 정보로 댓글을 생성한다")
-//    @Transactional
-//    @Test
-//    fun createThreadWithImagesOK() {
-//    }
+    @DisplayName("projectId에 해당하는 프로젝트에 imageFiles 배열 정보로 댓글을 생성한다")
+    @Transactional
+    @Test
+    fun createCommentWithImagesOK() {
+        val targetCommentId = 2L
+        val user = database.getUser()
+        database.getProject()
+        val thread = database.getThread()
 
-// TODO(createCommentWithContentAndImagesOK)
-//    @DisplayName("projectId에 해당하는 프로젝트에 content와 imageUrl 배열 정보로 댓글을 생성한다")
-//    @Transactional
-//    @Test
-//    fun createThreadWithContentAndImagesOK() {
-//    }
+        for (commentId in listOf(1L, 2L, 3L)) {
+            for (imageFile in DefaultInput.imageFiles) {
+                every {
+                    imageService.upload(imageFile, ImageInfo(commentId, ImageType.COMMENT))
+                } returns imageRepository.save(ImageEntity(parentId = commentId, type = ImageType.COMMENT))
+            }
+        }
+
+        for (i in listOf(1, 2, 3)) {
+            chatService.createComment(
+                command = DefaultCommand.CreateComment.copy(
+                    threadId = thread.id,
+                    userId = user.id,
+                    content = null,
+                    imageFiles = DefaultInput.imageFiles
+                )
+            )
+        }
+        val createdComment = commentRepository.findById(targetCommentId).get()
+        val createdImages = database.getImages()
+
+        createdComment.id shouldBe targetCommentId
+        createdComment.threadId shouldBe thread.id
+        createdComment.userId shouldBe user.id
+        createdComment.content shouldBe null
+        createdImages.size shouldBe 9
+        createdImages[3].id shouldBe 4
+        createdImages[3].type shouldBe ImageType.COMMENT
+        createdImages[3].parentId shouldBe targetCommentId
+    }
+
+    @DisplayName("projectId에 해당하는 프로젝트에 content와 imageFiles 배열 정보로 댓글을 생성한다")
+    @Transactional
+    @Test
+    fun createCommentWithContentAndImagesOK() {
+        val targetCommentId = 3L
+        val user = database.getUser()
+        database.getProject()
+        val thread = database.getThread()
+
+        for (commentId in listOf(1L, 2L, 3L)) {
+            for (imageFile in DefaultInput.imageFiles) {
+                every {
+                    imageService.upload(imageFile, ImageInfo(commentId, ImageType.COMMENT))
+                } returns imageRepository.save(ImageEntity(parentId = commentId, type = ImageType.COMMENT))
+            }
+        }
+
+        for (i in listOf(1, 2, 3)) {
+            chatService.createComment(
+                command = DefaultCommand.CreateComment.copy(
+                    threadId = thread.id,
+                    userId = user.id,
+                    content = "Content for Comment $i",
+                    imageFiles = DefaultInput.imageFiles
+                )
+            )
+        }
+        val createdComment = commentRepository.findById(targetCommentId).get()
+        val createdImages = database.getImages()
+
+        createdComment.id shouldBe targetCommentId
+        createdComment.threadId shouldBe thread.id
+        createdComment.userId shouldBe user.id
+        createdComment.content shouldBe "Content for Comment 3"
+        createdImages.size shouldBe 9
+        createdImages[6].id shouldBe 7
+        createdImages[6].type shouldBe ImageType.COMMENT
+        createdImages[6].parentId shouldBe targetCommentId
+    }
 
     @DisplayName("threadId에 해당하는 쓰레드가 없다면 예외가 발생한다")
     @Transactional
@@ -798,6 +888,7 @@ class ChatServiceSpec @Autowired constructor(
                 userId = user.id,
             )
         )
+        database.flush()
         val editedComment = commentRepository.findById(1).get()
 
         result shouldBe true
@@ -987,7 +1078,15 @@ object DefaultCommand {
         commentId = 1,
         userId = 1,
     )
+}
 
+object DefaultInput {
+    val task = TaskEntity(
+        position = Position.FRONTEND,
+        projectId = 1,
+        userId = 1,
+        state = State.MEMBER
+    )
     val imageFiles = listOf(
         MockMultipartFile("파일1", "기존 파일명1.png", MediaType.IMAGE_PNG_VALUE, "파일 1 내용".toByteArray()),
         MockMultipartFile("파일2", "기존 파일명2.png", MediaType.IMAGE_PNG_VALUE, "파일 2 내용".toByteArray()),

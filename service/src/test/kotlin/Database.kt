@@ -9,16 +9,13 @@ import waffle.guam.db.entity.ImageEntity
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectEntity
-import waffle.guam.db.entity.State
 import waffle.guam.db.entity.Status
-import waffle.guam.db.entity.TaskEntity
 import waffle.guam.db.entity.TechStackEntity
 import waffle.guam.db.entity.ThreadEntity
 import waffle.guam.db.entity.UserEntity
 import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.StackRepository
-import waffle.guam.db.repository.TaskRepository
 import waffle.guam.db.repository.ThreadRepository
 import waffle.guam.db.repository.UserRepository
 import javax.persistence.EntityManager
@@ -78,12 +75,13 @@ class Database(
         )
     }
 
-    fun getTask(): TaskEntity {
-        val taskRepository = repositories.getRepositoryFor(TaskEntity::class.java).get() as TaskRepository
-        return taskRepository.findById(1L).orElse(
-            taskRepository.save(DefaultDataInfo.task)
-        )
-    }
+// FIXME : 실행 불가: TaskRepository is in unnamed module of loader 'app'
+//    fun getTask(): TaskEntity {
+//        val taskRepository = repositories.getRepositoryFor(TaskEntity::class.java).get() as TaskRepository
+//        return taskRepository.findById(1L).orElse(
+//            taskRepository.save(DefaultDataInfo.task)
+//        )
+//    }
 
     fun getThread(): ThreadEntity {
         val threadRepository = repositories.getRepositoryFor(ThreadEntity::class.java).get() as ThreadRepository
@@ -148,12 +146,12 @@ object DefaultDataInfo {
         due = Due.SIX
     )
 
-    val task = TaskEntity(
-        position = Position.FRONTEND,
-        projectId = 1,
-        userId = 1,
-        state = State.MEMBER
-    )
+//    val task = TaskEntity(
+//        position = Position.FRONTEND,
+//        projectId = 1,
+//        userId = 1,
+//        state = State.MEMBER
+//    )
 
     val thread = ThreadEntity(
         projectId = 1,
