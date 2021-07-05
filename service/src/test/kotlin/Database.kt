@@ -48,6 +48,12 @@ class Database(
         entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY TRUE").executeUpdate()
     }
 
+
+    @Transactional
+    fun flush() {
+        entityManager.flush()
+    }
+
     fun getUser(): UserEntity {
         val userRepository = repositories.getRepositoryFor(UserEntity::class.java).get() as UserRepository
         return userRepository.findById(1L).orElse(
@@ -75,7 +81,6 @@ class Database(
 
     fun getTask(): TaskEntity {
         val taskRepository = repositories.getRepositoryFor(TaskEntity::class.java).get() as TaskRepository
-
         return taskRepository.findById(1L).orElse(
             taskRepository.save(DefaultDataInfo.task)
         )
@@ -88,7 +93,7 @@ class Database(
         )
     }
 
-    fun getChatImages(): List<ImageEntity> {
+    fun getImages(): List<ImageEntity> {
         val imageRepository = repositories.getRepositoryFor(ImageEntity::class.java).get() as ImageRepository
         return imageRepository.findAll().let {
             if (it.isEmpty()) {
@@ -159,6 +164,7 @@ object DefaultDataInfo {
     )
 
     val images = listOf(
+        ImageEntity(parentId = 1, type = ImageType.PROFILE),
         ImageEntity(parentId = 1, type = ImageType.THREAD),
         ImageEntity(parentId = 1, type = ImageType.THREAD),
         ImageEntity(parentId = 1, type = ImageType.THREAD),
@@ -172,7 +178,7 @@ object DefaultDataInfo {
     )
 
     val techStacks = listOf(
-        TechStackEntity(name = "kotlin", aliases = "kotlin, 코틀린", thumbnail = ""),
-        TechStackEntity(name = "python", aliases = "python, 파이썬", thumbnail = "")
+        TechStackEntity(name = "kotlin", aliases = "kotlin, 코틀린", thumbnail = "", position = Position.FRONTEND),
+        TechStackEntity(name = "python", aliases = "python, 파이썬", thumbnail = "", position = Position.BACKEND)
     )
 }
