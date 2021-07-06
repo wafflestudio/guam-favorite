@@ -75,7 +75,7 @@ class ChatServiceSpec @Autowired constructor(
         database.cleanUp()
     }
 
-    @DisplayName("projectId에 해당하는 프로젝트에 달린 쓰레드들을 조회할 수 있다")
+    @DisplayName("복수의 쓰레드 조회 : projectId에 해당하는 프로젝트에 달린 쓰레드들을 조회할 수 있다")
     @Transactional
     @Test
     fun getThreadsOK() {
@@ -110,7 +110,7 @@ class ChatServiceSpec @Autowired constructor(
         result.totalElements shouldBe 15
     }
 
-    @DisplayName("projectId, page, size 정보에 해당되는 쓰레드들의 세부 정보를 조회할 수 있다")
+    @DisplayName("복수의 쓰레드 조회 : projectId, page, size 정보에 해당되는 쓰레드들의 세부 정보를 조회할 수 있다")
     @Transactional
     @Test
     fun getThreadsEveryDetailOK() {
@@ -184,7 +184,7 @@ class ChatServiceSpec @Autowired constructor(
         result.totalElements shouldBe 15
     }
 
-    @DisplayName("page와 size에 해당되는 범위에 쓰레드가 없어도 예외는 발생하지 않는다")
+    @DisplayName("복수의 쓰레드 조회 : page와 size에 해당되는 범위에 쓰레드가 없어도 예외는 발생하지 않는다")
     @Transactional
     @Test
     fun getThreadsOutOfRangeOK() {
@@ -209,7 +209,7 @@ class ChatServiceSpec @Autowired constructor(
         result.totalElements shouldBe totalThreadNum
     }
 
-    @DisplayName("projectId에 해당하는 프로젝트가 없어도 예외는 발생하지 않는다")
+    @DisplayName("복수의 쓰레드 조회 : projectId에 해당하는 프로젝트가 없어도 예외는 발생하지 않는다")
     @Transactional
     @Test
     fun getThreadsProjectNotFoundOK() {
@@ -229,7 +229,7 @@ class ChatServiceSpec @Autowired constructor(
         result.totalElements shouldBe totalThreadNum
     }
 
-    @DisplayName("threadId에 해당하는 쓰레드를 찾아준다")
+    @DisplayName("쓰레드 상세 조회 : threadId에 해당하는 쓰레드를 찾아준다")
     @Transactional
     @Test
     fun getFullThreadOK() {
@@ -259,7 +259,7 @@ class ChatServiceSpec @Autowired constructor(
         result.comments[1].creatorNickname shouldBe users[2].nickname
     }
 
-    @DisplayName("threadId에 해당하는 쓰레드와 관련 댓글들의 세부 정보를 조회할 수 있다")
+    @DisplayName("쓰레드 상세 조회 : threadId에 해당하는 쓰레드와 관련 댓글들의 세부 정보를 조회할 수 있다")
     @Transactional
     @Test
     fun getFullThreadEveryDetailOK() {
@@ -327,7 +327,7 @@ class ChatServiceSpec @Autowired constructor(
         result.comments[1].commentImages shouldBe emptyImageList
     }
 
-    @DisplayName("threadId에 해당하는 쓰레드가 없다면 예외가 발생한다")
+    @DisplayName("쓰레드 상세 조회 : threadId에 해당하는 쓰레드가 없다면 예외가 발생한다")
     @Transactional
     @Test
     fun getFullThreadThreadNotFoundException() {
@@ -336,7 +336,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("projectId에 해당하는 프로젝트의 멤버는 공지 쓰레드로 threadId에 해당하는 쓰레드를 설정할 수 있다.")
+    @DisplayName("공지 쓰레드 설정 : projectId에 해당하는 프로젝트의 멤버는 공지 쓰레드로 threadId에 해당하는 쓰레드를 설정할 수 있다.")
     @Transactional
     @Test
     fun setNoticeThreadOK() {
@@ -361,7 +361,7 @@ class ChatServiceSpec @Autowired constructor(
         updatedProject.noticeThreadId shouldBe thread.id
     }
 
-    @DisplayName("projectId에 해당되는 프로젝트에 공지 쓰레드를 설정하려고 하면 예외가 발생한다")
+    @DisplayName("공지 쓰레드 설정 : projectId에 해당되는 프로젝트에 공지 쓰레드를 설정하려고 하면 예외가 발생한다")
     @Transactional
     @Test
     fun setNoticeThreadProjectNotFoundException() {
@@ -373,7 +373,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("projectId와 userId에 해당되는 task가 없을 때 쓰레드를 설정하려고 하면 예외가 발생한다")
+    @DisplayName("공지 쓰레드 설정 : projectId와 userId에 해당되는 task가 없을 때 쓰레드를 설정하려고 하면 예외가 발생한다")
     @Transactional
     @Test
     fun setNoticeThreadTaskNotFoundException() {
@@ -395,7 +395,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("projectId와 userId에 해당되는 task의 State가 GUEST일 때 쓰레드를 설정하려고 하면 예외가 발생한다")
+    @DisplayName("공지 쓰레드 설정 : projectId와 userId에 해당되는 task의 State가 GUEST일 때 쓰레드를 설정하려고 하면 예외가 발생한다")
     @Transactional
     @Test
     fun setNoticeThreadGuestTaskNotAllowedException() {
@@ -418,7 +418,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("threadId에 해당하는 쓰레드가 존재하지 않을 때 해당 쓰레드를 공지 쓰레드로 설정하려고 하면 예외가 발생한다")
+    @DisplayName("공지 쓰레드 설정 : threadId에 해당하는 쓰레드가 존재하지 않을 때 해당 쓰레드를 공지 쓰레드로 설정하려고 하면 예외가 발생한다")
     @Transactional
     @Test
     fun setNoticeThreadThreadNotFoundException() {
@@ -443,7 +443,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("projectId에 해당하는 프로젝트에 content 정보로 쓰레드를 생성한다")
+    @DisplayName("쓰레드 생성 : projectId에 해당하는 프로젝트에 content 정보로 쓰레드를 생성한다")
     @Transactional
     @Test
     fun createThreadWithContentOK() {
@@ -462,7 +462,7 @@ class ChatServiceSpec @Autowired constructor(
         createdThread.content shouldBe "New Thread"
     }
 
-    @DisplayName("projectId에 해당하는 프로젝트에 imageFiles 배열 정보로 쓰레드를 생성한다")
+    @DisplayName("쓰레드 생성 : projectId에 해당하는 프로젝트에 imageFiles 배열 정보로 쓰레드를 생성한다")
     @Transactional
     @Test
     fun createThreadWithImagesOK() {
@@ -501,7 +501,7 @@ class ChatServiceSpec @Autowired constructor(
         createdImages[3].parentId shouldBe targetThreadId
     }
 
-    @DisplayName("projectId에 해당하는 프로젝트에 content와 imageFiles 배열 정보로 쓰레드를 생성한다")
+    @DisplayName("쓰레드 생성 : projectId에 해당하는 프로젝트에 content와 imageFiles 배열 정보로 쓰레드를 생성한다")
     @Transactional
     @Test
     fun createThreadWithContentAndImagesOK() {
@@ -539,7 +539,7 @@ class ChatServiceSpec @Autowired constructor(
         createdImages[6].parentId shouldBe targetThreadId
     }
 
-    @DisplayName("쓰레드 생성시 content와 imageFiles 배열 정보가 null이라면 예외가 발생한다")
+    @DisplayName("쓰레드 생성 : content와 imageFiles 배열 정보가 null이라면 예외가 발생한다")
     @Transactional
     @Test
     fun createThreadNullInputException() {
@@ -550,7 +550,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("쓰레드 생성시 content와 imageFiles 배열 정보가 비어있다면 예외가 발생한다")
+    @DisplayName("쓰레드 생성 : content와 imageFiles 배열 정보가 비어있다면 예외가 발생한다")
     @Transactional
     @Test
     fun createThreadEmptyNoInputException() {
@@ -561,7 +561,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("projectId에 해당하는 프로젝트가 없다면 예외가 발생한다")
+    @DisplayName("쓰레드 생성 : projectId에 해당하는 프로젝트가 없다면 예외가 발생한다")
     @Transactional
     @Test
     fun createThreadThreadNotFoundException() {
@@ -572,7 +572,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("threadId에 해당하는 쓰레드의 작성자는 쓰레드를 수정할 수 있다.")
+    @DisplayName("쓰레드 수정 : threadId에 해당하는 쓰레드의 작성자는 쓰레드를 수정할 수 있다.")
     @Transactional
     @Test
     fun editThreadContentOK() {
@@ -597,7 +597,7 @@ class ChatServiceSpec @Autowired constructor(
         editedThread.createdAt shouldNotBe editedThread.modifiedAt
     }
 
-    @DisplayName("threadId에 해당하는 쓰레드가 없다면 예외가 발생한다.")
+    @DisplayName("쓰레드 수정 : threadId에 해당하는 쓰레드가 없다면 예외가 발생한다.")
     @Transactional
     @Test
     fun editThreadThreadIdNotFoundException() {
@@ -610,7 +610,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("수정하려는 쓰레드의 작성자가 아니면 예외가 발생한다.")
+    @DisplayName("쓰레드 수정 : 수정하려는 쓰레드의 작성자가 아니면 예외가 발생한다.")
     @Transactional
     @Test
     fun editThreadNotCreatorException() {
@@ -628,7 +628,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("이전과 동일한 content로 수정하려고 하면 예외가 발생한다.")
+    @DisplayName("쓰레드 수정 : 이전과 동일한 content로 수정하려고 하면 예외가 발생한다.")
     @Transactional
     @Test
     fun editThreadSameContentException() {
@@ -650,7 +650,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("threadId에 해당하는 쓰레드의 작성자는 imageId에 해당하는 이미지를 쓰레드에서 삭제할 수 있다.")
+    @DisplayName("쓰레드 이미지 삭제 : threadId에 해당하는 쓰레드의 작성자는 imageId에 해당하는 이미지를 쓰레드에서 삭제할 수 있다.")
     @Transactional
     @Test
     fun deleteThreadImageOK() {
@@ -676,7 +676,72 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("threadId에 해당하는 쓰레드의 작성자는 쓰레드를 삭제할 수 있다.")
+    @DisplayName("쓰레드 이미지 삭제 : imageId에 해당하는 이미지가 없다면 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun deleteThreadImageImageNotFoundException() {
+        database.getImages()
+        shouldThrowExactly<DataNotFoundException> {
+            chatService.deleteThreadImage(
+                command = DefaultCommand.DeleteThreadImage.copy(
+                    imageId = 9999999999,
+                )
+            )
+        }
+    }
+
+    @DisplayName("쓰레드 이미지 삭제 : threadId에 해당하는 쓰레드가 없다면 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun deleteThreadImageThreadNotFoundException() {
+        val images = database.getImages()
+        shouldThrowExactly<DataNotFoundException> {
+            chatService.deleteThreadImage(
+                command = DefaultCommand.DeleteThreadImage.copy(
+                    threadId = 999999999,
+                    imageId = images[0].id,
+                )
+            )
+        }
+    }
+
+    @DisplayName("쓰레드 이미지 삭제 : 해당 쓰레드의 작성자가 아니라면 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun deleteThreadImageNotCreatorException() {
+        database.getUser()
+        database.getProject()
+        database.getThread()
+        database.getImages()
+
+        shouldThrowExactly<NotAllowedException> {
+            chatService.deleteThreadImage(
+                command = DefaultCommand.DeleteThreadImage.copy(
+                    userId = 999999999999999,
+                )
+            )
+        }
+    }
+
+    @DisplayName("쓰레드 이미지 삭제 : threadId와 이미지의 parentId가 불일치하면 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun deleteThreadImageInvalidThreadIdException() {
+        database.getUser()
+        database.getProject()
+        database.getThread()
+        val image = imageRepository.save(ImageEntity(type = ImageType.THREAD, parentId = 999999999))
+
+        shouldThrowExactly<InvalidRequestException> {
+            chatService.deleteThreadImage(
+                command = DefaultCommand.DeleteThreadImage.copy(
+                    imageId = image.id
+                )
+            )
+        }
+    }
+
+    @DisplayName("쓰레드 삭제 : threadId에 해당하는 쓰레드의 작성자는 쓰레드를 삭제할 수 있다.")
     @Transactional
     @Test
     fun deleteThreadOK() {
@@ -695,7 +760,7 @@ class ChatServiceSpec @Autowired constructor(
         deletedThread shouldBe Optional.empty()
     }
 
-    @DisplayName("쓰레드를 삭제하면 쓰레드에 달린 댓글들도 자동 삭제된다.")
+    @DisplayName("쓰레드 삭제 : 쓰레드에 달린 댓글들도 자동 삭제된다.")
     @Transactional
     @Test
     fun deleteThreadWithCommentsOK() {
@@ -732,7 +797,7 @@ class ChatServiceSpec @Autowired constructor(
         remainingCommentsInAnotherThread shouldBe 3
     }
 
-    @DisplayName("threadId에 해당하는 쓰레드가 없다면 예외가 발생한다.")
+    @DisplayName("쓰레드 삭제 : threadId에 해당하는 쓰레드가 없다면 예외가 발생한다.")
     @Transactional
     @Test
     fun deleteThreadThreadNotFoundException() {
@@ -745,7 +810,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("삭제하려는 쓰레드의 작성자가 아니면 예외가 발생한다.")
+    @DisplayName("쓰레드 삭제 : 삭제하려는 쓰레드의 작성자가 아니면 예외가 발생한다.")
     @Transactional
     @Test
     fun deleteThreadNotCreatorException() {
@@ -763,7 +828,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("threadId에 해당하는 쓰레드에 content 정보로 댓글을 생성한다.")
+    @DisplayName("댓글 생성 : threadId에 해당하는 쓰레드에 content 정보로 댓글을 생성한다.")
     @Transactional
     @Test
     fun createCommentWithContentOK() {
@@ -781,7 +846,7 @@ class ChatServiceSpec @Autowired constructor(
         createdComment.content shouldBe "New Comment"
     }
 
-    @DisplayName("projectId에 해당하는 프로젝트에 imageFiles 배열 정보로 댓글을 생성한다")
+    @DisplayName("댓글 생성 : projectId에 해당하는 프로젝트에 imageFiles 배열 정보로 댓글을 생성한다")
     @Transactional
     @Test
     fun createCommentWithImagesOK() {
@@ -821,7 +886,7 @@ class ChatServiceSpec @Autowired constructor(
         createdImages[3].parentId shouldBe targetCommentId
     }
 
-    @DisplayName("projectId에 해당하는 프로젝트에 content와 imageFiles 배열 정보로 댓글을 생성한다")
+    @DisplayName("댓글 생성 : projectId에 해당하는 프로젝트에 content와 imageFiles 배열 정보로 댓글을 생성한다")
     @Transactional
     @Test
     fun createCommentWithContentAndImagesOK() {
@@ -861,7 +926,7 @@ class ChatServiceSpec @Autowired constructor(
         createdImages[6].parentId shouldBe targetCommentId
     }
 
-    @DisplayName("threadId에 해당하는 쓰레드가 없다면 예외가 발생한다")
+    @DisplayName("댓글 생성 : threadId에 해당하는 쓰레드가 없다면 예외가 발생한다")
     @Transactional
     @Test
     fun createCommentThreadNotFoundException() {
@@ -872,7 +937,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("commentId에 해당하는 댓글의 작성자는 댓글을 수정할 수 있다.")
+    @DisplayName("댓글 수정 : commentId에 해당하는 댓글의 작성자는 댓글을 수정할 수 있다.")
     @Transactional
     @Test
     fun editCommentContentOK() {
@@ -897,7 +962,7 @@ class ChatServiceSpec @Autowired constructor(
         editedComment.createdAt shouldNotBe editedComment.modifiedAt
     }
 
-    @DisplayName("commentId에 해당하는 댓글이 없다면 예외가 발생한다.")
+    @DisplayName("댓글 수정 : commentId에 해당하는 댓글이 없다면 예외가 발생한다.")
     @Transactional
     @Test
     fun editCommentCommentNotFoundException() {
@@ -910,7 +975,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("수정하려는 댓글의 작성자가 아니면 예외가 발생한다.")
+    @DisplayName("댓글 수정 : 수정하려는 댓글의 작성자가 아니면 예외가 발생한다.")
     @Transactional
     @Test
     fun editCommentNotCreatorException() {
@@ -929,7 +994,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("이전과 동일한 content로 수정하려고 하면 예외가 발생한다.")
+    @DisplayName("댓글 수정 : 이전과 동일한 content로 수정하려고 하면 예외가 발생한다.")
     @Transactional
     @Test
     fun editCommentSameContentException() {
@@ -953,7 +1018,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("commentId에 해당하는 댓글의 작성자는 imageId에 해당하는 이미지를 댓글에서 삭제할 수 있다.")
+    @DisplayName("댓글 이미지 삭제 : commentId에 해당하는 댓글의 작성자는 imageId에 해당하는 이미지를 댓글에서 삭제할 수 있다.")
     @Transactional
     @Test
     fun deleteCommentImageOK() {
@@ -980,7 +1045,73 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("commentId에 해당하는 댓글의 작성자는 댓글을 삭제할 수 있다.")
+    @DisplayName("댓글 이미지 삭제 : imageId에 해당하는 이미지가 없다면 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun deleteCommentImageImageNotFoundException() {
+        database.getImages()
+        shouldThrowExactly<DataNotFoundException> {
+            chatService.deleteCommentImage(
+                command = DefaultCommand.DeleteCommentImage.copy(
+                    imageId = 9999999999,
+                )
+            )
+        }
+    }
+
+    @DisplayName("댓글 이미지 삭제 : commentId에 해당하는 댓글이 없다면 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun deleteCommentImageThreadNotFoundException() {
+        val images = database.getImages()
+        shouldThrowExactly<DataNotFoundException> {
+            chatService.deleteCommentImage(
+                command = DefaultCommand.DeleteCommentImage.copy(
+                    commentId = 999999999,
+                    imageId = images[0].id,
+                )
+            )
+        }
+    }
+
+    @DisplayName("댓글 이미지 삭제 : 해당 댓글의 작성자가 아니라면 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun deleteCommentImageNotCreatorException() {
+        database.getUser()
+        database.getProject()
+        val comment = database.getComment()
+        val images = database.getImages()
+        shouldThrowExactly<NotAllowedException> {
+            chatService.deleteCommentImage(
+                command = DefaultCommand.DeleteCommentImage.copy(
+                    imageId = images[6].id,
+                    commentId = comment.id,
+                    userId = 999999999999999,
+                )
+            )
+        }
+    }
+
+    @DisplayName("댓글 이미지 삭제 : commentId와 이미지의 parentId가 불일치하면 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun deleteCommentImageInvalidThreadIdException() {
+        database.getUser()
+        database.getProject()
+        database.getComment()
+        val image = imageRepository.save(ImageEntity(type = ImageType.COMMENT, parentId = 999999999))
+
+        shouldThrowExactly<InvalidRequestException> {
+            chatService.deleteCommentImage(
+                command = DefaultCommand.DeleteCommentImage.copy(
+                    imageId = image.id
+                )
+            )
+        }
+    }
+
+    @DisplayName("댓글 삭제 : commentId에 해당하는 댓글의 작성자는 댓글을 삭제할 수 있다.")
     @Transactional
     @Test
     fun deleteCommentOK() {
@@ -999,7 +1130,7 @@ class ChatServiceSpec @Autowired constructor(
         deletedComment shouldBe Optional.empty()
     }
 
-    @DisplayName("commentId에 해당하는 댓글이 없다면 예외가 발생한다.")
+    @DisplayName("댓글 삭제 : commentId에 해당하는 댓글이 없다면 예외가 발생한다.")
     @Transactional
     @Test
     fun deleteCommentNotFoundException() {
@@ -1012,7 +1143,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("삭제하려는 댓글의 작성자가 아니면 예외가 발생한다.")
+    @DisplayName("댓글 삭제 : 삭제하려는 댓글의 작성자가 아니면 예외가 발생한다.")
     @Transactional
     @Test
     fun deleteCommentNotCreatorException() {
@@ -1029,67 +1160,67 @@ class ChatServiceSpec @Autowired constructor(
             )
         }
     }
-}
 
-object DefaultCommand {
-    val SetNoticeThread = SetNoticeThread(
-        projectId = 1,
-        threadId = 1,
-        userId = 1
-    )
+    object DefaultCommand {
+        val SetNoticeThread = SetNoticeThread(
+            projectId = 1,
+            threadId = 1,
+            userId = 1
+        )
 
-    val CreateThread = CreateThread(
-        projectId = 1,
-        userId = 1,
-        content = "New Thread",
-        imageFiles = null
-    )
-    val EditThreadContent = EditThreadContent(
-        threadId = 1,
-        userId = 1,
-        content = "edited Content"
-    )
-    val DeleteThreadImage = DeleteThreadImage(
-        imageId = 1,
-        threadId = 1,
-        userId = 1,
-    )
-    val DeleteThread = DeleteThread(
-        threadId = 1,
-        userId = 1,
-    )
-    val CreateComment = CreateComment(
-        threadId = 1,
-        userId = 1,
-        content = "New Comment",
-        imageFiles = null
-    )
-    val EditCommentContent = EditCommentContent(
-        commentId = 1,
-        userId = 1,
-        content = "edited Content"
-    )
-    val DeleteCommentImage = DeleteCommentImage(
-        imageId = 1,
-        commentId = 1,
-        userId = 1,
-    )
-    val DeleteComment = DeleteComment(
-        commentId = 1,
-        userId = 1,
-    )
-}
+        val CreateThread = CreateThread(
+            projectId = 1,
+            userId = 1,
+            content = "New Thread",
+            imageFiles = null
+        )
+        val EditThreadContent = EditThreadContent(
+            threadId = 1,
+            userId = 1,
+            content = "edited Content"
+        )
+        val DeleteThreadImage = DeleteThreadImage(
+            imageId = 1,
+            threadId = 1,
+            userId = 1,
+        )
+        val DeleteThread = DeleteThread(
+            threadId = 1,
+            userId = 1,
+        )
+        val CreateComment = CreateComment(
+            threadId = 1,
+            userId = 1,
+            content = "New Comment",
+            imageFiles = null
+        )
+        val EditCommentContent = EditCommentContent(
+            commentId = 1,
+            userId = 1,
+            content = "edited Content"
+        )
+        val DeleteCommentImage = DeleteCommentImage(
+            imageId = 1,
+            commentId = 1,
+            userId = 1,
+        )
+        val DeleteComment = DeleteComment(
+            commentId = 1,
+            userId = 1,
+        )
+    }
 
-object DefaultInput {
-    val task = TaskEntity(
-        position = Position.FRONTEND,
-        projectId = 1,
-        userId = 1,
-        state = State.MEMBER
-    )
-    val imageFiles = listOf(
-        MockMultipartFile("파일1", "기존 파일명1.png", MediaType.IMAGE_PNG_VALUE, "파일 1 내용".toByteArray()),
-        MockMultipartFile("파일2", "기존 파일명2.png", MediaType.IMAGE_PNG_VALUE, "파일 2 내용".toByteArray()),
-        MockMultipartFile("파일3", "기존 파일명3.png", MediaType.IMAGE_PNG_VALUE, "파일 3 내용".toByteArray())
-    )
+    object DefaultInput {
+        val task = TaskEntity(
+            position = Position.FRONTEND,
+            projectId = 1,
+            userId = 1,
+            state = State.MEMBER
+        )
+        val imageFiles = listOf(
+            MockMultipartFile("파일1", "기존 파일명1.png", MediaType.IMAGE_PNG_VALUE, "파일 1 내용".toByteArray()),
+            MockMultipartFile("파일2", "기존 파일명2.png", MediaType.IMAGE_PNG_VALUE, "파일 2 내용".toByteArray()),
+            MockMultipartFile("파일3", "기존 파일명3.png", MediaType.IMAGE_PNG_VALUE, "파일 3 내용".toByteArray())
+        )
+    }
 }

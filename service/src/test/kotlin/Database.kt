@@ -11,6 +11,7 @@ import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectEntity
 import waffle.guam.db.entity.Status
 import waffle.guam.db.entity.TechStackEntity
+import waffle.guam.db.entity.CommentEntity
 import waffle.guam.db.entity.ThreadEntity
 import waffle.guam.db.entity.UserEntity
 import waffle.guam.db.repository.ImageRepository
@@ -18,6 +19,7 @@ import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.StackRepository
 import waffle.guam.db.repository.ThreadRepository
 import waffle.guam.db.repository.UserRepository
+import waffle.guam.db.repository.CommentRepository
 import javax.persistence.EntityManager
 import javax.persistence.Table
 
@@ -90,6 +92,13 @@ class Database(
         )
     }
 
+    fun getComment(): CommentEntity {
+        val commentRepository = repositories.getRepositoryFor(CommentEntity::class.java).get() as CommentRepository
+        return commentRepository.findById(1L).orElse(
+            commentRepository.save(DefaultDataInfo.comment)
+        )
+    }
+
     fun getImages(): List<ImageEntity> {
         val imageRepository = repositories.getRepositoryFor(ImageEntity::class.java).get() as ImageRepository
         return imageRepository.findAll().let {
@@ -155,6 +164,12 @@ object DefaultDataInfo {
 
     val thread = ThreadEntity(
         projectId = 1,
+        userId = 1,
+        content = "Test Thread Content",
+    )
+
+    val comment = CommentEntity(
+        threadId = 1,
         userId = 1,
         content = "Test Thread Content",
     )
