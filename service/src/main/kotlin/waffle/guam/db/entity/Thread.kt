@@ -15,7 +15,8 @@ import javax.persistence.Table
 @Table(name = "threads")
 @Entity
 data class ThreadEntity(
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
 
     val projectId: Long,
@@ -23,7 +24,7 @@ data class ThreadEntity(
     @Column(name = "user_id")
     val userId: Long,
 
-    val content: String = "",
+    val content: String?,
 
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
@@ -42,8 +43,11 @@ data class ThreadView(
     @JoinColumn(name = "user_id")
     val user: UserEntity,
 
-    @OneToMany(mappedBy = "threadId", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "threadId", fetch = FetchType.LAZY)
     val comments: List<CommentView>,
+
+    @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
+    val images: List<ImageEntity>,
 
     val content: String,
 

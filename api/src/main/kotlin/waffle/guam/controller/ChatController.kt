@@ -9,11 +9,12 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import waffle.guam.controller.request.Content
-import waffle.guam.controller.response.GuamResponse
+import org.springframework.web.multipart.MultipartFile
+import waffle.guam.common.UserContext
+import waffle.guam.controller.request.ContentInput
 import waffle.guam.controller.response.PageableResponse
 import waffle.guam.controller.response.SuccessResponse
 import waffle.guam.model.ThreadDetail
@@ -22,9 +23,12 @@ import waffle.guam.service.ChatService
 import waffle.guam.service.command.CreateComment
 import waffle.guam.service.command.CreateThread
 import waffle.guam.service.command.DeleteComment
+import waffle.guam.service.command.DeleteCommentImage
 import waffle.guam.service.command.DeleteThread
-import waffle.guam.service.command.EditComment
-import waffle.guam.service.command.EditThread
+import waffle.guam.service.command.DeleteThreadImage
+import waffle.guam.service.command.EditCommentContent
+import waffle.guam.service.command.EditThreadContent
+import waffle.guam.service.command.SetNoticeThread
 
 @RestController
 @RequestMapping
@@ -34,7 +38,7 @@ class ChatController(
     @GetMapping("/project/{projectId}/threads")
     fun getThreads(
         @PathVariable projectId: Long,
-        @PageableDefault(size = 10, page = 0, sort = ["id"], direction = Sort.Direction.DESC) pageable: Pageable
+        @PageableDefault(size = 10, page = 0, sort = ["id"], direction = Sort.Direction.ASC) pageable: Pageable
     ): PageableResponse<ThreadOverView> =
         chatService.getThreads(projectId, pageable).let {
             PageableResponse(
@@ -54,73 +58,121 @@ class ChatController(
             chatService.getFullThread(threadId)
         )
 
-    @PostMapping("/thread/create/{projectId}")
-    fun createThread(
+    @PutMapping("/project/{projectId}/notice/{threadId}")
+    fun setNoticeThread(
         @PathVariable projectId: Long,
-        @RequestBody content: Content,
-        @RequestHeader("USER-ID") userId: Long
+        @PathVariable threadId: Long,
+        userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
-            chatService.createThread(
-                command = CreateThread(projectId = projectId, userId = userId, content = content.value)
+            chatService.setNoticeThread(
+                command = SetNoticeThread(projectId = projectId, threadId = threadId, userId = userContext.id)
             )
         )
 
-    @PutMapping("/thread/{threadId}")
-    fun editThread(
-        @PathVariable threadId: Long,
-        @RequestBody content: Content,
-        @RequestHeader("USER-ID") userId: Long
+    @PostMapping("/thread/create/{projectId}")
+    fun createThread(
+        @PathVariable projectId: Long,
+        @RequestParam("images") imageFiles: List<MultipartFile>?,
+        @RequestBody contentInput: ContentInput?,
+        userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
-            chatService.editThread(
-                command = EditThread(threadId = threadId, userId = userId, content = content.value)
+            chatService.createThread(
+                command = CreateThread(
+                    projectId = projectId,
+                    userId = userContext.id,
+                    content = contentInput?.content,
+                    imageFiles = imageFiles
+                )
+            )
+        )
+
+    @PutMapping("/thread/{threadId}/content")
+    fun editThreadContent(
+        @PathVariable threadId: Long,
+        @RequestBody contentInput: ContentInput,
+        userContext: UserContext
+    ): SuccessResponse<Boolean> =
+        SuccessResponse(
+            chatService.editThreadContent(
+                command = EditThreadContent(threadId = threadId, userId = userContext.id, content = contentInput.content)
+            )
+        )
+
+    @DeleteMapping("/thread/{threadId}/image/{imageId}")
+    fun deleteThreadImage(
+        @PathVariable threadId: Long,
+        @PathVariable imageId: Long,
+        userContext: UserContext
+    ): SuccessResponse<Boolean> =
+        SuccessResponse(
+            chatService.deleteThreadImage(
+                command = DeleteThreadImage(imageId = imageId, threadId = threadId, userId = userContext.id)
             )
         )
 
     @DeleteMapping("/thread/{threadId}")
     fun deleteThread(
         @PathVariable threadId: Long,
-        @RequestHeader("USER-ID") userId: Long
+        userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.deleteThread(
-                command = DeleteThread(threadId = threadId, userId = userId)
+                command = DeleteThread(threadId = threadId, userId = userContext.id)
             )
         )
 
     @PostMapping("/comment/create/{threadId}")
     fun createComment(
         @PathVariable threadId: Long,
-        @RequestBody content: Content,
-        @RequestHeader("USER-ID") userId: Long
-    ): GuamResponse =
-        SuccessResponse<Boolean>(
+        @RequestParam("images") imageFiles: List<MultipartFile>?,
+        @RequestBody contentInput: ContentInput?,
+        userContext: UserContext
+    ): SuccessResponse<Boolean> =
+        SuccessResponse(
             chatService.createComment(
-                command = CreateComment(threadId = threadId, userId = userId, content = content.value)
+                command = CreateComment(
+                    threadId = threadId,
+                    userId = userContext.id,
+                    content = contentInput?.content,
+                    imageFiles = imageFiles
+                )
             )
         )
 
-    @PutMapping("/comment/{commentId}")
-    fun editComment(
+    @PutMapping("/comment/{commentId}/content")
+    fun editCommentContent(
         @PathVariable commentId: Long,
-        @RequestBody content: Content,
-        @RequestHeader("USER-ID") userId: Long
+        @RequestBody contentInput: ContentInput,
+        userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
-            chatService.editComment(
-                command = EditComment(commentId = commentId, userId = userId, content = content.value)
+            chatService.editCommentContent(
+                command = EditCommentContent(commentId = commentId, userId = userContext.id, content = contentInput.content)
+            )
+        )
+
+    @DeleteMapping("/comment/{commentId}/image/{imageId}")
+    fun deleteCommentImage(
+        @PathVariable commentId: Long,
+        @PathVariable imageId: Long,
+        userContext: UserContext
+    ): SuccessResponse<Boolean> =
+        SuccessResponse(
+            chatService.deleteCommentImage(
+                command = DeleteCommentImage(imageId = imageId, commentId = commentId, userId = userContext.id)
             )
         )
 
     @DeleteMapping("/comment/{commentId}")
     fun deleteComment(
         @PathVariable commentId: Long,
-        @RequestHeader("USER-ID") userId: Long
+        userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
             chatService.deleteComment(
-                command = DeleteComment(commentId = commentId, userId = userId)
+                command = DeleteComment(commentId = commentId, userId = userContext.id)
             )
         )
 }

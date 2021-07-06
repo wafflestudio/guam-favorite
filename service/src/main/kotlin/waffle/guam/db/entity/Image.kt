@@ -1,21 +1,23 @@
+
 package waffle.guam.db.entity
 
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
+import javax.persistence.Table
 
+@Table(name = "images")
 @Entity
 data class ImageEntity(
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Id
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
 
     val type: ImageType,
 
     val parentId: Long
 ) {
-    val path: String = "${type.name}/$parentId"
+    fun getPath(): String = "${type.name}/$id"
 }
 
 enum class ImageType {

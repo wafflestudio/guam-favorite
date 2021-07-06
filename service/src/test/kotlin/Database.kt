@@ -4,11 +4,16 @@ import org.springframework.beans.factory.ListableBeanFactory
 import org.springframework.data.repository.support.Repositories
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import waffle.guam.db.entity.Due
+import waffle.guam.db.entity.ImageEntity
+import waffle.guam.db.entity.ImageType
+import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectEntity
 import waffle.guam.db.entity.Status
 import waffle.guam.db.entity.TechStackEntity
 import waffle.guam.db.entity.ThreadEntity
 import waffle.guam.db.entity.UserEntity
+import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.StackRepository
 import waffle.guam.db.repository.ThreadRepository
@@ -21,7 +26,6 @@ class Database(
     private val entityManager: EntityManager,
     beanFactory: ListableBeanFactory
 ) {
-
     private val tableNames: List<String> =
         entityManager.metamodel.entities.mapNotNull { it.javaType.getAnnotation(Table::class.java)?.name }
 
@@ -41,11 +45,27 @@ class Database(
         entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY TRUE").executeUpdate()
     }
 
+    @Transactional
+    fun flush() {
+        entityManager.flush()
+    }
+
     fun getUser(): UserEntity {
         val userRepository = repositories.getRepositoryFor(UserEntity::class.java).get() as UserRepository
         return userRepository.findById(1L).orElse(
             userRepository.save(DefaultDataInfo.user)
         )
+    }
+
+    fun getUsers(): List<UserEntity> {
+        val userRepository = repositories.getRepositoryFor(UserEntity::class.java).get() as UserRepository
+        return userRepository.findAll().let {
+            if (it.isEmpty()) {
+                userRepository.saveAll(DefaultDataInfo.users)
+            } else {
+                it
+            }
+        }
     }
 
     fun getProject(): ProjectEntity {
@@ -55,11 +75,30 @@ class Database(
         )
     }
 
+// FIXME : 실행 불가: TaskRepository is in unnamed module of loader 'app'
+//    fun getTask(): TaskEntity {
+//        val taskRepository = repositories.getRepositoryFor(TaskEntity::class.java).get() as TaskRepository
+//        return taskRepository.findById(1L).orElse(
+//            taskRepository.save(DefaultDataInfo.task)
+//        )
+//    }
+
     fun getThread(): ThreadEntity {
         val threadRepository = repositories.getRepositoryFor(ThreadEntity::class.java).get() as ThreadRepository
         return threadRepository.findById(1L).orElse(
             threadRepository.save(DefaultDataInfo.thread)
         )
+    }
+
+    fun getImages(): List<ImageEntity> {
+        val imageRepository = repositories.getRepositoryFor(ImageEntity::class.java).get() as ImageRepository
+        return imageRepository.findAll().let {
+            if (it.isEmpty()) {
+                imageRepository.saveAll(DefaultDataInfo.images)
+            } else {
+                it
+            }
+        }
     }
 
     fun getTechStacks(): List<TechStackEntity> {
@@ -83,6 +122,20 @@ object DefaultDataInfo {
         skills = "kotlin,python",
     )
 
+    val users = listOf(
+        UserEntity(
+            firebaseUid = "test 1",
+            nickname = "user1 nickname",
+            image = ImageEntity(parentId = 1, type = ImageType.PROFILE)
+        ),
+        UserEntity(
+            firebaseUid = "test 2",
+            nickname = "user2 nickname",
+            image = ImageEntity(parentId = 2, type = ImageType.PROFILE)
+        ),
+        UserEntity(firebaseUid = "test 3", nickname = "user3 nickname"),
+    )
+
     val project = ProjectEntity(
         title = "Test Project",
         description = "Test Project Description",
@@ -90,17 +143,38 @@ object DefaultDataInfo {
         frontHeadcount = 0,
         backHeadcount = 0,
         designerHeadcount = 0,
+        due = Due.SIX
     )
+
+//    val task = TaskEntity(
+//        position = Position.FRONTEND,
+//        projectId = 1,
+//        userId = 1,
+//        state = State.MEMBER
+//    )
 
     val thread = ThreadEntity(
         projectId = 1,
         userId = 1,
         content = "Test Thread Content",
+    )
 
+    val images = listOf(
+        ImageEntity(parentId = 1, type = ImageType.PROFILE),
+        ImageEntity(parentId = 1, type = ImageType.THREAD),
+        ImageEntity(parentId = 1, type = ImageType.THREAD),
+        ImageEntity(parentId = 1, type = ImageType.THREAD),
+        ImageEntity(parentId = 2, type = ImageType.THREAD),
+        ImageEntity(parentId = 2, type = ImageType.THREAD),
+        ImageEntity(parentId = 1, type = ImageType.COMMENT),
+        ImageEntity(parentId = 1, type = ImageType.COMMENT),
+        ImageEntity(parentId = 1, type = ImageType.COMMENT),
+        ImageEntity(parentId = 2, type = ImageType.COMMENT),
+        ImageEntity(parentId = 2, type = ImageType.COMMENT),
     )
 
     val techStacks = listOf(
-        TechStackEntity(name = "kotlin", aliases = "kotlin, 코틀린", thumbnail = ""),
-        TechStackEntity(name = "python", aliases = "python, 파이썬", thumbnail = "")
+        TechStackEntity(name = "kotlin", aliases = "kotlin, 코틀린", thumbnail = "", position = Position.FRONTEND),
+        TechStackEntity(name = "python", aliases = "python, 파이썬", thumbnail = "", position = Position.BACKEND)
     )
 }

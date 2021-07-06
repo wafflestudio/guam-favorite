@@ -31,24 +31,23 @@ class ImageServiceImpl(
 
     @Transactional
     override fun upload(multipartFile: MultipartFile, imageInfo: ImageInfo): ImageEntity =
-        internalUpLoad(multipartFile, imageInfo).let { req ->
-            client.putObject(req.withCannedAcl(CannedAccessControlList.PublicRead))
-            req.file.delete()
-            imageRepository.save(ImageEntity(type = imageInfo.type, parentId = imageInfo.id))
+        imageRepository.save(ImageEntity(type = imageInfo.type, parentId = imageInfo.parentId)).also {
+            internalUpLoad(multipartFile, it).let { req ->
+                client.putObject(req.withCannedAcl(CannedAccessControlList.PublicRead))
+                req.file.delete()
+            }
         }
 
-    private fun internalUpLoad(multipartFile: MultipartFile, imageInfo: ImageInfo): PutObjectRequest =
-        imageLocation.resolve(imageInfo.resourceName).let { filePath ->
+    private fun internalUpLoad(multipartFile: MultipartFile, imageEntity: ImageEntity): PutObjectRequest =
+        imageLocation.resolve(imageEntity.getPath()).let { filePath ->
             multipartFile.inputStream.use { inputStream ->
                 Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING)
             }
-            PutObjectRequest(bucketName, imageInfo.resourceName, filePath.toFile())
+            PutObjectRequest(bucketName, imageEntity.getPath(), filePath.toFile())
         }
 }
 
 data class ImageInfo(
-    val id: Long,
-    val type: ImageType
-) {
-    val resourceName = "${type.name}/$id"
-}
+    val parentId: Long,
+    val type: ImageType,
+)

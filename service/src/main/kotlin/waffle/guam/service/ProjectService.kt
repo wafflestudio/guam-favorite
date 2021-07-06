@@ -97,23 +97,21 @@ class ProjectService(
                 projectStackRepository.deleteByProjectIdAndTechStackId(id, it.techStackId)
             }
 
-
             projectStackRepository.saveAll(
-                    command.techStackIds.map {
-                        ProjectStackEntity(projectId = id, techStackId = it.first, position = it.second)
-                    }
-                )
+                command.techStackIds.map {
+                    ProjectStackEntity(projectId = id, techStackId = it.first, position = it.second)
+                }
+            )
 
             projectViewRepository.save(
-                    projectViewRepository.getById(id).copy(
-                        title = command.title, description = command.description,
-                        frontHeadcount = command.frontLeftCnt, backHeadcount = command.backLeftCnt,
-                        designerHeadcount = command.designLeftCnt, modifiedAt = LocalDateTime.now()
-                    )
+                projectViewRepository.getById(id).copy(
+                    title = command.title, description = command.description,
+                    frontHeadcount = command.frontLeftCnt, backHeadcount = command.backLeftCnt,
+                    designerHeadcount = command.designLeftCnt, modifiedAt = LocalDateTime.now()
+                )
             ).let {
-                    Project.of(it, true)
+                Project.of(it, true)
             }
-
         }
 
     @Transactional
@@ -144,7 +142,7 @@ class ProjectService(
                 TaskEntity(projectId = id, userId = userId, position = position, state = State.GUEST)
             )
             chatService.createThread(
-                CreateThread(id, userId, introduction)
+                CreateThread(projectId = id, userId = userId, content = introduction, imageFiles = null)
             )
             true
         }
