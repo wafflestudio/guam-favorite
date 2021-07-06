@@ -1,5 +1,6 @@
 package waffle.guam.test
 
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -36,17 +37,6 @@ class ProjectServiceSpec @Autowired constructor(
         chatService = chatService
     )
 
-    private val protoCreateCommand = CreateProject(
-        title = "Test Project",
-        description = "This is test",
-        thumbnail = "This is test",
-        frontLeftCnt = 3,
-        backLeftCnt = 3,
-        designLeftCnt = 3,
-        techStackIds = emptyList(),
-        due = Due.SIX
-    )
-
     @BeforeEach
     fun clearDatabase() {
         database.cleanUp()
@@ -60,7 +50,7 @@ class ProjectServiceSpec @Autowired constructor(
 //        val user = database.getUser()
 //
 //        val result = projectService.createProject(
-//            command = protoCreateCommand.copy(techStackIds = stacks.map { it.id }),
+//            command = DefaultCommand.CreateProject.copy(techStackIds = stacks.map { it.id }),
 //            userId = user.id
 //        )
 //
@@ -69,6 +59,11 @@ class ProjectServiceSpec @Autowired constructor(
 //        result.techStacks.map { it.name } shouldContainAll stacks.map { it.name }
 //        result.tasks!![0].id shouldBe user.id
 //    }
+
+    // TODO(JoinException)
+
+
+
 
     @DisplayName("프로젝트 전체 목록 조회")
     @Transactional
@@ -80,7 +75,7 @@ class ProjectServiceSpec @Autowired constructor(
         val size = 4
 
         for (i in 0 until totalAmount) {
-            projectService.createProject(command = protoCreateCommand, userId = user.id)
+            projectService.createProject(command = DefaultCommand.CreateProject, userId = user.id)
         }
 
         val result = projectService.getAllProjects(pageable = PageRequest.of(page, size))
@@ -98,7 +93,7 @@ class ProjectServiceSpec @Autowired constructor(
 //        val stacks = database.getTechStacks()
 //        val user = database.getUser()
 //        val createdProject = projectService.createProject(
-//            command = protoCreateCommand.copy(techStackIds = stacks.map { it.id }),
+//            command = DefaultCommand.CreateProject.copy(techStackIds = stacks.map { it.id }),
 //            userId = user.id
 //        )
 //
@@ -115,7 +110,7 @@ class ProjectServiceSpec @Autowired constructor(
 
         for (i in 0 until 3) {
             projectService.createProject(
-                command = protoCreateCommand.copy(frontLeftCnt = i),
+                command = DefaultCommand.CreateProject.copy(frontLeftCnt = i),
                 userId = user.id,
             )
         }
@@ -123,5 +118,18 @@ class ProjectServiceSpec @Autowired constructor(
         val result = projectService.imminentProjects()
 
         result.size shouldBe 2
+    }
+
+    object DefaultCommand {
+        val CreateProject = CreateProject(
+            title = "Test Project",
+            description = "This is test",
+            thumbnail = "This is test",
+            frontLeftCnt = 3,
+            backLeftCnt = 3,
+            designLeftCnt = 3,
+            techStackIds = emptyList(),
+            due = Due.SIX
+        )
     }
 }

@@ -108,6 +108,7 @@ class ChatService(
         imageRepository.findById(command.imageId).orElseThrow(::DataNotFoundException).let { image ->
             threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).also {
                 if (it.userId != command.userId) throw NotAllowedException()
+                if (it.id != image.parentId) throw InvalidRequestException()
             }
             imageRepository.delete(image)
         }
@@ -155,6 +156,7 @@ class ChatService(
         imageRepository.findById(command.imageId).orElseThrow(::DataNotFoundException).let { image ->
             commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).also {
                 if (it.userId != command.userId) throw NotAllowedException()
+                if (it.id != image.parentId) throw InvalidRequestException()
             }
             imageRepository.delete(image)
         }
