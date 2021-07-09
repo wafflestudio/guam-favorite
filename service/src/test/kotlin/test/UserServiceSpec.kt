@@ -58,7 +58,7 @@ class UserServiceSpec(
                 val result = userService.update(
                     command = UpdateUser(
                         nickname = "jony",
-                        skills = "kotlin",
+                        skills = listOf("kotlin"),
                         githubUrl = "s.s",
                         blogUrl = "s.s",
                         introduction = null
