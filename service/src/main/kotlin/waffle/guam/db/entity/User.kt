@@ -2,11 +2,13 @@ package waffle.guam.db.entity
 
 import java.time.Instant
 import javax.persistence.CascadeType
+import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
+import javax.persistence.Lob
 import javax.persistence.OneToOne
 import javax.persistence.Table
 
@@ -17,6 +19,8 @@ data class UserEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
+    @Lob
+    @Column
     val firebaseUid: String,
 
     var status: Status = Status.ACTIVE,
