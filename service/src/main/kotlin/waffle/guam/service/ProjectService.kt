@@ -5,18 +5,23 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.db.entity.Due
+import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectStackEntity
 import waffle.guam.db.entity.State
 import waffle.guam.db.entity.TaskEntity
+import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.ProjectStackRepository
 import waffle.guam.db.repository.ProjectViewRepository
 import waffle.guam.db.repository.TaskRepository
+import waffle.guam.db.repository.ThreadViewRepository
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.exception.JoinException
 import waffle.guam.exception.NotAllowedException
+import waffle.guam.model.Image
 import waffle.guam.model.Project
+import waffle.guam.model.ThreadOverView
 import waffle.guam.service.command.CreateProject
 import waffle.guam.service.command.CreateThread
 import java.time.LocalDateTime
@@ -27,6 +32,8 @@ class ProjectService(
     private val projectViewRepository: ProjectViewRepository,
     private val projectStackRepository: ProjectStackRepository,
     private val taskRepository: TaskRepository,
+    private val threadViewRepository: ThreadViewRepository,
+    private val commentRepository: CommentRepository,
     private val chatService: ChatService
 ) {
 
@@ -58,11 +65,27 @@ class ProjectService(
     }
 
     fun getAllProjects(pageable: Pageable): Page<Project> =
-        projectViewRepository.findAll(pageable).map { Project.of(it, true) }
+        projectViewRepository.findAll(pageable).map { Project.of(it, false) }
 
     fun findProject(id: Long): Project =
         projectViewRepository.findById(id).orElseThrow(::DataNotFoundException)
-            .let { Project.of(entity = it, fetchTasks = true) }
+            .let {
+                Project.of(
+                    entity = it,
+                    fetchTasks = true,
+                    thread =
+                    it.noticeThreadId?.let { noticeId ->
+                        ThreadOverView.of(
+                            threadViewRepository.getById(noticeId),
+                            { threadId -> commentRepository.countByThreadId(threadId) },
+                            { images ->
+                                images.filter { allImage -> allImage.type == ImageType.THREAD }
+                                    .map { threadImage -> Image.of(threadImage) }
+                            }
+                        )
+                    }
+                )
+            }
 
     fun imminentProjects(): List<Project> =
         projectViewRepository

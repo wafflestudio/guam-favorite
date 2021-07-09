@@ -63,6 +63,8 @@ data class ProjectView(
 
     val recruiting: Boolean,
 
+    val noticeThreadId: Long?,
+
     val createdAt: LocalDateTime,
 
     val modifiedAt: LocalDateTime,
