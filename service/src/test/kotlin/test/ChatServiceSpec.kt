@@ -44,6 +44,7 @@ import waffle.guam.service.command.DeleteThread
 import waffle.guam.service.command.DeleteThreadImage
 import waffle.guam.service.command.EditCommentContent
 import waffle.guam.service.command.EditThreadContent
+import waffle.guam.service.command.RemoveNoticeThread
 import waffle.guam.service.command.SetNoticeThread
 import java.util.Optional
 
@@ -352,16 +353,14 @@ class ChatServiceSpec @Autowired constructor(
                 userId = user.id
             )
         )
-        database.flush()
         val updatedProject = projectRepository.findById(prevProject.id).get()
-
         result shouldBe true
         updatedProject.id shouldBe prevProject.id
         prevProject.noticeThreadId shouldBe null
         updatedProject.noticeThreadId shouldBe thread.id
     }
 
-    @DisplayName("공지 쓰레드 설정 : projectId에 해당되는 프로젝트에 공지 쓰레드를 설정하려고 하면 예외가 발생한다")
+    @DisplayName("공지 쓰레드 설정 : 존재하지 않는 프로젝트에 공지 쓰레드를 설정하려고 하면 예외가 발생한다")
     @Transactional
     @Test
     fun setNoticeThreadProjectNotFoundException() {
@@ -373,7 +372,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("공지 쓰레드 설정 : projectId와 userId에 해당되는 task가 없을 때 쓰레드를 설정하려고 하면 예외가 발생한다")
+    @DisplayName("공지 쓰레드 설정 : 프로젝트와 연관이 없는 사용자(=task가 없는 경우)가 쓰레드를 설정하려고 하면 예외가 발생한다")
     @Transactional
     @Test
     fun setNoticeThreadTaskNotFoundException() {
@@ -395,7 +394,7 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("공지 쓰레드 설정 : projectId와 userId에 해당되는 task의 State가 GUEST일 때 쓰레드를 설정하려고 하면 예외가 발생한다")
+    @DisplayName("공지 쓰레드 설정 : GUEST 상태의 사용자가 쓰레드를 설정하려고 하면 예외가 발생한다")
     @Transactional
     @Test
     fun setNoticeThreadGuestTaskNotAllowedException() {
@@ -438,6 +437,95 @@ class ChatServiceSpec @Autowired constructor(
                     projectId = project.id,
                     threadId = 9999999999999999,
                     userId = users[1].id
+                )
+            )
+        }
+    }
+
+    @DisplayName("공지 쓰레드 제거 : projectId에 해당하는 프로젝트의 멤버는 공지 쓰레드를 삭제할 수 있다.")
+    @Transactional
+    @Test
+    fun removeNoticeThreadOK() {
+        val user = database.getUser()
+        val prevProject = database.getProject().copy()
+        taskRepository.save(DefaultInput.task.copy())
+        val thread = database.getThread()
+
+        chatService.setNoticeThread(
+            DefaultCommand.SetNoticeThread.copy(
+                projectId = prevProject.id,
+                threadId = thread.id,
+                userId = user.id
+            )
+        )
+        val prevProject2 = projectRepository.findById(prevProject.id).get().copy()
+        val result = chatService.removeNoticeThread(
+            DefaultCommand.RemoveNoticeThread.copy(
+                projectId = prevProject2.id,
+                userId = user.id
+            )
+        )
+        val updatedProject = projectRepository.findById(prevProject2.id).get()
+        result shouldBe true
+        prevProject.id shouldBe prevProject2.id
+        prevProject2.id shouldBe updatedProject.id
+        prevProject.noticeThreadId shouldBe null
+        prevProject2.noticeThreadId shouldBe thread.id
+        updatedProject.noticeThreadId shouldBe null
+    }
+
+    @DisplayName("공지 쓰레드 제거 : 존재하지 않는 프로젝트에 공지 쓰레드를 삭제하려고 하면 예외가 발생한다")
+    @Transactional
+    @Test
+    fun removeNoticeThreadProjectNotFoundException() {
+        database.getProject()
+        shouldThrowExactly<DataNotFoundException> {
+            chatService.removeNoticeThread(
+                command = DefaultCommand.RemoveNoticeThread.copy(projectId = 9999999)
+            )
+        }
+    }
+
+    @DisplayName("공지 쓰레드 제거 : 프로젝트와 연관이 없는 사용자(=task가 없는 경우)가 쓰레드를 삭제하려고 하면 예외가 발생한다")
+    @Transactional
+    @Test
+    fun removeNoticeThreadTaskNotFoundException() {
+        val users = database.getUsers()
+        val project = database.getProject()
+        taskRepository.saveAll(
+            listOf(
+                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
+            )
+        )
+        shouldThrowExactly<NotAllowedException> {
+            chatService.removeNoticeThread(
+                command = DefaultCommand.RemoveNoticeThread.copy(
+                    projectId = project.id,
+                    userId = users[2].id
+                )
+            )
+        }
+    }
+
+    @DisplayName("공지 쓰레드 제거 : GUEST 상태의 사용자가 쓰레드를 삭제하려고 하면 예외가 발생한다")
+    @Transactional
+    @Test
+    fun removeNoticeThreadGuestTaskNotAllowedException() {
+        val users = database.getUsers()
+        val project = database.getProject()
+        taskRepository.saveAll(
+            listOf(
+                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[2].id, state = State.GUEST),
+            )
+        )
+        shouldThrowExactly<NotAllowedException> {
+            chatService.removeNoticeThread(
+                command = DefaultCommand.RemoveNoticeThread.copy(
+                    projectId = project.id,
+                    userId = users[2].id
                 )
             )
         }
@@ -1165,6 +1253,11 @@ class ChatServiceSpec @Autowired constructor(
         val SetNoticeThread = SetNoticeThread(
             projectId = 1,
             threadId = 1,
+            userId = 1
+        )
+
+        val RemoveNoticeThread = RemoveNoticeThread(
+            projectId = 1,
             userId = 1
         )
 
