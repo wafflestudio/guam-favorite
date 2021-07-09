@@ -30,7 +30,7 @@ class UserService(
     fun update(command: UpdateUser, userId: Long): User =
         userRepository.findById(userId).orElseThrow(::DataNotFoundException).let {
             it.nickname = command.nickname ?: it.nickname
-            it.skills = command.skills ?: it.skills
+            it.skills = command.skills?.joinToString(",") ?: it.skills
             it.githubUrl = command.githubUrl ?: it.githubUrl
             it.blogUrl = command.blogUrl ?: it.blogUrl
             it.introduction = command.introduction ?: it.introduction

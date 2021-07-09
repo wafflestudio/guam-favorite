@@ -13,6 +13,7 @@ data class Project(
     val backLeftCnt: Int,
     val designLeftCnt: Int,
     val isRecruiting: Boolean,
+    val noticeThread: ThreadOverView?,
     val techStacks: List<TechStack>,
     val tasks: List<Task>?,
     val createdAt: LocalDateTime,
@@ -20,7 +21,7 @@ data class Project(
     val due: Due
 ) {
     companion object {
-        fun of(entity: ProjectView, fetchTasks: Boolean = false): Project =
+        fun of(entity: ProjectView, fetchTasks: Boolean = false, thread: ThreadOverView? = null): Project =
             Project(
                 id = entity.id,
                 title = entity.title,
@@ -37,7 +38,8 @@ data class Project(
                 },
                 createdAt = entity.createdAt,
                 modifiedAt = entity.modifiedAt,
-                due = entity.due
+                due = entity.due,
+                noticeThread = thread
             )
     }
 }
