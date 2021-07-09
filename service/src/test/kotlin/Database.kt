@@ -4,6 +4,7 @@ import org.springframework.beans.factory.ListableBeanFactory
 import org.springframework.data.repository.support.Repositories
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import waffle.guam.db.entity.CommentEntity
 import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.ImageEntity
 import waffle.guam.db.entity.ImageType
@@ -11,15 +12,14 @@ import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectEntity
 import waffle.guam.db.entity.Status
 import waffle.guam.db.entity.TechStackEntity
-import waffle.guam.db.entity.CommentEntity
 import waffle.guam.db.entity.ThreadEntity
 import waffle.guam.db.entity.UserEntity
+import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.StackRepository
 import waffle.guam.db.repository.ThreadRepository
 import waffle.guam.db.repository.UserRepository
-import waffle.guam.db.repository.CommentRepository
 import javax.persistence.EntityManager
 import javax.persistence.Table
 
