@@ -1,6 +1,5 @@
 package waffle.guam.test
 
-import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -11,10 +10,12 @@ import org.springframework.transaction.annotation.Transactional
 import waffle.guam.Database
 import waffle.guam.DatabaseTest
 import waffle.guam.db.entity.Due
+import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.ProjectStackRepository
 import waffle.guam.db.repository.ProjectViewRepository
 import waffle.guam.db.repository.TaskRepository
+import waffle.guam.db.repository.ThreadViewRepository
 import waffle.guam.service.ChatService
 import waffle.guam.service.ProjectService
 import waffle.guam.service.command.CreateProject
@@ -26,6 +27,8 @@ class ProjectServiceSpec @Autowired constructor(
     private val projectStackRepository: ProjectStackRepository,
     private val taskRepository: TaskRepository,
     private val chatService: ChatService,
+    private val threadViewRepository: ThreadViewRepository,
+    private val commentRepository: CommentRepository,
     private val database: Database,
 ) {
 
@@ -34,7 +37,9 @@ class ProjectServiceSpec @Autowired constructor(
         projectViewRepository = projectViewRepository,
         projectStackRepository = projectStackRepository,
         taskRepository = taskRepository,
-        chatService = chatService
+        chatService = chatService,
+        threadViewRepository = threadViewRepository,
+        commentRepository = commentRepository
     )
 
     @BeforeEach
@@ -62,17 +67,14 @@ class ProjectServiceSpec @Autowired constructor(
 
     // TODO(JoinException)
 
-
-
-
     @DisplayName("프로젝트 전체 목록 조회")
     @Transactional
     @Test
     fun getAllProject() {
         val user = database.getUser()
-        val totalAmount = 10
+        val totalAmount = 3
         val page = 2
-        val size = 4
+        val size = 1
 
         for (i in 0 until totalAmount) {
             projectService.createProject(command = DefaultCommand.CreateProject, userId = user.id)
@@ -81,7 +83,7 @@ class ProjectServiceSpec @Autowired constructor(
         val result = projectService.getAllProjects(pageable = PageRequest.of(page, size))
 
         result.totalElements shouldBe totalAmount
-        result.content.size shouldBe 2
+        result.content.size shouldBe 1
         // 전체 조회시, 구성원 정보는 생략한다.
         result.content.forEach { it.tasks shouldBe null }
     }
