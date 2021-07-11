@@ -8,6 +8,7 @@ import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectStackEntity
+import waffle.guam.db.entity.ProjectView
 import waffle.guam.db.entity.State
 import waffle.guam.db.entity.TaskEntity
 import waffle.guam.db.repository.CommentRepository
@@ -44,6 +45,8 @@ class ProjectService(
 
         if (taskRepository.countByUserId(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
 
+        val myPosition = command.myPosition ?: throw JoinException("포지션을 설정해주세요.")
+
         return projectRepository.save(command.toEntity()).let { project ->
             projectStackRepository.saveAll(
                 command.techStackIds.map { stackInfo ->
@@ -55,21 +58,25 @@ class ProjectService(
                 }
             )
             taskRepository.save(
-                TaskEntity(projectId = project.id, userId = userId, position = Position.WHATEVER, state = State.LEADER)
+                TaskEntity(
+                    projectId = project.id, userId = userId,
+                    position = myPosition, state = State.LEADER
+                )
             )
             project.id
         }.let { projectId ->
             projectViewRepository.findById(projectId).orElseThrow(::DataNotFoundException)
-                .let { Project.of(entity = it, fetchTasks = true) }
+                .let { Project.of(entity = it, fetchTasks = true, currHeadCnt = currHeadCntOf(it)) }
         }
     }
 
     fun getAllProjects(pageable: Pageable): Page<Project> =
-        projectViewRepository.findAll(pageable).map { Project.of(it, false) }
+        projectViewRepository.findAll(pageable).map { Project.of(it, false, currHeadCnt = currHeadCntOf(it)) }
 
     fun findProject(id: Long): Project =
         projectViewRepository.findById(id).orElseThrow(::DataNotFoundException)
             .let {
+
                 Project.of(
                     entity = it,
                     fetchTasks = true,
@@ -83,7 +90,8 @@ class ProjectService(
                                     .map { threadImage -> Image.of(threadImage) }
                             }
                         )
-                    }
+                    },
+                    currHeadCnt = currHeadCntOf(it)
                 )
             }
 
@@ -142,11 +150,14 @@ class ProjectService(
 
         // reject when there is no quota
         // check if this pj is recruiting
-        // FIXME 참조할 때 약간 불편하다. 예외처리는 각각 언제?
 
         if (taskRepository.countByUserId(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
 
-        return projectRepository.findById(id).orElseThrow(::DataNotFoundException).takeIf {
+        taskRepository.findByUserIdAndProjectId(userId, id).ifPresent {
+            throw JoinException("이미 참여하고 계신 프로젝트입니다 ^~^")
+        }
+
+        return projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).takeIf {
             it.recruiting
         }.let {
 
@@ -165,15 +176,33 @@ class ProjectService(
                 TaskEntity(projectId = id, userId = userId, position = position, state = State.GUEST)
             )
             chatService.createThread(
-                CreateThread(projectId = id, userId = userId, content = introduction, imageFiles = null)
+                CreateThread(id, userId, introduction, null)
             )
             true
         }
     }
 
     @Transactional
-    fun deleteProject(id: Long): Boolean {
-        projectViewRepository.deleteById(id)
-        return true
+    fun deleteProject(id: Long, userId: Long): Boolean {
+
+        taskRepository.findByUserIdAndProjectId(userId, id).orElseThrow(::DataNotFoundException).let {
+            if (it.state != State.LEADER) throw NotAllowedException("프로젝트 수정 권한이 없습니다.")
+        }.let {
+            projectViewRepository.deleteById(id)
+            return true
+        }
+    }
+
+    fun currHeadCntOf(projectView: ProjectView): IntArray {
+        val res = MutableList(3, fun(_: Int) = 0)
+        projectView.tasks.map {
+            when (it.position) {
+                Position.WHATEVER -> 0
+                Position.DESIGNER -> res[2]++
+                Position.BACKEND -> res[1]++
+                Position.FRONTEND -> res[0]++
+            }
+        }
+        return res.toIntArray()
     }
 }
