@@ -8,7 +8,6 @@ import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectStackEntity
-import waffle.guam.db.entity.ProjectView
 import waffle.guam.db.entity.State
 import waffle.guam.db.entity.TaskEntity
 import waffle.guam.db.repository.CommentRepository
@@ -66,12 +65,12 @@ class ProjectService(
             project.id
         }.let { projectId ->
             projectViewRepository.findById(projectId).orElseThrow(::DataNotFoundException)
-                .let { Project.of(entity = it, fetchTasks = true, currHeadCnt = currHeadCntOf(it)) }
+                .let { Project.of(entity = it, fetchTasks = true) }
         }
     }
 
     fun getAllProjects(pageable: Pageable): Page<Project> =
-        projectViewRepository.findAll(pageable).map { Project.of(it, false, currHeadCnt = currHeadCntOf(it)) }
+        projectViewRepository.findAll(pageable).map { Project.of(it, false) }
 
     fun findProject(id: Long): Project =
         projectViewRepository.findById(id).orElseThrow(::DataNotFoundException)
@@ -90,8 +89,7 @@ class ProjectService(
                                     .map { threadImage -> Image.of(threadImage) }
                             }
                         )
-                    },
-                    currHeadCnt = currHeadCntOf(it)
+                    }
                 )
             }
 
@@ -187,23 +185,10 @@ class ProjectService(
 
         taskRepository.findByUserIdAndProjectId(userId, id)
             .orElseThrow(::NotAllowedException).let {
-            if (it.state != State.LEADER) throw NotAllowedException("프로젝트 수정 권한이 없습니다.")
-        }.let {
-            projectViewRepository.deleteById(id)
-            return true
-        }
-    }
-
-    fun currHeadCntOf(projectView: ProjectView): IntArray {
-        val res = MutableList(3, fun(_: Int) = 0)
-        projectView.tasks.map {
-            when (it.position) {
-                Position.WHATEVER -> 0
-                Position.DESIGNER -> res[2]++
-                Position.BACKEND -> res[1]++
-                Position.FRONTEND -> res[0]++
+                if (it.state != State.LEADER) throw NotAllowedException("프로젝트 수정 권한이 없습니다.")
+            }.let {
+                projectViewRepository.deleteById(id)
+                return true
             }
-        }
-        return res.toIntArray()
     }
 }
