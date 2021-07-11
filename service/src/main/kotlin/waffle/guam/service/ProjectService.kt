@@ -185,7 +185,8 @@ class ProjectService(
     @Transactional
     fun deleteProject(id: Long, userId: Long): Boolean {
 
-        taskRepository.findByUserIdAndProjectId(userId, id).orElseThrow(::DataNotFoundException).let {
+        taskRepository.findByUserIdAndProjectId(userId, id)
+            .orElseThrow(::NotAllowedException).let {
             if (it.state != State.LEADER) throw NotAllowedException("프로젝트 수정 권한이 없습니다.")
         }.let {
             projectViewRepository.deleteById(id)
