@@ -97,7 +97,6 @@ class ChatService(
     @Transactional
     fun createThread(command: CreateThread): Boolean {
         if (command.content.isNullOrBlank() && command.imageFiles.isNullOrEmpty()) throw InvalidRequestException("입력된 내용이 없습니다.")
-        println(command)
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
         val threadId = threadRepository.save(command.toEntity()).id
         if (!command.imageFiles.isNullOrEmpty())

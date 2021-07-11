@@ -130,7 +130,7 @@ class ProjectServiceSpec @Autowired constructor(
                     title = "Project $i",
                     techStackIds = stacks.map { Pair(first = it.id, second = it.position) }
                 ),
-                userId = users[i%3].id
+                userId = users[i % 3].id
             )
         }
 
@@ -159,7 +159,7 @@ class ProjectServiceSpec @Autowired constructor(
         for (i in 0 until totalAmount) {
             projectService.createProject(
                 command = DefaultCommand.CreateProject,
-                userId = users[i%3].id
+                userId = users[i % 3].id
             )
         }
 
@@ -210,8 +210,10 @@ class ProjectServiceSpec @Autowired constructor(
         val user = database.getUser()
         val thread = database.getThread()
         database.getComment()
-        val createdProject = projectRepository.save(DefaultDataInfo.project.copy(
-            noticeThreadId = thread.id, modifiedAt = LocalDateTime.now())
+        val createdProject = projectRepository.save(
+            DefaultDataInfo.project.copy(
+                noticeThreadId = thread.id, modifiedAt = LocalDateTime.now()
+            )
         )
         val result = projectService.findProject(createdProject.id)
 
@@ -288,12 +290,14 @@ class ProjectServiceSpec @Autowired constructor(
         val user = database.getUser()
         for (i in 0 until 3) {
             projectService.createProject(
-                command = DefaultCommand.CreateProject.copy(techStackIds = stacks.map {
-                    Pair(
-                        first = it.id,
-                        second = it.position
-                    )
-                }),
+                command = DefaultCommand.CreateProject.copy(
+                    techStackIds = stacks.map {
+                        Pair(
+                            first = it.id,
+                            second = it.position
+                        )
+                    }
+                ),
                 userId = user.id
             )
         }
