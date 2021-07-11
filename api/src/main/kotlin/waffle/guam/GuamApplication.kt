@@ -3,12 +3,21 @@ package waffle.guam
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
+import kotlinx.coroutines.runBlocking
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.core.io.ClassPathResource
+import javax.annotation.PostConstruct
 
 @SpringBootApplication
-class GuamApplication
+class GuamApplication(
+    private val dataInitializer: DataInitializer
+) {
+    @PostConstruct
+    private fun init(): Unit = runBlocking {
+        dataInitializer.init()
+    }
+}
 
 fun main(args: Array<String>) {
     runApplication<GuamApplication>(*args)

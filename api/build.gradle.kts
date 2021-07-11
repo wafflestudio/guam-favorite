@@ -12,3 +12,11 @@ dependencies {
     implementation("io.springfox:springfox-swagger-ui:2.9.2")
     implementation("com.google.firebase:firebase-admin:7.1.0")
 }
+
+/**
+ *  테스트용, 추후 제거
+ */
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+}
