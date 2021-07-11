@@ -1,6 +1,7 @@
 package waffle.guam.config
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import org.springframework.core.MethodParameter
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
@@ -28,8 +29,17 @@ class UserContextResolver(
         binderFactory: WebDataBinderFactory?
     ): UserContext =
         (webRequest.nativeRequest as HttpServletRequest).getHeader(HttpHeaders.AUTHORIZATION)
-            ?.let { sessionService.takeUserId(it) }
-            ?: throw InvalidFirebaseTokenException()
+            ?.let {
+                kotlin.runCatching {
+                    sessionService.takeUserId(it)
+                }.getOrElse {
+                    if(it is FirebaseAuthException && it.message?.contains("expired") == true) {
+                        throw InvalidFirebaseTokenException("만료된 토큰입니다.")
+                    }
+                    throw InvalidFirebaseTokenException("잘못된 토큰입니다.")
+                }
+            }
+            ?: throw InvalidFirebaseTokenException("토큰 정보를 찾을 수 없습니다.")
 }
 
 interface SessionService {
