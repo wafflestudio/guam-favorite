@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.multipart.MultipartFile
 import waffle.guam.common.UserContext
 import waffle.guam.controller.request.ContentInput
+import waffle.guam.controller.request.CreateFullInfoInput
 import waffle.guam.controller.response.PageableResponse
 import waffle.guam.controller.response.SuccessResponse
 import waffle.guam.model.ThreadDetail
@@ -85,8 +87,7 @@ class ChatController(
     @PostMapping("/thread/create/{projectId}")
     fun createThread(
         @PathVariable projectId: Long,
-        @RequestParam("images") imageFiles: List<MultipartFile>?,
-        @RequestBody contentInput: ContentInput?,
+        @ModelAttribute("contentAndOrImages") createFullInfoInput : CreateFullInfoInput,
         userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
@@ -94,8 +95,8 @@ class ChatController(
                 command = CreateThread(
                     projectId = projectId,
                     userId = userContext.id,
-                    content = contentInput?.content,
-                    imageFiles = imageFiles
+                    content = createFullInfoInput.content,
+                    imageFiles = createFullInfoInput.imageFiles
                 )
             )
         )
@@ -138,8 +139,7 @@ class ChatController(
     @PostMapping("/comment/create/{threadId}")
     fun createComment(
         @PathVariable threadId: Long,
-        @RequestParam("images") imageFiles: List<MultipartFile>?,
-        @RequestBody contentInput: ContentInput?,
+        @ModelAttribute("contentAndOrImages") createFullInfoInput : CreateFullInfoInput,
         userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
@@ -147,8 +147,8 @@ class ChatController(
                 command = CreateComment(
                     threadId = threadId,
                     userId = userContext.id,
-                    content = contentInput?.content,
-                    imageFiles = imageFiles
+                    content = createFullInfoInput.content,
+                    imageFiles = createFullInfoInput.imageFiles
                 )
             )
         )
