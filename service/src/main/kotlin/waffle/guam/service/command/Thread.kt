@@ -12,6 +12,11 @@ data class SetNoticeThread(
     val userId: Long,
 ) : ThreadCommand()
 
+data class RemoveNoticeThread(
+    val projectId: Long,
+    val userId: Long,
+) : ThreadCommand()
+
 data class CreateThread(
     val projectId: Long,
     val userId: Long,

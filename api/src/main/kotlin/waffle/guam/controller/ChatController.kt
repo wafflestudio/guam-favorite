@@ -28,6 +28,7 @@ import waffle.guam.service.command.DeleteThread
 import waffle.guam.service.command.DeleteThreadImage
 import waffle.guam.service.command.EditCommentContent
 import waffle.guam.service.command.EditThreadContent
+import waffle.guam.service.command.RemoveNoticeThread
 import waffle.guam.service.command.SetNoticeThread
 
 @RestController
@@ -67,6 +68,17 @@ class ChatController(
         SuccessResponse(
             chatService.setNoticeThread(
                 command = SetNoticeThread(projectId = projectId, threadId = threadId, userId = userContext.id)
+            )
+        )
+
+    @PutMapping("/project/{projectId}/notice/reset")
+    fun removeNoticeThread(
+        @PathVariable projectId: Long,
+        userContext: UserContext
+    ): SuccessResponse<Boolean> =
+        SuccessResponse(
+            chatService.removeNoticeThread(
+                command = RemoveNoticeThread(projectId = projectId, userId = userContext.id)
             )
         )
 

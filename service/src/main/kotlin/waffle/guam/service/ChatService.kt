@@ -27,6 +27,7 @@ import waffle.guam.service.command.DeleteThread
 import waffle.guam.service.command.DeleteThreadImage
 import waffle.guam.service.command.EditCommentContent
 import waffle.guam.service.command.EditThreadContent
+import waffle.guam.service.command.RemoveNoticeThread
 import waffle.guam.service.command.SetNoticeThread
 import java.time.LocalDateTime
 
@@ -78,6 +79,17 @@ class ChatService(
             threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { thread ->
                 projectRepository.save(project.copy(noticeThreadId = thread.id, modifiedAt = LocalDateTime.now()))
             }
+        }
+        return true
+    }
+
+    @Transactional
+    fun removeNoticeThread(command: RemoveNoticeThread): Boolean {
+        projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
+            taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::NotAllowedException).also {
+                if (it.state == State.GUEST) throw NotAllowedException()
+            }
+            projectRepository.save(project.copy(noticeThreadId = null, modifiedAt = LocalDateTime.now()))
         }
         return true
     }
