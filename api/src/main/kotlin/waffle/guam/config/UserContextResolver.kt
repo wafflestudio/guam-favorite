@@ -33,7 +33,7 @@ class UserContextResolver(
                 kotlin.runCatching {
                     sessionService.takeUserId(it)
                 }.getOrElse {
-                    if(it is FirebaseAuthException && it.message?.contains("expired") == true) {
+                    if (it is FirebaseAuthException && it.message?.contains("expired") == true) {
                         throw InvalidFirebaseTokenException("만료된 토큰입니다.")
                     }
                     throw InvalidFirebaseTokenException("잘못된 토큰입니다.")
