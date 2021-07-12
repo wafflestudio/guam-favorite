@@ -14,7 +14,8 @@ data class CreateProject(
     val backLeftCnt: Int,
     val designLeftCnt: Int,
     val techStackIds: List<Pair<Long, Position>>,
-    val due: Due
+    val due: Due,
+    val myPosition: Position?
 ) : ProjectCommand() {
     fun toEntity(): ProjectEntity =
         ProjectEntity(
@@ -28,3 +29,8 @@ data class CreateProject(
             due = due
         )
 }
+
+data class JoinProject(
+    val position: Position,
+    val introduction: String
+)

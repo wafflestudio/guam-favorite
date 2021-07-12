@@ -19,6 +19,7 @@ import waffle.guam.db.entity.Position
 import waffle.guam.model.Project
 import waffle.guam.service.ProjectService
 import waffle.guam.service.command.CreateProject
+import waffle.guam.service.command.JoinProject
 
 @RestController
 @RequestMapping
@@ -94,20 +95,20 @@ class ProjectController(
     @ResponseBody
     fun joinProject(
         @PathVariable id: Long,
-        @RequestParam position: Position,
-        @RequestParam introduction: String,
+        @RequestBody jp: JoinProject,
         userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
-            data = projectService.join(id, userContext.id, position, introduction)
+            data = projectService.join(id, userContext.id, jp.position, jp.introduction)
         )
 
     @DeleteMapping("/project/{id}")
     @ResponseBody
     fun deleteProject(
-        @PathVariable id: Long
+        @PathVariable id: Long,
+        userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(
-            data = projectService.deleteProject(id)
+            data = projectService.deleteProject(id, userContext.id)
         )
 }
