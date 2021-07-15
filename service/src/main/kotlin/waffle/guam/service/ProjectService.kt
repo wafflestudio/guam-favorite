@@ -145,41 +145,37 @@ class ProjectService(
         }
 
     @Transactional
-    fun join(id: Long, userId: Long, position: Position, introduction: String): Boolean {
+    fun join(id: Long, userId: Long, position: Position, introduction: String): Boolean =
 
-        // reject when there is no quota
-        // check if this pj is recruiting
+        when {
+            taskRepository.countByUserIdAndStateNotLike(userId) >= 3 -> throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
+            taskRepository.findByUserIdAndProjectId(userId, id).isPresent -> throw JoinException("이미 참여하고 계신 프로젝트입니다.")
+            else -> projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).let {
 
-        if (taskRepository.countByUserIdAndStateNotLike(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
+                if (it.recruiting)
+                    throw JoinException("이 프로젝트는 현재 팀원을 모집하고 있지 않습니다.")
 
-        taskRepository.findByUserIdAndProjectId(userId, id).ifPresent {
-            throw JoinException("이미 참여하고 계신 프로젝트입니다 ^~^")
+                val headCnt =
+                    when (position) {
+                        Position.WHATEVER -> throw JoinException("포지션을 입력해주세요.")
+                        Position.DESIGNER -> it!!.designerHeadcount
+                        Position.BACKEND -> it!!.backHeadcount
+                        Position.FRONTEND -> it!!.frontHeadcount
+                    }
+                val currCnt = taskRepository.countByProjectIdAndPosition(id, position)
+
+                if (currCnt >= headCnt)
+                    throw JoinException("해당 포지션에는 남은 정원이 없습니다.")
+
+                taskRepository.save(
+                    TaskEntity(projectId = id, userId = userId, position = position, state = State.GUEST)
+                )
+
+                chatService.createThread(
+                    CreateThread(id, userId, introduction, null)
+                )
+            }
         }
-
-        return projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).takeIf {
-            it.recruiting
-        }.let {
-
-            val headCnt =
-                when (position) {
-                    Position.WHATEVER -> throw JoinException("포지션을 입력해주세요.")
-                    Position.DESIGNER -> it!!.designerHeadcount
-                    Position.BACKEND -> it!!.backHeadcount
-                    Position.FRONTEND -> it!!.frontHeadcount
-                }
-            val currCnt = taskRepository.countByProjectIdAndPosition(id, position)
-
-            if (currCnt >= headCnt) throw JoinException("해당 포지션에는 남은 정원이 없습니다.")
-
-            taskRepository.save(
-                TaskEntity(projectId = id, userId = userId, position = position, state = State.GUEST)
-            )
-            chatService.createThread(
-                CreateThread(id, userId, introduction, null)
-            )
-            true
-        }
-    }
 
     @Transactional
     fun acceptOrNot(id: Long, guestId: Long, leaderId: Long, accept: Boolean): String =
