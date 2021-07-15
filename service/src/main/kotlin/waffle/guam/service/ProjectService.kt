@@ -44,6 +44,8 @@ class ProjectService(
 
         if (taskRepository.countByUserId(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
 
+        val myPosition = command.myPosition ?: throw JoinException("포지션을 설정해주세요.")
+
         return projectRepository.save(command.toEntity()).let { project ->
             projectStackRepository.saveAll(
                 command.techStackIds.map { stackInfo ->
@@ -55,7 +57,10 @@ class ProjectService(
                 }
             )
             taskRepository.save(
-                TaskEntity(projectId = project.id, userId = userId, position = Position.WHATEVER, state = State.LEADER)
+                TaskEntity(
+                    projectId = project.id, userId = userId,
+                    position = myPosition, state = State.LEADER
+                )
             )
             project.id
         }.let { projectId ->
@@ -70,6 +75,7 @@ class ProjectService(
     fun findProject(id: Long): Project =
         projectViewRepository.findById(id).orElseThrow(::DataNotFoundException)
             .let {
+
                 Project.of(
                     entity = it,
                     fetchTasks = true,
@@ -142,11 +148,14 @@ class ProjectService(
 
         // reject when there is no quota
         // check if this pj is recruiting
-        // FIXME 참조할 때 약간 불편하다. 예외처리는 각각 언제?
 
         if (taskRepository.countByUserId(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
 
-        return projectRepository.findById(id).orElseThrow(::DataNotFoundException).takeIf {
+        taskRepository.findByUserIdAndProjectId(userId, id).ifPresent {
+            throw JoinException("이미 참여하고 계신 프로젝트입니다 ^~^")
+        }
+
+        return projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).takeIf {
             it.recruiting
         }.let {
 
@@ -165,15 +174,21 @@ class ProjectService(
                 TaskEntity(projectId = id, userId = userId, position = position, state = State.GUEST)
             )
             chatService.createThread(
-                CreateThread(projectId = id, userId = userId, content = introduction, imageFiles = null)
+                CreateThread(id, userId, introduction, null)
             )
             true
         }
     }
 
     @Transactional
-    fun deleteProject(id: Long): Boolean {
-        projectViewRepository.deleteById(id)
-        return true
+    fun deleteProject(id: Long, userId: Long): Boolean {
+
+        taskRepository.findByUserIdAndProjectId(userId, id)
+            .orElseThrow(::NotAllowedException).let {
+                if (it.state != State.LEADER) throw NotAllowedException("프로젝트 수정 권한이 없습니다.")
+            }.let {
+                projectViewRepository.deleteById(id)
+                return true
+            }
     }
 }

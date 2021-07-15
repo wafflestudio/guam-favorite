@@ -7,9 +7,11 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import waffle.guam.db.entity.Due
+import waffle.guam.db.entity.Position
 import waffle.guam.service.ProjectService
 import waffle.guam.service.UserService
 import waffle.guam.service.command.CreateProject
+import java.lang.Math.random
 
 @Service
 class DataInitializer(
@@ -32,7 +34,8 @@ class DataInitializer(
         backLeftCnt = 3,
         designLeftCnt = 3,
         techStackIds = listOf(),
-        due = Due.UNDEFINED
+        due = Due.UNDEFINED,
+        myPosition = Position.values().random()
     )
 
     suspend fun init() = runBlocking {

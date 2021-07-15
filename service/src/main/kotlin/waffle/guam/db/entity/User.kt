@@ -23,6 +23,8 @@ data class UserEntity(
     @Column
     val firebaseUid: String,
 
+    var deviceId: String? = null,
+
     var status: Status = Status.ACTIVE,
 
     var nickname: String = "",

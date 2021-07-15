@@ -13,6 +13,7 @@ import waffle.guam.controller.response.SuccessResponse
 import waffle.guam.model.User
 import waffle.guam.service.TaskService
 import waffle.guam.service.UserService
+import waffle.guam.service.command.UpdateDevice
 import waffle.guam.service.command.UpdateUser
 
 @RequestMapping("user")
@@ -37,6 +38,15 @@ class UserController(
     ): SuccessResponse<User> =
         SuccessResponse(
             userService.update(command, userContext.id)
+        )
+
+    @PostMapping("/device")
+    fun updateUser(
+        @RequestBody command: UpdateDevice,
+        userContext: UserContext
+    ): SuccessResponse<User> =
+        SuccessResponse(
+            userService.updateDeviceId(command, userContext.id)
         )
 
     @PostMapping("image")
