@@ -3,6 +3,7 @@ package waffle.guam.model
 import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectView
+import waffle.guam.db.entity.State
 import java.time.LocalDateTime
 
 data class Project(
@@ -21,7 +22,9 @@ data class Project(
     val tasks: List<Task>?,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime,
-    val due: Due
+    val due: Due,
+    val leaderProfile: User?,
+    val noticeThread: ThreadOverView?
 ) {
     companion object {
         fun of(
@@ -49,7 +52,16 @@ data class Project(
                     },
                     createdAt = entity.createdAt,
                     modifiedAt = entity.modifiedAt,
-                    due = entity.due
+                    due = entity.due,
+                    leaderProfile = when (fetchTasks) {
+                        true -> entity.tasks.single {
+                            it.state == State.LEADER
+                        }.let {
+                            User.of(it.user)
+                        }
+                        else -> null
+                    },
+                    noticeThread = thread
                 )
             }
 
