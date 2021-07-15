@@ -203,6 +203,7 @@ class ProjectService(
             }
         }
 
+    // TODO : GUEST가 자발적으로 프로젝트를 그만두는 경우도 발생할 수 있음.
     @Transactional
     fun quit(id: Long, userId: Long): Boolean =
         taskRepository.findByUserIdAndProjectId(userId, id).orElseThrow(::DataNotFoundException).let {

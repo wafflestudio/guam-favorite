@@ -6,6 +6,7 @@ import waffle.guam.db.entity.ProjectView
 import waffle.guam.db.entity.State
 import java.time.LocalDateTime
 
+// TODO: DTO가 너무 더럽다.
 data class Project(
     val id: Long,
     val title: String,

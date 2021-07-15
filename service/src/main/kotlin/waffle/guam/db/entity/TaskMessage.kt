@@ -1,15 +1,15 @@
 package waffle.guam.db.entity
 
 import java.time.LocalDateTime
-import javax.persistence.Table
 import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.GenerationType
 import javax.persistence.GeneratedValue
+import javax.persistence.GenerationType
+import javax.persistence.Id
+import javax.persistence.Table
 
 @Table(name = "task_msg")
 @Entity
-data class TaskMessage (
+data class TaskMessage(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,9 +25,7 @@ data class TaskMessage (
 
     val modifiedAt: LocalDateTime = createdAt
 
-    ){
-
-}
+)
 
 enum class TaskStatus {
     DONE, ONGOING

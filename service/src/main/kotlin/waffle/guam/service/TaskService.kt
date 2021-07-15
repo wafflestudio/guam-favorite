@@ -13,6 +13,7 @@ import waffle.guam.service.command.CreateTaskMsg
 
 @Service
 class TaskService(
+    private val taskRepository: TaskRepository,
     private val taskViewRepository: TaskViewRepository,
     private val taskMessageRepository: TaskMessageRepository
 ) {
@@ -27,8 +28,10 @@ class TaskService(
     fun update(msgId: Long, createTaskMsg: CreateTaskMsg) =
         taskMessageRepository.findById(msgId).orElseThrow(::DataNotFoundException).let {
             taskMessageRepository.save(
-                it.copy( msg = createTaskMsg.msg ?: it.msg ,
-                         status = createTaskMsg.status ?: it.status )
+                it.copy(
+                    msg = createTaskMsg.msg ?: it.msg,
+                    status = createTaskMsg.status ?: it.status
+                )
             )
         }
 
@@ -40,4 +43,7 @@ class TaskService(
     fun delete(msgId: Long) =
         taskMessageRepository.deleteById(msgId).let { true }
 
+    @Transactional
+    fun getProjectIds(userId: Long): List<Long> =
+        taskRepository.findByUserId(userId).map { it.id }
 }

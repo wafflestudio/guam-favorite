@@ -21,7 +21,7 @@ data class Task(
             Task(
                 id = e.id,
                 position = e.position.name,
-                taskMsg = if(fetchMessage) getLatestMsg(e.tasks) else null,
+                taskMsg = if (fetchMessage) getLatestMsg(e.tasks) else null,
                 projectId = e.projectId,
                 user = User.of(e.user),
                 createdAt = e.createdAt,
@@ -34,12 +34,11 @@ data class Task(
                 it.status == TaskStatus.ONGOING
             }.maxByOrNull {
                 it.modifiedAt
-            }.let{
+            }.let {
                 it?.msg ?: "아직 아무 할 일도 작성하지 않으셨습니다."
             }
     }
 }
-
 
 data class TaskDetail(
     val id: Long,
@@ -56,7 +55,7 @@ data class TaskDetail(
             TaskDetail(
                 id = e.id,
                 position = e.position.name,
-                taskMsg = if(fetchMessage) e.tasks else null,
+                taskMsg = if (fetchMessage) e.tasks else null,
                 projectId = e.projectId,
                 user = User.of(e.user),
                 createdAt = e.createdAt,

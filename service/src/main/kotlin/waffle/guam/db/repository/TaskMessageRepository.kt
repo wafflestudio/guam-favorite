@@ -5,7 +5,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import waffle.guam.db.entity.TaskMessage
 
-interface TaskMessageRepository: JpaRepository<TaskMessage, Long> {
+interface TaskMessageRepository : JpaRepository<TaskMessage, Long> {
 
     fun findAllByTaskId(taskId: Long, pageable: Pageable): Page<TaskMessage>
 }
