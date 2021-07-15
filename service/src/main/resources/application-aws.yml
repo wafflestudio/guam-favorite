@@ -1,8 +1,8 @@
 cloud:
   aws:
     credentials:
-      accessKey: AKIAV5APOORJD3PDPPFS
-      secretKey: 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
+      accessKey: ${AWS_ACCESSKEY}
+      secretKey: ${AWS_ACCESSKEY}
     s3:
       bucket: guam
     region:
