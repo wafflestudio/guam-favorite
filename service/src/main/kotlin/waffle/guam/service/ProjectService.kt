@@ -82,7 +82,7 @@ class ProjectService(
                     fetchTasks = true,
                     thread =
                     project.noticeThreadId?.let { noticeThreadId ->
-                        threadViewRepository.findById(noticeThreadId).takeIf { it.isPresent }?.get()?.let{ noticeThread ->
+                        threadViewRepository.findById(noticeThreadId).takeIf { it.isPresent }?.get()?.let { noticeThread ->
                             ThreadOverView.of(
                                 noticeThread,
                                 { threadId -> commentRepository.countByThreadId(threadId) },

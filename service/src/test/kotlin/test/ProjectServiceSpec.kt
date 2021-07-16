@@ -1,6 +1,5 @@
 package waffle.guam.test
 
-import java.util.Optional
 import io.kotest.assertions.throwables.shouldNotThrowExactly
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldContainAll
@@ -32,6 +31,7 @@ import waffle.guam.service.ProjectService
 import waffle.guam.service.command.CreateProject
 import waffle.guam.service.command.DeleteThread
 import waffle.guam.service.command.SetNoticeThread
+import java.util.Optional
 
 @DatabaseTest
 class ProjectServiceSpec @Autowired constructor(
@@ -232,10 +232,12 @@ class ProjectServiceSpec @Autowired constructor(
             command = DefaultCommand.CreateProject,
             userId = user.id
         )
-        chatService.setNoticeThread(command = SetNoticeThread(
-            projectId = createdProject.id,
-            threadId = thread.id,
-            userId = user.id)
+        chatService.setNoticeThread(
+            command = SetNoticeThread(
+                projectId = createdProject.id,
+                threadId = thread.id,
+                userId = user.id
+            )
         )
         database.flushAndClear()
         val result = projectService.findProject(createdProject.id)
@@ -261,18 +263,22 @@ class ProjectServiceSpec @Autowired constructor(
             command = DefaultCommand.CreateProject,
             userId = user.id
         )
-        chatService.setNoticeThread(command = SetNoticeThread(
-            projectId = createdProject.id,
-            threadId = thread.id,
-            userId = user.id)
+        chatService.setNoticeThread(
+            command = SetNoticeThread(
+                projectId = createdProject.id,
+                threadId = thread.id,
+                userId = user.id
+            )
         )
         database.flushAndClear()
         val prevResult = projectService.findProject(createdProject.id)
 
-        chatService.deleteThread(command = DeleteThread(
-            threadId = thread.id,
-            userId = user.id
-        ))
+        chatService.deleteThread(
+            command = DeleteThread(
+                threadId = thread.id,
+                userId = user.id
+            )
+        )
         database.flushAndClear()
         val threadDeletedResult = projectService.findProject(createdProject.id)
 
@@ -666,12 +672,12 @@ class ProjectServiceSpec @Autowired constructor(
         val fourthProject = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[1].id)
 
         shouldThrowExactly<JoinException> {
-                projectService.join(
-                    id = fourthProject.id,
-                    userId = users[0].id,
-                    position = Position.FRONTEND,
-                    introduction = "I wanna Be a Member!"
-                )
+            projectService.join(
+                id = fourthProject.id,
+                userId = users[0].id,
+                position = Position.FRONTEND,
+                introduction = "I wanna Be a Member!"
+            )
         }
     }
 
