@@ -3,3 +3,4 @@
 .gradle/
 build/
 **/build/
+service/src/main/resources/application-aws.yml

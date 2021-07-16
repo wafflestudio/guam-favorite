@@ -102,6 +102,28 @@ class ProjectController(
             data = projectService.join(id, userContext.id, jp.position, jp.introduction)
         )
 
+    @PostMapping("/project/{id}/{guestId}")
+    @ResponseBody
+    fun acceptProjectJoinOrNot(
+        @PathVariable id: Long,
+        @PathVariable guestId: Long,
+        @RequestParam accept: Boolean,
+        userContext: UserContext
+    ): SuccessResponse<String> =
+        SuccessResponse(
+            data = projectService.acceptOrNot(id, guestId, userContext.id, accept)
+        )
+
+    @PostMapping("/project/{id}/quit")
+    @ResponseBody
+    fun quitProject(
+        @PathVariable id: Long,
+        userContext: UserContext
+    ): SuccessResponse<Boolean> =
+        SuccessResponse(
+            data = projectService.quit(id, userContext.id)
+        )
+
     @DeleteMapping("/project/{id}")
     @ResponseBody
     fun deleteProject(
