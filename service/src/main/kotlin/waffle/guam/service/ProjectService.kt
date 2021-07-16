@@ -76,20 +76,22 @@ class ProjectService(
 
     fun findProject(id: Long): Project =
         projectViewRepository.findById(id).orElseThrow(::DataNotFoundException)
-            .let {
+            .let { project ->
                 Project.of(
-                    entity = it,
+                    entity = project,
                     fetchTasks = true,
                     thread =
-                    it.noticeThreadId?.let { noticeId ->
-                        ThreadOverView.of(
-                            threadViewRepository.getById(noticeId),
-                            { threadId -> commentRepository.countByThreadId(threadId) },
-                            { images ->
-                                images.filter { allImage -> allImage.type == ImageType.THREAD }
-                                    .map { threadImage -> Image.of(threadImage) }
-                            }
-                        )
+                    project.noticeThreadId?.let { noticeThreadId ->
+                        threadViewRepository.findById(noticeThreadId).takeIf { it.isPresent }?.get()?.let{ noticeThread ->
+                            ThreadOverView.of(
+                                noticeThread,
+                                { threadId -> commentRepository.countByThreadId(threadId) },
+                                { images ->
+                                    images.filter { allImage -> allImage.type == ImageType.THREAD }
+                                        .map { threadImage -> Image.of(threadImage) }
+                                }
+                            )
+                        }
                     }
                 )
             }
@@ -152,7 +154,7 @@ class ProjectService(
             taskRepository.findByUserIdAndProjectId(userId, id).isPresent -> throw JoinException("이미 참여하고 계신 프로젝트입니다.")
             else -> projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).let {
 
-                if (it.recruiting)
+                if (!it.recruiting)
                     throw JoinException("이 프로젝트는 현재 팀원을 모집하고 있지 않습니다.")
 
                 val headCnt =

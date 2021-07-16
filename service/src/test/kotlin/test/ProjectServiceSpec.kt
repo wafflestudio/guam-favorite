@@ -1,5 +1,7 @@
 package waffle.guam.test
 
+import java.util.Optional
+import io.kotest.assertions.throwables.shouldNotThrowExactly
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
@@ -12,7 +14,6 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.Database
 import waffle.guam.DatabaseTest
-import waffle.guam.DefaultDataInfo
 import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.State
@@ -21,6 +22,7 @@ import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.ProjectStackRepository
 import waffle.guam.db.repository.ProjectViewRepository
 import waffle.guam.db.repository.TaskRepository
+import waffle.guam.db.repository.TaskViewRepository
 import waffle.guam.db.repository.ThreadViewRepository
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.exception.JoinException
@@ -28,13 +30,15 @@ import waffle.guam.exception.NotAllowedException
 import waffle.guam.service.ChatService
 import waffle.guam.service.ProjectService
 import waffle.guam.service.command.CreateProject
-import java.time.LocalDateTime
+import waffle.guam.service.command.DeleteThread
+import waffle.guam.service.command.SetNoticeThread
 
 @DatabaseTest
 class ProjectServiceSpec @Autowired constructor(
     private val projectRepository: ProjectRepository,
     private val projectViewRepository: ProjectViewRepository,
     private val projectStackRepository: ProjectStackRepository,
+    private val taskViewRepository: TaskViewRepository,
     private val taskRepository: TaskRepository,
     private val chatService: ChatService,
     private val threadViewRepository: ThreadViewRepository,
@@ -46,6 +50,7 @@ class ProjectServiceSpec @Autowired constructor(
         projectRepository = projectRepository,
         projectViewRepository = projectViewRepository,
         projectStackRepository = projectStackRepository,
+        taskViewRepository = taskViewRepository,
         taskRepository = taskRepository,
         chatService = chatService,
         threadViewRepository = threadViewRepository,
@@ -71,6 +76,7 @@ class ProjectServiceSpec @Autowired constructor(
         )
         val dbProjectStacks = projectStackRepository.findAll()
         val dbTasks = taskRepository.findAll()
+        database.flushAndClear()
 
         result.id shouldBe projectId
         result.title shouldBe "Test Project"
@@ -80,16 +86,15 @@ class ProjectServiceSpec @Autowired constructor(
         result.backLeftCnt shouldBe 3
         result.designLeftCnt shouldBe 3
         result.isRecruiting shouldBe true
-//        TODO(result.noticeThread shouldBe null)
+        result.noticeThread shouldBe null
         result.techStacks.map { it.name } shouldContainAll stacks.map { it.name }
         result.techStacks.map { it.aliases } shouldContainAll stacks.map { it.aliases }
         result.techStacks.map { it.position } shouldContainAll stacks.map { it.position }
         result.tasks!![0].projectId shouldBe projectId
         result.tasks!![0].user.id shouldBe user.id
         result.tasks!![0].user.nickname shouldBe user.nickname
-        result.tasks!![0].user.status shouldBe user.status.toString()
-        result.tasks!![0].task shouldBe "Let's get it started!"
-        result.tasks!![0].position shouldBe Position.WHATEVER.toString()
+        result.tasks!![0].user.status shouldBe user.status.name
+        result.tasks!![0].position shouldBe Position.WHATEVER.name
         result.tasks!![0].state shouldBe State.LEADER
         result.due shouldBe Due.SIX
         dbProjectStacks[0].projectId shouldBe 1
@@ -124,7 +129,7 @@ class ProjectServiceSpec @Autowired constructor(
         }
     }
 
-    // createProjectCreatedProjectFoundException : 생성한 프로젝트가 DB에 생성되지 않은 경우에 대한 예외처리 - 논리적으로 발생 불가? mock or spy?
+    // TODO(createProjectCreatedProjectFoundException : 생성한 프로젝트가 DB에 생성되지 않은 경우에 대한 예외처리 - 논리적으로 발생 불가? mock or spy?)
 
     @DisplayName("프로젝트 전체 목록 조회 :  page, size 정보에 맞게 복수의 프로젝트들을 조회할 수 있다")
     @Transactional
@@ -185,7 +190,7 @@ class ProjectServiceSpec @Autowired constructor(
         result.totalElements shouldBe totalAmount
     }
 
-    @DisplayName("단일 프로젝트 세부 조회 : id에 해당하는 프로젝트의 작업실 세부 정보 조회 가능 (task, techStack 포함)")
+    @DisplayName("단일 프로젝트 세부 조회 : 특정 프로젝트의 작업실 세부 정보와 연결된 task, techStack 조회 가능")
     @Transactional
     @Test
     fun findProjectOK() {
@@ -212,7 +217,7 @@ class ProjectServiceSpec @Autowired constructor(
         result.tasks!![0].position shouldBe Position.WHATEVER.toString()
         result.tasks!![0].projectId shouldBe createdProject.id
         result.due shouldBe createdProject.due
-        //        TODO(result.noticeThread shouldBe null)
+        result.noticeThread shouldBe null
     }
 
     @DisplayName("단일 프로젝트 세부 조회 : 공지쓰레드가 있는 경우 포함하여 작업실 정보 조회 가능")
@@ -221,21 +226,64 @@ class ProjectServiceSpec @Autowired constructor(
     fun findProjectWithNoticeThreadOK() {
         val user = database.getUser()
         val thread = database.getThread()
+        database.getImages()
         database.getComment()
-        val createdProject = projectRepository.save(
-            DefaultDataInfo.project.copy(
-                noticeThreadId = thread.id, modifiedAt = LocalDateTime.now()
-            )
+        val createdProject = projectService.createProject(
+            command = DefaultCommand.CreateProject,
+            userId = user.id
         )
+        chatService.setNoticeThread(command = SetNoticeThread(
+            projectId = createdProject.id,
+            threadId = thread.id,
+            userId = user.id)
+        )
+        database.flushAndClear()
         val result = projectService.findProject(createdProject.id)
 
-        /*TODO(result.noticeThread?.id shouldBe thread.id
+        result.title shouldBe createdProject.title
+        result.isRecruiting shouldBe createdProject.isRecruiting
+        result.description shouldBe createdProject.description
+        result.noticeThread?.id shouldBe thread.id
         result.noticeThread?.content shouldBe thread.content
         result.noticeThread?.creatorId shouldBe thread.userId
-        result.noticeThread?.creatorNickname shouldBe user.nickname)*/
-        result.title shouldBe createdProject.title
-        result.isRecruiting shouldBe createdProject.recruiting
-        result.description shouldBe createdProject.description
+        result.noticeThread?.creatorNickname shouldBe user.nickname
+    }
+
+    @DisplayName("단일 프로젝트 세부 조회 : noticeThreadId에 해당되는 공지 쓰레드가 삭제된 경우 예외가 발생하지 않는다")
+    @Transactional
+    @Test
+    fun findProjectNoticeThreadNotFoundOK() {
+        val user = database.getUser()
+        val thread = database.getThread()
+        database.getImages()
+        database.getComment()
+        val createdProject = projectService.createProject(
+            command = DefaultCommand.CreateProject,
+            userId = user.id
+        )
+        chatService.setNoticeThread(command = SetNoticeThread(
+            projectId = createdProject.id,
+            threadId = thread.id,
+            userId = user.id)
+        )
+        database.flushAndClear()
+        val prevResult = projectService.findProject(createdProject.id)
+
+        chatService.deleteThread(command = DeleteThread(
+            threadId = thread.id,
+            userId = user.id
+        ))
+        database.flushAndClear()
+        val threadDeletedResult = projectService.findProject(createdProject.id)
+
+        prevResult.noticeThread?.id shouldBe thread.id
+        prevResult.noticeThread?.content shouldBe thread.content
+        prevResult.noticeThread?.creatorId shouldBe thread.userId
+
+        threadDeletedResult.title shouldBe createdProject.title
+        threadDeletedResult.isRecruiting shouldBe createdProject.isRecruiting
+        threadDeletedResult.description shouldBe createdProject.description
+        threadDeletedResult.noticeThread shouldBe null
     }
 
     @DisplayName("프로젝트 단일 조회 : id에 해당하는 프로젝트가 없는 경우 예외가 발생한다")
@@ -470,7 +518,6 @@ class ProjectServiceSpec @Autowired constructor(
         result.tasks!![0].id shouldBe user.id
     }
 
-    // TODO(Test Fail : 응답에 projectStack이 제대로 수정되어 전달되지 않음. DB에는 제대로 재생성됨)
     @DisplayName("프로젝트 수정: projectStack 데이터가 삭제되고 재생성된다")
     @Transactional
     @Test
@@ -482,8 +529,8 @@ class ProjectServiceSpec @Autowired constructor(
                 techStackIds = listOf(Pair(first = stacks[0].id, second = stacks[0].position))
             ),
             userId = user.id
-        ).copy()
-
+        )
+        database.flushAndClear()
         val result = projectService.updateProject(
             id = prevProject.id,
             command = CreateProject(
@@ -499,9 +546,6 @@ class ProjectServiceSpec @Autowired constructor(
             ),
             userId = user.id
         )
-        // val projectStacks = projectStackRepository.findAll()
-        // val projectStacks = projectStackRepository.findByProjectId(result.id)
-        // println(projectStacks) // [ProjectStackEntity(id=2, position=FRONTEND, projectId=1, techStackId=1), ProjectStackEntity(id=3, position=BACKEND, projectId=1, techStackId=2)]
 
         result.id shouldBe prevProject.id
         result.title shouldBe prevProject.title
@@ -572,27 +616,25 @@ class ProjectServiceSpec @Autowired constructor(
             position = Position.FRONTEND,
             introduction = "Hello!"
         )
-        database.flush()
+        database.flushAndClear()
         val newGuest = taskRepository.findByUserIdAndProjectId(guestId, projectId).get()
-//        val project = projectViewRepository.findAll().filter { it.id == projectId }
+        val project = projectViewRepository.findAll().filter { it.id == projectId }
         val introThread = threadViewRepository.findById(1L).get()
-        database.flush()
 
         result shouldBe true
         newGuest.state shouldBe State.GUEST
         newGuest.position shouldBe Position.FRONTEND
-        //  TODO(tasks in ProjectView not chaining problem)
-//        project[0].tasks.map { it.user.id } shouldContainAll listOf(leaderId, guestId)
-//        project[0].tasks.map { it.position } shouldContainAll listOf(Position.BACKEND, Position.FRONTEND)
+        project[0].tasks.map { it.user.id } shouldContainAll listOf(leaderId, guestId)
+        project[0].tasks.map { it.position } shouldContainAll listOf(Position.BACKEND, Position.FRONTEND)
         introThread.user.id shouldBe guestId
         introThread.content shouldBe "Hello!"
         introThread.projectId shouldBe projectId
     }
 
-    @DisplayName("프로젝트 참여 : 이미 3개의 프로젝트에 참여 중인 사용자가 다른 프로젝트에 참여 시도시 예외가 발생한다")
+    @DisplayName("프로젝트 참여 : 복수의 프로젝트에 GUEST로 지원 중인 프로젝트에 참여 중이어도 새로운 프로젝트에 지원할 수 있다")
     @Transactional
     @Test
-    fun joinProjectNumberLimitException() {
+    fun joinMultipleProjectsAsGuestOk() {
         val users = database.getUsers()
 
         for (i in 0 until 2) {
@@ -600,7 +642,7 @@ class ProjectServiceSpec @Autowired constructor(
             projectService.createProject(command = DefaultCommand.CreateProject, userId = users[1].id)
         }
 
-        shouldThrowExactly<JoinException> {
+        shouldNotThrowExactly<JoinException> {
             for (i in 1L until 5L) {
                 projectService.join(
                     id = i,
@@ -609,6 +651,27 @@ class ProjectServiceSpec @Autowired constructor(
                     introduction = "Hello!"
                 )
             }
+        }
+    }
+
+    @DisplayName("프로젝트 참여 : 이미 3개의 프로젝트에 Member 혹은 Leader로 참여 중인 사용자가 다른 프로젝트에 참여 시도시 예외가 발생한다")
+    @Transactional
+    @Test
+    fun joinProjectNumberLimitException() {
+        val users = database.getUsers()
+
+        for (i in 0 until 3) {
+            projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id)
+        }
+        val fourthProject = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[1].id)
+
+        shouldThrowExactly<JoinException> {
+                projectService.join(
+                    id = fourthProject.id,
+                    userId = users[0].id,
+                    position = Position.FRONTEND,
+                    introduction = "I wanna Be a Member!"
+                )
         }
     }
 
@@ -648,7 +711,6 @@ class ProjectServiceSpec @Autowired constructor(
         }
     }
 
-    // TODO(takeIf 피드백 필요 : NullPointerException)
     @DisplayName("프로젝트 참여 : 참여하려는 프로젝트가 리크루트 모드가 아니면 예외가 발생한다")
     @Transactional
     @Test
@@ -660,7 +722,7 @@ class ProjectServiceSpec @Autowired constructor(
             projectViewRepository.getById(project.id).copy(recruiting = false)
         )
 
-        shouldThrowExactly<NullPointerException> {
+        shouldThrowExactly<JoinException> {
             projectService.join(
                 id = project.id,
                 userId = users[1].id,
@@ -708,7 +770,6 @@ class ProjectServiceSpec @Autowired constructor(
         }
     }
 
-    // TODO(ProjectEntity remaining problem - only in test logic)
     @DisplayName("프로젝트 삭제 : 프로젝트 리더는 id에 해당되는 프로젝트 1개만 삭제한다.")
     @Transactional
     @Test
@@ -722,15 +783,16 @@ class ProjectServiceSpec @Autowired constructor(
         val dbExistingProjects = projectRepository.findAll()
 
         val result = projectService.deleteProject(id = projectId, userId = user.id)
-        // database.flush()
+
+        database.flushAndClear()
         val remainingProjects = projectRepository.findAll()
-        // val dbDeletedProject = projectRepository.findById(projectId)
+        val dbDeletedProject = projectRepository.findById(projectId)
 
         result shouldBe true
         projectLeader.state shouldBe State.LEADER
         dbExistingProjects.size shouldBe 3
         remainingProjects.size shouldBe 2
-        // dbDeletedProject shouldBe Optional.empty()
+        dbDeletedProject shouldBe Optional.empty()
     }
 
     @DisplayName("프로젝트 삭제 : 프로젝트에 연결된 task와 projectStack을 함께 삭제한다.")
