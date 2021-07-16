@@ -1,5 +1,6 @@
 plugins {
-    id("io.github.wafflestudio.base") version "1.0.5"
+    id("io.github.wafflestudio.base") version "1.1.3"
+    id("io.github.wafflestudio.springboot") version "1.1.3" apply false
     id("org.jlleitschuh.gradle.ktlint") version "10.0.0"
 }
 
