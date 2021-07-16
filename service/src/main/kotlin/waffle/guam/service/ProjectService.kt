@@ -15,6 +15,7 @@ import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.ProjectStackRepository
 import waffle.guam.db.repository.ProjectViewRepository
 import waffle.guam.db.repository.TaskRepository
+import waffle.guam.db.repository.TaskViewRepository
 import waffle.guam.db.repository.ThreadViewRepository
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.exception.JoinException
@@ -32,6 +33,7 @@ class ProjectService(
     private val projectViewRepository: ProjectViewRepository,
     private val projectStackRepository: ProjectStackRepository,
     private val taskRepository: TaskRepository,
+    private val taskViewRepository: TaskViewRepository,
     private val threadViewRepository: ThreadViewRepository,
     private val commentRepository: CommentRepository,
     private val chatService: ChatService
@@ -42,7 +44,7 @@ class ProjectService(
     @Transactional
     fun createProject(command: CreateProject, userId: Long): Project {
 
-        if (taskRepository.countByUserId(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
+        if (taskRepository.countByUserIdAndStateNotLike(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
 
         val myPosition = command.myPosition ?: throw JoinException("포지션을 설정해주세요.")
 
@@ -75,7 +77,6 @@ class ProjectService(
     fun findProject(id: Long): Project =
         projectViewRepository.findById(id).orElseThrow(::DataNotFoundException)
             .let {
-
                 Project.of(
                     entity = it,
                     fetchTasks = true,
@@ -144,41 +145,70 @@ class ProjectService(
         }
 
     @Transactional
-    fun join(id: Long, userId: Long, position: Position, introduction: String): Boolean {
+    fun join(id: Long, userId: Long, position: Position, introduction: String): Boolean =
 
-        // reject when there is no quota
-        // check if this pj is recruiting
+        when {
+            taskRepository.countByUserIdAndStateNotLike(userId) >= 3 -> throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
+            taskRepository.findByUserIdAndProjectId(userId, id).isPresent -> throw JoinException("이미 참여하고 계신 프로젝트입니다.")
+            else -> projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).let {
 
-        if (taskRepository.countByUserId(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
+                if (it.recruiting)
+                    throw JoinException("이 프로젝트는 현재 팀원을 모집하고 있지 않습니다.")
 
-        taskRepository.findByUserIdAndProjectId(userId, id).ifPresent {
-            throw JoinException("이미 참여하고 계신 프로젝트입니다 ^~^")
+                val headCnt =
+                    when (position) {
+                        Position.WHATEVER -> throw JoinException("포지션을 입력해주세요.")
+                        Position.DESIGNER -> it!!.designerHeadcount
+                        Position.BACKEND -> it!!.backHeadcount
+                        Position.FRONTEND -> it!!.frontHeadcount
+                    }
+                val currCnt = taskRepository.countByProjectIdAndPosition(id, position)
+
+                if (currCnt >= headCnt)
+                    throw JoinException("해당 포지션에는 남은 정원이 없습니다.")
+
+                taskRepository.save(
+                    TaskEntity(projectId = id, userId = userId, position = position, state = State.GUEST)
+                )
+
+                chatService.createThread(
+                    CreateThread(id, userId, introduction, null)
+                )
+            }
         }
 
-        return projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).takeIf {
-            it.recruiting
-        }.let {
+    @Transactional
+    fun acceptOrNot(id: Long, guestId: Long, leaderId: Long, accept: Boolean): String =
 
-            val headCnt =
-                when (position) {
-                    Position.WHATEVER -> throw JoinException("포지션을 입력해주세요.")
-                    Position.DESIGNER -> it!!.designerHeadcount
-                    Position.BACKEND -> it!!.backHeadcount
-                    Position.FRONTEND -> it!!.frontHeadcount
+        taskRepository.findByUserIdAndProjectIdAndState(leaderId, id, State.LEADER).orElseThrow(::NotAllowedException).run {
+
+            taskViewRepository.findByUserIdAndProjectId(guestId, id).orElseThrow(::DataNotFoundException).let {
+                when (it.state) {
+                    State.GUEST ->
+
+                        if (accept)
+                            taskViewRepository.save(it.copy(state = State.MEMBER))
+                                .let { "정상적으로 승인되었습니다." }
+                        else
+                            taskViewRepository.delete(it)
+                                .let { "정상적으로 반려되었습니다." }
+
+                    State.MEMBER -> throw NotAllowedException("이미 승인이 된 멤버입니다.")
+                    State.LEADER -> throw NotAllowedException("리더를 승인할 수 없습니다.")
                 }
-            val currCnt = taskRepository.countByProjectIdAndPosition(id, position)
-
-            if (currCnt >= headCnt) throw JoinException("해당 포지션에는 남은 정원이 없습니다.")
-
-            taskRepository.save(
-                TaskEntity(projectId = id, userId = userId, position = position, state = State.GUEST)
-            )
-            chatService.createThread(
-                CreateThread(id, userId, introduction, null)
-            )
-            true
+            }
         }
-    }
+
+    // TODO : GUEST가 자발적으로 프로젝트를 그만두는 경우도 발생할 수 있음.
+    @Transactional
+    fun quit(id: Long, userId: Long): Boolean =
+        taskRepository.findByUserIdAndProjectId(userId, id).orElseThrow(::DataNotFoundException).let {
+            when (it.state) {
+                State.GUEST -> throw NotAllowedException("나갈 수 없습니다. 팀의 멤버가 아닙니다")
+                State.LEADER -> throw NotAllowedException("리더는 나갈 수 없습니다. 권한을 위임하거나 프로젝트를 종료해 주세요")
+                State.MEMBER -> taskRepository.delete(it).let { true }
+            }
+        }
 
     @Transactional
     fun deleteProject(id: Long, userId: Long): Boolean {

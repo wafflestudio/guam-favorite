@@ -2,7 +2,7 @@ cloud:
   aws:
     credentials:
       accessKey: ${AWS_ACCESSKEY}
-      secretKey: ${AWS_SECRETKEY}
+      secretKey: ${AWS_ACCESSKEY}
     s3:
       bucket: guam
     region:

@@ -5,10 +5,12 @@ import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
+import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
+import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
 
@@ -21,8 +23,6 @@ data class TaskEntity(
 
     @Enumerated(EnumType.STRING)
     val position: Position,
-
-    val task: String = "Let's get it started!",
 
     val projectId: Long,
 
@@ -47,7 +47,8 @@ data class TaskView(
     @Enumerated(EnumType.STRING)
     val position: Position,
 
-    val task: String,
+    @OneToMany(mappedBy = "taskId", fetch = FetchType.LAZY, orphanRemoval = true)
+    val tasks: Set<TaskMessage>,
 
     val projectId: Long,
 
