@@ -3,6 +3,7 @@ package waffle.guam.service.command
 import org.springframework.web.multipart.MultipartFile
 import waffle.guam.db.entity.CommentEntity
 import waffle.guam.db.entity.ImageType
+import waffle.guam.util.TypeCheck
 
 sealed class CommentCommand
 
@@ -12,6 +13,9 @@ data class CreateComment(
     val content: String?,
     val imageFiles: List<MultipartFile>?,
 ) : CommentCommand() {
+    init {
+        TypeCheck.validChatInput(content, imageFiles)
+    }
     fun toEntity() = CommentEntity(threadId = threadId, userId = userId, content = content)
 }
 
