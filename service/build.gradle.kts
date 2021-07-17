@@ -15,3 +15,7 @@ dependencies {
 dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-aws:2.2.1.RELEASE")
 }
+
+dependencies {
+    implementation("com.google.firebase:firebase-admin:7.1.0")
+}
