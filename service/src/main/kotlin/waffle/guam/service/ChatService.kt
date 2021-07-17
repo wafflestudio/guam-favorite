@@ -96,14 +96,11 @@ class ChatService(
 
     @Transactional
     fun createThread(command: CreateThread): Boolean {
-        if (command.content.isNullOrBlank() && command.imageFiles.isNullOrEmpty()) throw InvalidRequestException("입력된 내용이 없습니다.")
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
         val threadId = threadRepository.save(command.toEntity()).id
         if (!command.imageFiles.isNullOrEmpty())
-            for (imageFile in command.imageFiles) {
-                if (!imageFile.contentType!!.startsWith("image")) throw InvalidRequestException("이미지만 업로드 가능합니다")
+            for (imageFile in command.imageFiles)
                 imageService.upload(imageFile, ImageInfo(threadId, ImageType.THREAD))
-            }
         return true
     }
 
@@ -146,14 +143,11 @@ class ChatService(
 
     @Transactional
     fun createComment(command: CreateComment): Boolean {
-        if (command.content.isNullOrBlank() && command.imageFiles.isNullOrEmpty()) throw InvalidRequestException("입력된 내용이 없습니다.")
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException)
         val commentId = commentRepository.save(command.toEntity()).id
         if (!command.imageFiles.isNullOrEmpty())
-            for (imageFile in command.imageFiles) {
-                if (!imageFile.contentType!!.startsWith("image")) throw InvalidRequestException("이미지만 업로드 가능합니다")
+            for (imageFile in command.imageFiles)
                 imageService.upload(imageFile, ImageInfo(commentId, ImageType.COMMENT))
-            }
         return true
     }
 

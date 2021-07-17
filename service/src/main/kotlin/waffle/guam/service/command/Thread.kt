@@ -3,6 +3,7 @@ package waffle.guam.service.command
 import org.springframework.web.multipart.MultipartFile
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.ThreadEntity
+import waffle.guam.util.TypeCheck
 
 sealed class ThreadCommand
 
@@ -23,6 +24,9 @@ data class CreateThread(
     val content: String?,
     val imageFiles: List<MultipartFile>?,
 ) : ThreadCommand() {
+    init {
+        TypeCheck.validChatInput(content, imageFiles)
+    }
     fun toEntity() = ThreadEntity(projectId = projectId, userId = userId, content = content)
 }
 
