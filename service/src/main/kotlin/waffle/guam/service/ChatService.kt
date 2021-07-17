@@ -100,8 +100,10 @@ class ChatService(
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
         val threadId = threadRepository.save(command.toEntity()).id
         if (!command.imageFiles.isNullOrEmpty())
-            for (imageFile in command.imageFiles)
+            for (imageFile in command.imageFiles) {
+                if (!imageFile.contentType!!.startsWith("image")) throw InvalidRequestException("이미지만 업로드 가능합니다")
                 imageService.upload(imageFile, ImageInfo(threadId, ImageType.THREAD))
+            }
         return true
     }
 
@@ -148,8 +150,10 @@ class ChatService(
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException)
         val commentId = commentRepository.save(command.toEntity()).id
         if (!command.imageFiles.isNullOrEmpty())
-            for (imageFile in command.imageFiles)
+            for (imageFile in command.imageFiles) {
+                if (!imageFile.contentType!!.startsWith("image")) throw InvalidRequestException("이미지만 업로드 가능합니다")
                 imageService.upload(imageFile, ImageInfo(commentId, ImageType.COMMENT))
+            }
         return true
     }
 
