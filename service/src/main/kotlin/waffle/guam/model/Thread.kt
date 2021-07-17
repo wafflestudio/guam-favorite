@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 
 data class ThreadOverView(
     val id: Long,
-    val content: String,
+    val content: String?,
     val isEdited: Boolean,
     val creatorId: Long,
     val creatorNickname: String,
@@ -39,7 +39,7 @@ data class ThreadOverView(
 
 data class ThreadDetail(
     val id: Long,
-    val content: String,
+    val content: String?,
     val isEdited: Boolean,
     val creatorId: Long,
     val creatorNickname: String,

@@ -185,6 +185,43 @@ class ChatServiceSpec @Autowired constructor(
         result.totalElements shouldBe 15
     }
 
+    @DisplayName("복수의 쓰레드 조회 : content 혹은 imageFiles만 존재하는 쓰레드들을 조회해도 예외가 발생하지 않는다.")
+    @Transactional
+    @Test
+    fun getThreadsNoImageOrContentOK() {
+        database.getUsers()
+        val project = database.getProject()
+        chatService.createThread(command = DefaultCommand.CreateThread.copy(content = "Only Content Thread"))
+
+        every {
+            imageService.upload(DefaultInput.imageFiles[0], ImageInfo(2L, ImageType.THREAD))
+        } returns imageRepository.save(ImageEntity(parentId = 2L, type = ImageType.THREAD))
+
+        chatService.createThread(
+            command = DefaultCommand.CreateThread.copy(
+                content = null,
+                imageFiles = listOf(DefaultInput.imageFiles[0])
+            )
+        )
+
+        val result: Page<ThreadOverView> = chatService.getThreads(
+            projectId = project.id,
+            pageable = PageRequest.of(
+                0,
+                10,
+            )
+        )
+        database.flushAndClear()
+
+        result.content[0].id shouldBe 1
+        result.content[0].content shouldBe "Only Content Thread"
+        result.content[0].threadImages.size shouldBe 0
+
+        result.content[1].id shouldBe 2
+        result.content[1].content shouldBe null
+        result.content[1].threadImages.size shouldBe 1
+    }
+
     @DisplayName("복수의 쓰레드 조회 : page와 size에 해당되는 범위에 쓰레드가 없어도 예외는 발생하지 않는다")
     @Transactional
     @Test
@@ -326,6 +363,54 @@ class ChatServiceSpec @Autowired constructor(
         result.comments[1].creatorImageUrl shouldBe users[2 % 3].image?.getPath()
         result.comments[1].commentImages.size shouldBe emptyImageList.size
         result.comments[1].commentImages shouldBe emptyImageList
+    }
+
+    @DisplayName("쓰레드 상세 조회 : content 혹은 imageFiles만 존재하는 쓰레드와 댓글들을 조회해도 예외가 발생하지 않는다.")
+    @Transactional
+    @Test
+    fun getFullThreadNoImageOrContentOK() {
+        database.getUsers()
+        val project = database.getProject()
+        chatService.createThread(command = DefaultCommand.CreateThread.copy(content = "Only Content Thread"))
+        chatService.createComment(command = DefaultCommand.CreateComment.copy(threadId = 1, content = "Only Content Comment"))
+
+        every {
+            imageService.upload(DefaultInput.imageFiles[0], ImageInfo(2L, ImageType.THREAD))
+        } returns imageRepository.save(ImageEntity(parentId = 2L, type = ImageType.THREAD))
+        every {
+            imageService.upload(DefaultInput.imageFiles[1], ImageInfo(2L, ImageType.COMMENT))
+        } returns imageRepository.save(ImageEntity(parentId = 2L, type = ImageType.COMMENT))
+
+        chatService.createThread(
+            command = DefaultCommand.CreateThread.copy(
+                content = null,
+                imageFiles = listOf(DefaultInput.imageFiles[0])
+            )
+        )
+        chatService.createComment(
+            command = DefaultCommand.CreateComment.copy(
+                threadId = 2,
+                content = null,
+                imageFiles = listOf(DefaultInput.imageFiles[1])
+            )
+        )
+
+        database.flushAndClear()
+
+        val noImageResult: ThreadDetail = chatService.getFullThread(1)
+        val noContentResult: ThreadDetail = chatService.getFullThread(2)
+
+        noImageResult.id shouldBe 1
+        noImageResult.content shouldBe "Only Content Thread"
+        noImageResult.threadImages.size shouldBe 0
+        noImageResult.comments[0].content shouldBe "Only Content Comment"
+        noImageResult.comments[0].commentImages.size shouldBe 0
+
+        noContentResult.id shouldBe 2
+        noContentResult.content shouldBe null
+        noContentResult.threadImages.size shouldBe 1
+        noContentResult.comments[0].content shouldBe null
+        noContentResult.comments[0].commentImages.size shouldBe 1
     }
 
     @DisplayName("쓰레드 상세 조회 : threadId에 해당하는 쓰레드가 없다면 예외가 발생한다")

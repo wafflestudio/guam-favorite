@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 
 data class Comment(
     val id: Long,
-    val content: String,
+    val content: String?,
     val isEdited: Boolean,
     val creatorId: Long,
     val creatorNickname: String,
