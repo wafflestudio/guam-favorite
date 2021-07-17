@@ -745,6 +745,37 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
+    @DisplayName("쓰레드 생성 : 이미지 이외의 파일을 업로드하려고 하면 예외가 발생한다")
+    @Transactional
+    @Test
+    fun createThreadNonImageFileUploadException() {
+        database.getUser()
+        val project = database.getProject()
+
+        val imageFiles = listOf(
+            MockMultipartFile("파일1", "기존 파일명1.png", MediaType.IMAGE_PNG_VALUE, "파일 1 내용".toByteArray()),
+            MockMultipartFile("파일2", "기존 파일명2.png", MediaType.IMAGE_PNG_VALUE, "파일 2 내용".toByteArray()),
+            MockMultipartFile("파일3", "기존 파일명3.png", MediaType.IMAGE_PNG_VALUE, "파일 3 내용".toByteArray())
+        )
+
+        every {
+            imageService.upload(DefaultInput.imageFiles[0], ImageInfo(1L, ImageType.THREAD))
+        } returns imageRepository.save(ImageEntity(parentId = 1L, type = ImageType.THREAD))
+
+        shouldThrowExactly<InvalidRequestException> {
+            chatService.createThread(
+                command = DefaultCommand.CreateThread.copy(
+                    projectId = project.id,
+                    content = "Only ImageFiles Are Allowed",
+                    imageFiles = listOf(
+                        DefaultInput.imageFiles[0],
+                        MockMultipartFile("영상 파일", "기존 파일명.mp4", "video/.mp4", "영상 내용".toByteArray())
+                    )
+                )
+            )
+        }
+    }
+
     @DisplayName("쓰레드 수정 : threadId에 해당하는 쓰레드의 작성자는 쓰레드를 수정할 수 있다.")
     @Transactional
     @Test
