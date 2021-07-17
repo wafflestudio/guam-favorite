@@ -47,9 +47,13 @@ class Database(
         entityManager.createNativeQuery("SET REFERENTIAL_INTEGRITY TRUE").executeUpdate()
     }
 
-    @Transactional
     fun flush() {
         entityManager.flush()
+    }
+
+    fun flushAndClear() {
+        entityManager.flush()
+        entityManager.clear()
     }
 
     fun getUser(): UserEntity {
