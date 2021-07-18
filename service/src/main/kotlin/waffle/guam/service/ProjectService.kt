@@ -43,6 +43,8 @@ class ProjectService(
 
     @Transactional
     fun createProject(command: CreateProject, userId: Long): Project {
+        LogHandler.info("$command")
+
         if (taskRepository.countByUserIdAndStateNotLike(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
 
         val myPosition = command.myPosition ?: throw JoinException("포지션을 설정해주세요.")
