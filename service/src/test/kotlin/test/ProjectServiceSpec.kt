@@ -637,7 +637,7 @@ class ProjectServiceSpec @Autowired constructor(
         introThread.projectId shouldBe projectId
     }
 
-    @DisplayName("프로젝트 참여 : 복수의 프로젝트에 GUEST로 지원 중인 프로젝트에 참여 중이어도 새로운 프로젝트에 지원할 수 있다")
+    @DisplayName("프로젝트 참여 : 복수의 프로젝트에 GUEST로 지원 중이어도 새로운 프로젝트에 지원할 수 있다")
     @Transactional
     @Test
     fun joinMultipleProjectsAsGuestOk() {
@@ -684,20 +684,25 @@ class ProjectServiceSpec @Autowired constructor(
     @DisplayName("프로젝트 참여 : 사용자가 이미 참여중인 프로젝트에 참여 시도시 예외가 발생한다")
     @Transactional
     @Test
-    fun joinProjectAlreadyMemberException() {
+    fun joinAlreadyProjectMemberException() {
         val users = database.getUsers()
 
         val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id)
 
+        val firstJoinSuccess = projectService.join(
+            id = project.id,
+            userId = users[1].id,
+            position = Position.FRONTEND,
+            introduction = "Hello!"
+        )
+        firstJoinSuccess shouldBe true
         shouldThrowExactly<JoinException> {
-            for (i in 0 until 2) {
                 projectService.join(
                     id = project.id,
                     userId = users[1].id,
                     position = Position.FRONTEND,
-                    introduction = "Hello!"
+                    introduction = "I am already a member!"
                 )
-            }
         }
     }
 
@@ -771,7 +776,261 @@ class ProjectServiceSpec @Autowired constructor(
                 id = project.id,
                 userId = users[1].id,
                 position = Position.FRONTEND,
-                introduction = "Hello!"
+                introduction = "You don't want a FE!"
+            )
+        }
+    }
+
+    // acceptOrNot
+
+    @DisplayName("지원자 승인 : 프로젝트 리더는 guest 상태의 task를 member로 승격시킬 수 있다.")
+    @Transactional
+    @Test
+    fun acceptOrNotAcceptOK() {
+        val users = database.getUsers()
+        val project = projectService.createProject(
+            command = DefaultCommand.CreateProject,
+            userId = users[0].id
+        )
+        projectService.join(
+            id = project.id,
+            userId = users[1].id,
+            position = Position.FRONTEND,
+            introduction = "I heard that you want a frontend!"
+        )
+        val guestTask = taskViewRepository.findByUserId(users[1].id)[0].copy()
+
+        val resultMessage = projectService.acceptOrNot(
+            id = project.id,
+            guestId = users[1].id,
+            leaderId = users[0].id,
+            accept = true
+        )
+        val memberTask = taskViewRepository.findByUserId(users[1].id)[0]
+
+        resultMessage shouldBe "정상적으로 승인되었습니다."
+        guestTask.state shouldBe State.GUEST
+        memberTask.state shouldBe State.MEMBER
+    }
+
+    @DisplayName("지원자 거부 : 프로젝트 리더는 guest 상태의 task를 삭제할 수 있다.")
+    @Transactional
+    @Test
+    fun acceptOrNotRefuseOK() {
+        val users = database.getUsers()
+        val project = projectService.createProject(
+            command = DefaultCommand.CreateProject,
+            userId = users[0].id
+        )
+        projectService.join(
+            id = project.id,
+            userId = users[1].id,
+            position = Position.FRONTEND,
+            introduction = "I heard that you want a frontend!"
+        )
+        val guestTask = taskViewRepository.findByUserId(users[1].id)[0].copy()
+
+        val resultMessage = projectService.acceptOrNot(
+            id = project.id,
+            guestId = users[1].id,
+            leaderId = users[0].id,
+            accept = false
+        )
+        val kickedOutTask = taskViewRepository.findByUserId(users[1].id)
+
+        resultMessage shouldBe "정상적으로 반려되었습니다."
+        guestTask.state shouldBe State.GUEST
+        kickedOutTask shouldBe emptyList()
+    }
+
+    @DisplayName("지원자 승인 : 해당 프로젝트의 리더가 아닌 경우 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun acceptOrNotLeaderException() {
+        val users = database.getUsers()
+        val project = projectService.createProject(
+            command = DefaultCommand.CreateProject,
+            userId = users[0].id
+        )
+        projectService.join(
+            id = project.id,
+            userId = users[1].id,
+            position = Position.FRONTEND,
+            introduction = "I am now a GUEST!"
+        )
+
+        shouldThrowExactly<NotAllowedException> {
+            projectService.acceptOrNot(
+                id = project.id,
+                guestId = users[1].id,
+                leaderId = 999999999,
+                accept = true
+            )
+        }
+    }
+
+    @DisplayName("지원자 승인 : 해당 프로젝트의 지원자가 아닌 경우 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun acceptOrNoGuestException() {
+        val users = database.getUsers()
+        val project = projectService.createProject(
+            command = DefaultCommand.CreateProject,
+            userId = users[0].id
+        )
+        projectService.join(
+            id = project.id,
+            userId = users[1].id,
+            position = Position.FRONTEND,
+            introduction = "I am now a GUEST!"
+        )
+
+        shouldThrowExactly<DataNotFoundException> {
+            projectService.acceptOrNot(
+                id = project.id,
+                guestId = 99999999999999,
+                leaderId = users[0].id,
+                accept = true
+            )
+        }
+    }
+
+    @DisplayName("지원자 승인 : 이미 멤버로 승인된 사용자를 승인하려고 하는 경우 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun acceptOrAlreadyMemberException() {
+        val users = database.getUsers()
+        val project = projectService.createProject(
+            command = DefaultCommand.CreateProject,
+            userId = users[0].id
+        )
+        projectService.join(
+            id = project.id,
+            userId = users[1].id,
+            position = Position.FRONTEND,
+            introduction = "I am now a GUEST!"
+        )
+
+        shouldThrowExactly<NotAllowedException> {
+            for (i in 0 until 2) {
+                projectService.acceptOrNot(
+                    id = project.id,
+                    guestId = users[1].id,
+                    leaderId = users[0].id,
+                    accept = true
+                )
+            }
+        }
+    }
+
+    @DisplayName("지원자 승인 : 리더가 자기 자신을 승인하려고 하는 경우 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun acceptOrAcceptLeaderException() {
+        val users = database.getUsers()
+        val project = projectService.createProject(
+            command = DefaultCommand.CreateProject,
+            userId = users[0].id
+        )
+        shouldThrowExactly<NotAllowedException> {
+            projectService.acceptOrNot(
+                id = project.id,
+                guestId = users[0].id,
+                leaderId = users[0].id,
+                accept = true
+            )
+        }
+    }
+
+    @DisplayName("프로젝트 탈퇴 : 멤버는 프로젝트를 자유롭게 탈퇴할 수 있다.")
+    @Transactional
+    @Test
+    fun quitOK() {
+        val users = database.getUsers()
+        val project = projectService.createProject(
+            command = DefaultCommand.CreateProject,
+            userId = users[0].id
+        )
+        projectService.join(
+            id = project.id,
+            userId = users[1].id,
+            position = Position.FRONTEND,
+            introduction = "I am now a GUEST!"
+        )
+        projectService.acceptOrNot(
+            id = project.id,
+            guestId = users[1].id,
+            leaderId = users[0].id,
+            accept = true
+        )
+        database.flushAndClear()
+        val memberTask = taskViewRepository.findByUserId(users[1].id)[0].copy()
+
+        val result = projectService.quit(
+            id = project.id,
+            userId = users[1].id,
+        )
+        val notMemberTask = taskViewRepository.findByUserId(users[1].id)
+
+        result shouldBe true
+        memberTask.state shouldBe State.MEMBER
+        notMemberTask shouldBe emptyList()
+    }
+
+    @DisplayName("프로젝트 탈퇴 : 외부자가 프로젝트를 탈퇴하려고 하면 예외가 발생한다")
+    @Transactional
+    @Test
+    fun quitOutsiderCannotQuitException() {
+        val users = database.getUsers()
+        val project = projectService.createProject(
+            command = DefaultCommand.CreateProject,
+            userId = users[0].id
+        )
+        shouldThrowExactly<DataNotFoundException> {
+            projectService.quit(
+                id = project.id,
+                userId = 999999999999,
+            )
+        }
+    }
+
+    // TODO(GUEST의 자발적 탈퇴 방법 제공 필요)
+    @DisplayName("프로젝트 탈퇴 : 지원자가 프로젝트를 탈퇴하려고 하면 예외가 발생한다")
+    @Transactional
+    @Test
+    fun quitGuestCannotQuitException() {
+        val users = database.getUsers()
+        val project = projectService.createProject(
+            command = DefaultCommand.CreateProject,
+            userId = users[0].id
+        )
+        projectService.join(
+            id = project.id,
+            userId = users[1].id,
+            position = Position.FRONTEND,
+            introduction = "I am now a GUEST!"
+        )
+        shouldThrowExactly<NotAllowedException> {
+            projectService.quit(
+                id = project.id,
+                userId = users[1].id,
+            )
+        }
+    }
+
+    @DisplayName("프로젝트 탈퇴 : 리더가 프로젝트를 탈퇴하려고 하면 예외가 발생한다")
+    @Transactional
+    @Test
+    fun quitLeaderCannotQuitException() {
+        val users = database.getUsers()
+        val project = projectService.createProject(
+            command = DefaultCommand.CreateProject,
+            userId = users[0].id
+        )
+        shouldThrowExactly<NotAllowedException> {
+            projectService.quit(
+                id = project.id,
+                userId = users[0].id
             )
         }
     }
