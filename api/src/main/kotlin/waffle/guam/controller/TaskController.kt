@@ -10,25 +10,27 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import waffle.guam.controller.request.CreateTaskMsgInput
+import waffle.guam.controller.request.UpdateTaskMsgInput
 import waffle.guam.controller.response.PageableResponse
 import waffle.guam.controller.response.SuccessResponse
 import waffle.guam.db.entity.TaskMessage
 import waffle.guam.service.TaskService
 import waffle.guam.service.command.CreateTaskMsg
+import waffle.guam.service.command.UpdateTaskMsg
 
 @RestController
 @RequestMapping
 class TaskController(
     private val taskService: TaskService
 ) {
-    // C
-    @GetMapping("/task/{id}")
+    @GetMapping("/task/{taskId}")
     fun getAllTaskMsg(
-        @PathVariable id: Long,
+        @PathVariable taskId: Long,
         @RequestParam(required = true, defaultValue = "0") page: Int,
         @RequestParam(required = false, defaultValue = "20") size: Int,
     ): PageableResponse<TaskMessage> {
-        return taskService.getAllMsg(PageRequest.of(page, size), id).let {
+        return taskService.getAllTaskMsg(PageRequest.of(page, size), taskId).let {
             PageableResponse(
                 data = it.content,
                 size = it.content.size,
@@ -39,30 +41,41 @@ class TaskController(
         }
     }
 
-    @PostMapping("/task/{id}")
+    @PostMapping("/task/{taskId}")
     fun createTaskMsg(
-        @PathVariable id: Long,
-        @RequestBody createTaskMsg: CreateTaskMsg
+        @PathVariable taskId: Long,
+        @RequestBody createTaskMsgInput: CreateTaskMsgInput
     ): SuccessResponse<TaskMessage> =
         SuccessResponse(
-            data = taskService.create(id, createTaskMsg)
+            data = taskService.createTaskMsg(
+                command = CreateTaskMsg(
+                    taskId = taskId,
+                    msg = createTaskMsgInput.msg,
+                    status = createTaskMsgInput.status,
+                )
+            )
         )
 
     @PutMapping("/taskMsg/{msgId}")
     fun updateTaskMsg(
         @PathVariable msgId: Long,
-        @RequestBody createMsg: CreateTaskMsg
+        @RequestBody updateTaskMsgInput: UpdateTaskMsgInput
     ): SuccessResponse<TaskMessage> =
         SuccessResponse(
-            data = taskService.update(msgId, createMsg)
+            data = taskService.updateTaskMsg(
+                command = UpdateTaskMsg(
+                    msgId = msgId,
+                    msg = updateTaskMsgInput.msg,
+                    status = updateTaskMsgInput.status,
+                )
+            )
         )
 
-    // R
-    @DeleteMapping("/taskMsg/{id}")
+    @DeleteMapping("/taskMsg/{msgId}")
     fun deleteTaskMsg(
         @PathVariable msgId: Long
     ): SuccessResponse<Boolean> =
         SuccessResponse(
-            data = taskService.delete(msgId)
+            data = taskService.deleteTaskMsg(msgId)
         )
 }

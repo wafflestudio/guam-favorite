@@ -697,12 +697,12 @@ class ProjectServiceSpec @Autowired constructor(
         )
         firstJoinSuccess shouldBe true
         shouldThrowExactly<JoinException> {
-                projectService.join(
-                    id = project.id,
-                    userId = users[1].id,
-                    position = Position.FRONTEND,
-                    introduction = "I am already a member!"
-                )
+            projectService.join(
+                id = project.id,
+                userId = users[1].id,
+                position = Position.FRONTEND,
+                introduction = "I am already a member!"
+            )
         }
     }
 
@@ -780,8 +780,6 @@ class ProjectServiceSpec @Autowired constructor(
             )
         }
     }
-
-    // acceptOrNot
 
     @DisplayName("지원자 승인 : 프로젝트 리더는 guest 상태의 task를 member로 승격시킬 수 있다.")
     @Transactional

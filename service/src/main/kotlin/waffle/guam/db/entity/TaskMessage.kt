@@ -15,9 +15,9 @@ data class TaskMessage(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
 
-    val msg: String? = "New task msg",
+    val msg: String = "New task msg",
 
-    val status: TaskStatus? = TaskStatus.ONGOING,
+    val status: TaskStatus = TaskStatus.ONGOING,
 
     val taskId: Long,
 
