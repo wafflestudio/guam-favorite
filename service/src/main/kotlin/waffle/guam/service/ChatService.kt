@@ -1,5 +1,6 @@
 package waffle.guam.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -41,6 +42,8 @@ class ChatService(
     private val imageRepository: ImageRepository,
     private val imageService: ImageService
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> {
         return threadViewRepository.findByProjectId(projectId, pageable).map {
             ThreadOverView.of(
@@ -72,6 +75,8 @@ class ChatService(
 
     @Transactional
     fun setNoticeThread(command: SetNoticeThread): Boolean {
+        logger.info("$command")
+
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
             taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::NotAllowedException).also {
                 if (it.state == State.GUEST) throw NotAllowedException()
@@ -85,6 +90,8 @@ class ChatService(
 
     @Transactional
     fun removeNoticeThread(command: RemoveNoticeThread): Boolean {
+        logger.info("$command")
+
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
             taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::NotAllowedException).also {
                 if (it.state == State.GUEST) throw NotAllowedException()
@@ -96,6 +103,8 @@ class ChatService(
 
     @Transactional
     fun createThread(command: CreateThread): Boolean {
+        logger.info("$command")
+
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
         val threadId = threadRepository.save(command.toEntity()).id
         if (!command.imageFiles.isNullOrEmpty())
@@ -106,6 +115,8 @@ class ChatService(
 
     @Transactional
     fun editThreadContent(command: EditThreadContent): Boolean {
+        logger.info("$command")
+
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) throw NotAllowedException()
             if (it.content == command.content) throw InvalidRequestException("수정 전과 동일한 내용입니다.")
@@ -116,6 +127,8 @@ class ChatService(
 
     @Transactional
     fun deleteThreadImage(command: DeleteThreadImage): Boolean {
+        logger.info("$command")
+
         imageRepository.findById(command.imageId).orElseThrow(::DataNotFoundException).let { image ->
             threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).also {
                 if (it.userId != command.userId) throw NotAllowedException()
@@ -128,6 +141,8 @@ class ChatService(
 
     @Transactional
     fun deleteThread(command: DeleteThread): Boolean {
+        logger.info("$command")
+
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { thread ->
             if (thread.userId != command.userId) throw NotAllowedException()
             val childComments: List<CommentEntity> = commentRepository.findByThreadId(command.threadId)
@@ -143,6 +158,8 @@ class ChatService(
 
     @Transactional
     fun createComment(command: CreateComment): Boolean {
+        logger.info("$command")
+
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException)
         val commentId = commentRepository.save(command.toEntity()).id
         if (!command.imageFiles.isNullOrEmpty())
@@ -153,6 +170,8 @@ class ChatService(
 
     @Transactional
     fun editCommentContent(command: EditCommentContent): Boolean {
+        logger.info("$command")
+
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) throw NotAllowedException()
             if (it.content == command.content) throw InvalidRequestException("수정 전과 동일한 내용입니다.")
@@ -163,6 +182,8 @@ class ChatService(
 
     @Transactional
     fun deleteCommentImage(command: DeleteCommentImage): Boolean {
+        logger.info("$command")
+
         imageRepository.findById(command.imageId).orElseThrow(::DataNotFoundException).let { image ->
             commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).also {
                 if (it.userId != command.userId) throw NotAllowedException()
@@ -175,6 +196,8 @@ class ChatService(
 
     @Transactional
     fun deleteComment(command: DeleteComment): Boolean {
+        logger.info("$command")
+
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) throw NotAllowedException()
             imageRepository.deleteByParentIdAndType(command.commentId, ImageType.COMMENT)
