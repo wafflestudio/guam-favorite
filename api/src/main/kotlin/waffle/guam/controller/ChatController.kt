@@ -94,7 +94,7 @@ class ChatController(
                     projectId = projectId,
                     userId = userContext.id,
                     content = createFullInfoInput.content,
-                    imageFiles = createFullInfoInput.imageFiles
+                    imageFiles = createFullInfoInput.files
                 )
             )
         )
@@ -146,7 +146,7 @@ class ChatController(
                     threadId = threadId,
                     userId = userContext.id,
                     content = createFullInfoInput.content,
-                    imageFiles = createFullInfoInput.imageFiles
+                    imageFiles = createFullInfoInput.files
                 )
             )
         )

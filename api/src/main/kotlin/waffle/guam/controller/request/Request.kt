@@ -8,5 +8,5 @@ data class ContentInput(
 
 data class CreateFullInfoInput(
     val content: String?,
-    val imageFiles: List<MultipartFile>?
+    val files: List<MultipartFile>?
 )
