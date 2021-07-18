@@ -2,7 +2,6 @@ package waffle.guam.config
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
-import org.slf4j.LoggerFactory
 import org.springframework.core.MethodParameter
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
@@ -14,14 +13,13 @@ import org.springframework.web.method.support.ModelAndViewContainer
 import waffle.guam.common.InvalidFirebaseTokenException
 import waffle.guam.common.UserContext
 import waffle.guam.service.UserService
+import waffle.guam.util.LogHandler
 import javax.servlet.http.HttpServletRequest
 
 @Component
 class UserContextResolver(
     private val sessionService: SessionService
 ) : HandlerMethodArgumentResolver {
-    private val logger = LoggerFactory.getLogger(javaClass)
-
     override fun supportsParameter(parameter: MethodParameter): Boolean =
         UserContext::class.java.isAssignableFrom(parameter.parameterType)
 
@@ -44,7 +42,7 @@ class UserContextResolver(
             throw InvalidFirebaseTokenException("잘못된 토큰입니다.")
         }
 
-        logger.info("user-id : ${userContext.id}, method: ${req.method}, uri: ${req.requestURI}")
+        LogHandler.info("user-id : ${userContext.id}, method: ${req.method}, uri: ${req.requestURI}")
 
         return userContext
     }

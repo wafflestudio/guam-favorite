@@ -3,13 +3,13 @@ package waffle.guam.service
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.amazonaws.services.s3.model.PutObjectRequest
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import waffle.guam.db.entity.ImageEntity
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.repository.ImageRepository
+import waffle.guam.util.LogHandler
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
@@ -23,8 +23,6 @@ class ImageServiceImpl(
     private val imageRepository: ImageRepository,
     private val client: AmazonS3Client
 ) : ImageService {
-    private val logger = LoggerFactory.getLogger(javaClass)
-
     private val imageLocation = Paths.get("image")
     private val bucketName = "guam"
 
@@ -42,7 +40,7 @@ class ImageServiceImpl(
         }
 
     private fun internalUpLoad(multipartFile: MultipartFile, imageEntity: ImageEntity): PutObjectRequest {
-        logger.info("Upload $imageEntity to s3..")
+        LogHandler.info("Upload $imageEntity to s3..")
         return imageLocation.resolve(imageEntity.getPath()).let { filePath ->
             multipartFile.inputStream.use { inputStream ->
                 Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING)

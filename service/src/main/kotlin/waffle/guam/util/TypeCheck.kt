@@ -1,14 +1,11 @@
 package waffle.guam.util
 
-import org.slf4j.LoggerFactory
 import org.springframework.web.multipart.MultipartFile
 import waffle.guam.exception.InvalidRequestException
 
 object TypeCheck {
-    private val logger = LoggerFactory.getLogger(javaClass)
-
     fun validImageFile(imageFile: MultipartFile) {
-        logger.info("check image content type : ${imageFile.contentType}")
+        LogHandler.info("check image content type : ${imageFile.contentType}")
 
         if (imageFile.contentType?.startsWith("image") != true) {
             throw InvalidRequestException("이미지만 업로드 가능합니다. Content Type : ${imageFile.contentType}")

@@ -1,6 +1,5 @@
 package waffle.guam.service
 
-import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -26,6 +25,7 @@ import waffle.guam.model.Project
 import waffle.guam.model.ThreadOverView
 import waffle.guam.service.command.CreateProject
 import waffle.guam.service.command.CreateThread
+import waffle.guam.util.LogHandler
 import java.time.LocalDateTime
 
 @Service
@@ -39,13 +39,10 @@ class ProjectService(
     private val commentRepository: CommentRepository,
     private val chatService: ChatService
 ) {
-    private val logger = LoggerFactory.getLogger(javaClass)
     private val searchEngine: SearchEngine = SearchEngine()
 
     @Transactional
     fun createProject(command: CreateProject, userId: Long): Project {
-        logger.info("$command")
-
         if (taskRepository.countByUserIdAndStateNotLike(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
 
         val myPosition = command.myPosition ?: throw JoinException("포지션을 설정해주세요.")
@@ -124,7 +121,7 @@ class ProjectService(
 
     @Transactional
     fun updateProject(id: Long, command: CreateProject, userId: Long): Project {
-        logger.info("$command")
+        LogHandler.info("$command")
 
         return taskRepository.findByUserIdAndProjectId(userId, id).orElseThrow(::DataNotFoundException).let {
             if (it.state != State.LEADER) throw NotAllowedException("프로젝트 수정 권한이 없습니다.")
@@ -153,7 +150,7 @@ class ProjectService(
 
     @Transactional
     fun join(id: Long, userId: Long, position: Position, introduction: String): Boolean {
-        logger.info("user $userId requests joining project $id as $position")
+        LogHandler.info("user $userId requests joining project $id as $position")
 
         return when {
             taskRepository.countByUserIdAndStateNotLike(userId) >= 3 -> throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
@@ -188,7 +185,7 @@ class ProjectService(
 
     @Transactional
     fun acceptOrNot(id: Long, guestId: Long, leaderId: Long, accept: Boolean): String {
-        logger.info("user $leaderId accepts guest $guestId as a member of project $id")
+        LogHandler.info("user $leaderId accepts guest $guestId as a member of project $id")
 
         return taskRepository.findByUserIdAndProjectIdAndState(leaderId, id, State.LEADER).orElseThrow(::NotAllowedException)
             .run {
@@ -214,7 +211,7 @@ class ProjectService(
     // TODO : GUEST가 자발적으로 프로젝트를 그만두는 경우도 발생할 수 있음.
     @Transactional
     fun quit(id: Long, userId: Long): Boolean {
-        logger.info("Quit project $id from $userId")
+        LogHandler.info("Quit project $id from $userId")
 
         return taskRepository.findByUserIdAndProjectId(userId, id).orElseThrow(::DataNotFoundException).let {
             when (it.state) {
@@ -226,7 +223,7 @@ class ProjectService(
     }
     @Transactional
     fun deleteProject(id: Long, userId: Long): Boolean {
-        logger.info("Delete project $id from $userId")
+        LogHandler.info("Delete project $id from $userId")
 
         taskRepository.findByUserIdAndProjectId(userId, id)
             .orElseThrow(::NotAllowedException).let {
