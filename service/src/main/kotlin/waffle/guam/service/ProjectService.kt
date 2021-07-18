@@ -105,7 +105,6 @@ class ProjectService(
     // FIXME: 효율성 문제
     // TODO: db 상에서 남은 인원을 바로 가지고 있지 않음. 또한 stack 의 경우에도 자식 테이블을 전부 참조 해보아야한다.
     fun search(query: String, due: Due?, stackId: Long?, position: Position?): List<Project> =
-
         if (due == null)
             projectViewRepository.findAll()
                 .map { it to searchEngine.search(dic = listOf(it.title, it.description), q = query) }
@@ -121,7 +120,6 @@ class ProjectService(
 
     @Transactional
     fun updateProject(id: Long, command: CreateProject, userId: Long) =
-
         taskRepository.findByUserIdAndProjectId(userId, id).orElseThrow(::DataNotFoundException).let {
             if (it.state != State.LEADER) throw NotAllowedException("프로젝트 수정 권한이 없습니다.")
         }.run {
@@ -148,7 +146,6 @@ class ProjectService(
 
     @Transactional
     fun join(id: Long, userId: Long, position: Position, introduction: String): Boolean =
-
         when {
             taskRepository.countByUserIdAndStateNotLike(userId) >= 3 -> throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
             taskRepository.findByUserIdAndProjectId(userId, id).isPresent -> throw JoinException("이미 참여하고 계신 프로젝트입니다.")
@@ -181,20 +178,16 @@ class ProjectService(
 
     @Transactional
     fun acceptOrNot(id: Long, guestId: Long, leaderId: Long, accept: Boolean): String =
-
         taskRepository.findByUserIdAndProjectIdAndState(leaderId, id, State.LEADER).orElseThrow(::NotAllowedException).run {
-
             taskViewRepository.findByUserIdAndProjectId(guestId, id).orElseThrow(::DataNotFoundException).let {
                 when (it.state) {
                     State.GUEST ->
-
                         if (accept)
                             taskViewRepository.save(it.copy(state = State.MEMBER))
                                 .let { "정상적으로 승인되었습니다." }
                         else
                             taskViewRepository.delete(it)
                                 .let { "정상적으로 반려되었습니다." }
-
                     State.MEMBER -> throw NotAllowedException("이미 승인이 된 멤버입니다.")
                     State.LEADER -> throw NotAllowedException("리더를 승인할 수 없습니다.")
                 }
@@ -214,7 +207,6 @@ class ProjectService(
 
     @Transactional
     fun deleteProject(id: Long, userId: Long): Boolean {
-
         taskRepository.findByUserIdAndProjectId(userId, id)
             .orElseThrow(::NotAllowedException).let {
                 if (it.state != State.LEADER) throw NotAllowedException("프로젝트 수정 권한이 없습니다.")

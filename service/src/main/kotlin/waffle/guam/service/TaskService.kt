@@ -10,6 +10,7 @@ import waffle.guam.db.repository.TaskRepository
 import waffle.guam.db.repository.TaskViewRepository
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.service.command.CreateTaskMsg
+import waffle.guam.service.command.UpdateTaskMsg
 
 @Service
 class TaskService(
@@ -17,33 +18,32 @@ class TaskService(
     private val taskViewRepository: TaskViewRepository,
     private val taskMessageRepository: TaskMessageRepository
 ) {
+    @Transactional
+    fun getProjectIds(userId: Long): List<Long> =
+        taskRepository.findByUserId(userId).map { it.id }
 
     @Transactional
-    fun create(taskId: Long, createTaskMsg: CreateTaskMsg) =
+    fun getAllTaskMsg(pageable: Pageable, taskId: Long): Page<TaskMessage> =
+        taskMessageRepository.findAllByTaskId(taskId, pageable)
+
+    @Transactional
+    fun createTaskMsg(command: CreateTaskMsg) =
         taskMessageRepository.save(
-            createTaskMsg.toEntity(taskId)
+            command.toEntity()
         )
 
     @Transactional
-    fun update(msgId: Long, createTaskMsg: CreateTaskMsg) =
-        taskMessageRepository.findById(msgId).orElseThrow(::DataNotFoundException).let {
+    fun updateTaskMsg(command: UpdateTaskMsg) =
+        taskMessageRepository.findById(command.msgId).orElseThrow(::DataNotFoundException).let {
             taskMessageRepository.save(
                 it.copy(
-                    msg = createTaskMsg.msg ?: it.msg,
-                    status = createTaskMsg.status ?: it.status
+                    msg = command.msg ?: it.msg,
+                    status = command.status ?: it.status
                 )
             )
         }
 
     @Transactional
-    fun getAllMsg(pageable: Pageable, taskId: Long): Page<TaskMessage> =
-        taskMessageRepository.findAllByTaskId(taskId, pageable)
-
-    @Transactional
-    fun delete(msgId: Long) =
+    fun deleteTaskMsg(msgId: Long) =
         taskMessageRepository.deleteById(msgId).let { true }
-
-    @Transactional
-    fun getProjectIds(userId: Long): List<Long> =
-        taskRepository.findByUserId(userId).map { it.id }
 }
