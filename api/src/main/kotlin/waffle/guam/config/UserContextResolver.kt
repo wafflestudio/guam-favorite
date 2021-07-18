@@ -2,6 +2,7 @@ package waffle.guam.config
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import org.slf4j.LoggerFactory
 import org.springframework.core.MethodParameter
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
@@ -19,6 +20,8 @@ import javax.servlet.http.HttpServletRequest
 class UserContextResolver(
     private val sessionService: SessionService
 ) : HandlerMethodArgumentResolver {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     override fun supportsParameter(parameter: MethodParameter): Boolean =
         UserContext::class.java.isAssignableFrom(parameter.parameterType)
 
@@ -27,19 +30,25 @@ class UserContextResolver(
         mavContainer: ModelAndViewContainer?,
         webRequest: NativeWebRequest,
         binderFactory: WebDataBinderFactory?
-    ): UserContext =
-        (webRequest.nativeRequest as HttpServletRequest).getHeader(HttpHeaders.AUTHORIZATION)
-            ?.let {
-                kotlin.runCatching {
-                    sessionService.takeUserId(it)
-                }.getOrElse {
-                    if (it is FirebaseAuthException && it.message?.contains("expired") == true) {
-                        throw InvalidFirebaseTokenException("만료된 토큰입니다.")
-                    }
-                    throw InvalidFirebaseTokenException("잘못된 토큰입니다.")
-                }
+    ): UserContext {
+        val req = (webRequest.nativeRequest as HttpServletRequest)
+        val authorizationHeader =
+            req.getHeader(HttpHeaders.AUTHORIZATION) ?: throw InvalidFirebaseTokenException("토큰 정보를 찾을 수 없습니다.")
+
+        val userContext = kotlin.runCatching {
+            sessionService.takeUserId(authorizationHeader)
+        }.getOrElse {
+            if (it is FirebaseAuthException && it.message?.contains("expired") == true) {
+                throw InvalidFirebaseTokenException("만료된 토큰입니다.")
             }
-            ?: throw InvalidFirebaseTokenException("토큰 정보를 찾을 수 없습니다.")
+            throw InvalidFirebaseTokenException("잘못된 토큰입니다.")
+        }
+
+        logger.info("user-id : ${userContext.id}, method: ${req.method}, uri: ${req.requestURI}")
+
+        return userContext
+    }
+
 }
 
 interface SessionService {
