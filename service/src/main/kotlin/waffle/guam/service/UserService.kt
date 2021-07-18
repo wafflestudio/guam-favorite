@@ -1,5 +1,6 @@
 package waffle.guam.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -11,12 +12,14 @@ import waffle.guam.model.User
 import waffle.guam.service.command.UpdateDevice
 import waffle.guam.service.command.UpdateUser
 import java.time.Instant
+import kotlin.math.log
 
 @Service
 class UserService(
     private val userRepository: UserRepository,
     private val imageService: ImageService
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     fun get(id: Long): User =
         userRepository.findById(id).orElseThrow(::DataNotFoundException).let { User.of(it) }
@@ -28,8 +31,10 @@ class UserService(
         )
 
     @Transactional
-    fun update(command: UpdateUser, userId: Long): User =
-        userRepository.findById(userId).orElseThrow(::DataNotFoundException).let {
+    fun update(command: UpdateUser, userId: Long): User {
+        logger.info("$command")
+
+        return userRepository.findById(userId).orElseThrow(::DataNotFoundException).let {
             it.nickname = command.nickname ?: it.nickname
             it.skills = command.skills?.joinToString(",") ?: it.skills
             it.githubUrl = command.githubUrl ?: it.githubUrl
@@ -38,28 +43,38 @@ class UserService(
             it.updatedAt = Instant.now()
             User.of(it)
         }
+    }
 
     @Transactional
-    fun updateImage(image: MultipartFile, userId: Long) =
-        userRepository.findById(userId).orElseThrow(::DataNotFoundException).also { userEntity ->
+    fun updateImage(image: MultipartFile, userId: Long): User {
+        logger.info("update profile image of $userId")
+
+        return userRepository.findById(userId).orElseThrow(::DataNotFoundException).also { userEntity ->
             userEntity.image = imageService.upload(image, ImageInfo(userId, ImageType.PROFILE))
         }.let {
             User.of(it)
         }
+    }
 
     @Transactional
-    fun deleteImage(userId: Long) =
-        userRepository.findById(userId).orElseThrow(::DataNotFoundException).also { userEntity ->
+    fun deleteImage(userId: Long): User {
+        logger.info("delete profile image of $userId")
+
+        return userRepository.findById(userId).orElseThrow(::DataNotFoundException).also { userEntity ->
             userEntity.image = null
         }.let {
             User.of(it)
         }
+    }
 
     @Transactional
-    fun updateDeviceId(command: UpdateDevice, userId: Long) =
-        userRepository.findById(userId).orElseThrow(::DataNotFoundException).also { userEntity ->
+    fun updateDeviceId(command: UpdateDevice, userId: Long): User {
+        logger.info("$command")
+
+        return userRepository.findById(userId).orElseThrow(::DataNotFoundException).also { userEntity ->
             userEntity.deviceId = command.deviceId
         }.let {
             User.of(it)
         }
+    }
 }
