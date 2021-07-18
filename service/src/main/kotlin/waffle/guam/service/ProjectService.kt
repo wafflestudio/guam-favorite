@@ -123,7 +123,7 @@ class ProjectService(
                 .map { Project.of(it.first) }
 
     @Transactional
-    fun updateProject(id: Long, command: CreateProject, userId: Long) {
+    fun updateProject(id: Long, command: CreateProject, userId: Long): Project {
         logger.info("$command")
 
         return taskRepository.findByUserIdAndProjectId(userId, id).orElseThrow(::DataNotFoundException).let {

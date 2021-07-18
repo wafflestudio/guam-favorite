@@ -48,7 +48,6 @@ class UserContextResolver(
 
         return userContext
     }
-
 }
 
 interface SessionService {

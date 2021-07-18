@@ -30,7 +30,7 @@ class ErrorHandler {
 
     @ExceptionHandler(value = [JoinException::class, NotAllowedException::class])
     fun notAllowed(e: RuntimeException): ResponseEntity<ErrorResponse> {
-        logger.error(e.message,e )
+        logger.error(e.message, e)
         return ResponseEntity(ErrorResponse(e.message ?: "", MDC.get("request-id")), HttpStatus.FORBIDDEN)
     }
 

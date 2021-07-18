@@ -12,7 +12,6 @@ import waffle.guam.model.User
 import waffle.guam.service.command.UpdateDevice
 import waffle.guam.service.command.UpdateUser
 import java.time.Instant
-import kotlin.math.log
 
 @Service
 class UserService(
