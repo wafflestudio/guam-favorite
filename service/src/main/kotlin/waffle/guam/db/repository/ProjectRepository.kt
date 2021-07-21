@@ -1,16 +1,15 @@
 package waffle.guam.db.repository
 
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.ProjectEntity
 import waffle.guam.db.entity.ProjectView
 
 interface ProjectRepository : JpaRepository<ProjectEntity, Long>
 
-interface ProjectViewRepository : JpaRepository<ProjectView, Long> {
+interface ProjectViewRepository : JpaRepository<ProjectView, Long>, JpaSpecificationExecutor<ProjectView> {
+
     fun findByFrontHeadcountIsLessThanOrBackHeadcountIsLessThanOrDesignerHeadcountIsLessThan(
         frontHeadcount: Int = 2,
         backHeadcount: Int = 2,
@@ -20,7 +19,4 @@ interface ProjectViewRepository : JpaRepository<ProjectView, Long> {
     fun findByDueEquals(
         due: Due
     ): List<ProjectView>
-
-    @Query("select p from ProjectView p left join p.tasks t left join t.user u")
-    fun listAllProjects(pageable: Pageable): Page<ProjectView>
 }

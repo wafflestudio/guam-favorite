@@ -40,7 +40,7 @@ class ProjectController(
         @RequestParam(required = true, defaultValue = "0") page: Int,
         @RequestParam(required = false, defaultValue = "20") size: Int,
     ): PageableResponse<Project> =
-        projectService.listAll(PageRequest.of(page, size)).let {
+        projectService.getAllProjects(PageRequest.of(page, size)).let {
             PageableResponse(
                 data = it.content,
                 size = it.content.size,
@@ -110,7 +110,7 @@ class ProjectController(
     fun quitProject(
         @PathVariable id: Long,
         userContext: UserContext
-    ): SuccessResponse<Boolean> =
+    ): SuccessResponse<String> =
         SuccessResponse(
             data = projectService.quit(id, userContext.id)
         )
@@ -119,7 +119,7 @@ class ProjectController(
     fun deleteProject(
         @PathVariable id: Long,
         userContext: UserContext
-    ): SuccessResponse<Boolean> =
+    ): SuccessResponse<String> =
         SuccessResponse(
             data = projectService.deleteProject(id, userContext.id)
         )
