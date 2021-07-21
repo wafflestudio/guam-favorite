@@ -4,7 +4,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import waffle.guam.db.entity.CommentEntity
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.State
 import waffle.guam.db.repository.CommentRepository
@@ -134,9 +133,8 @@ class ChatService(
                 if (it.content.isNullOrBlank()) {
                     if (imageRepository.findByParentIdAndType(it.id, ImageType.THREAD).size < 2)
                         this.deleteThread(DeleteThread(threadId = it.id, userId = command.userId))
-                } else {
-                    imageRepository.delete(image)
                 }
+                imageRepository.delete(image)
             }
         }
         return true
@@ -146,13 +144,12 @@ class ChatService(
     fun deleteThread(command: DeleteThread): Boolean {
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) throw NotAllowedException()
-            val childComments: List<CommentEntity> = commentRepository.findByThreadId(command.threadId)
-            imageRepository.deleteByParentIdAndType(it.id, ImageType.THREAD)
-            if (childComments.isEmpty()) {
+            if (commentRepository.findByThreadId(command.threadId).isEmpty()) {
                 threadRepository.delete(it)
             } else {
                 threadRepository.save(it.copy(content = null))
             }
+            imageRepository.deleteByParentIdAndType(it.id, ImageType.THREAD)
         }
         return true
     }
@@ -200,9 +197,8 @@ class ChatService(
                 if (it.content.isNullOrBlank()) {
                     if (imageRepository.findByParentIdAndType(it.id, ImageType.COMMENT).size < 2)
                         commentRepository.delete(it)
-                } else {
-                    imageRepository.delete(image)
                 }
+                imageRepository.delete(image)
             }
         }
         return true
@@ -214,6 +210,11 @@ class ChatService(
             if (it.userId != command.userId) throw NotAllowedException()
             imageRepository.deleteByParentIdAndType(command.commentId, ImageType.COMMENT)
             commentRepository.delete(it)
+
+            if (commentRepository.findByThreadId(it.threadId).isEmpty())
+                if(threadRepository.findById(it.threadId).get().content.isNullOrBlank())
+                    if (imageRepository.findByParentIdAndType(it.threadId, ImageType.THREAD).isEmpty())
+                        threadRepository.deleteById(it.threadId)
         }
         return true
     }
