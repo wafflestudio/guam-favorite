@@ -132,15 +132,15 @@ class ChatService(
 
     @Transactional
     fun deleteThread(command: DeleteThread): Boolean {
-        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { thread ->
-            if (thread.userId != command.userId) throw NotAllowedException()
+        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
+            if (it.userId != command.userId) throw NotAllowedException()
             val childComments: List<CommentEntity> = commentRepository.findByThreadId(command.threadId)
-            if (childComments.isNotEmpty()) {
-                imageRepository.deleteByParentIdInAndType(childComments.map { it.id }, ImageType.COMMENT)
-                commentRepository.deleteAll(childComments)
+            imageRepository.deleteByParentIdAndType(it.id, ImageType.THREAD)
+            if (childComments.isEmpty()) {
+                threadRepository.delete(it)
+            } else{
+                threadRepository.save(it.copy(content = null))
             }
-            imageRepository.deleteByParentIdAndType(thread.id, ImageType.THREAD)
-            threadRepository.delete(thread)
         }
         return true
     }
