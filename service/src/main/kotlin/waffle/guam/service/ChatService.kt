@@ -119,8 +119,13 @@ class ChatService(
             threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).also {
                 if (it.userId != command.userId) throw NotAllowedException()
                 if (it.id != image.parentId) throw InvalidRequestException()
+                if (it.content.isNullOrBlank()) {
+                    if (imageRepository.findByParentIdAndType(it.id, ImageType.THREAD).size < 2)
+                        this.deleteThread(DeleteThread(threadId = it.id, userId = command.userId))
+                } else {
+                    imageRepository.delete(image)
+                }
             }
-            imageRepository.delete(image)
         }
         return true
     }
@@ -166,8 +171,14 @@ class ChatService(
             commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).also {
                 if (it.userId != command.userId) throw NotAllowedException()
                 if (it.id != image.parentId) throw InvalidRequestException()
+
+                if (it.content.isNullOrBlank()) {
+                    if (imageRepository.findByParentIdAndType(it.id, ImageType.COMMENT).size < 2)
+                        commentRepository.delete(it)
+                } else {
+                    imageRepository.delete(image)
+                }
             }
-            imageRepository.delete(image)
         }
         return true
     }
