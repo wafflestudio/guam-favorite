@@ -20,7 +20,7 @@ class TaskService(
 ) {
     @Transactional
     fun getProjectIds(userId: Long): List<Long> =
-        taskRepository.findByUserId(userId).map { it.id }
+        taskRepository.findByUserId(userId).map { it.projectId }
 
     @Transactional
     fun getAllTaskMsg(pageable: Pageable, taskId: Long): Page<TaskMessage> =

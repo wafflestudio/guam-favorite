@@ -68,7 +68,12 @@ data class Project(
 
         private fun currHeadCntOf(projectView: ProjectView): IntArray {
             val res = MutableList(3, fun(_: Int) = 0)
-            projectView.tasks.map {
+            projectView.tasks.filter {
+                when (it.state) {
+                    State.LEADER, State.MEMBER -> true
+                    else -> false
+                }
+            }.map {
                 when (it.position) {
                     Position.WHATEVER -> 0
                     Position.DESIGNER -> res[2]++

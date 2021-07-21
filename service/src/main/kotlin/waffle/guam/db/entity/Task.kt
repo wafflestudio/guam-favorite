@@ -69,5 +69,5 @@ enum class Position {
 }
 
 enum class State {
-    GUEST, MEMBER, LEADER
+    GUEST, MEMBER, LEADER, QUIT, DECLINED
 }

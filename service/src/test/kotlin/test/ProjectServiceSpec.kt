@@ -310,9 +310,9 @@ class ProjectServiceSpec @Autowired constructor(
             projectService.createProject(
                 command = DefaultCommand.CreateProject.copy(
                     title = "Need Everything",
-                    frontLeftCnt = 10,
-                    backLeftCnt = 10,
-                    designLeftCnt = 10,
+                    frontHeadCnt = 10,
+                    backHeadCnt = 10,
+                    designHeadCnt = 10,
                 ),
                 userId = users[0].id
             )
@@ -321,7 +321,7 @@ class ProjectServiceSpec @Autowired constructor(
             projectService.createProject(
                 command = DefaultCommand.CreateProject.copy(
                     title = "Need Only 1 Frontend",
-                    frontLeftCnt = 1,
+                    frontHeadCnt = 1,
                 ),
                 userId = users[1].id
             )
@@ -330,7 +330,7 @@ class ProjectServiceSpec @Autowired constructor(
             projectService.createProject(
                 command = DefaultCommand.CreateProject.copy(
                     title = "Need Only 1 Designer",
-                    backLeftCnt = 1,
+                    backHeadCnt = 1,
                 ),
                 userId = users[2].id
             )
@@ -352,9 +352,9 @@ class ProjectServiceSpec @Autowired constructor(
             projectService.createProject(
                 command = DefaultCommand.CreateProject.copy(
                     title = "Need Everything",
-                    frontLeftCnt = 10,
-                    backLeftCnt = 10,
-                    designLeftCnt = 10,
+                    frontHeadCnt = 10,
+                    backHeadCnt = 10,
+                    designHeadCnt = 10,
                 ),
                 userId = users[i % 3].id
             )
@@ -508,9 +508,9 @@ class ProjectServiceSpec @Autowired constructor(
                 title = "Changed Title",
                 description = prevProject.description,
                 thumbnail = prevProject.thumbnail,
-                frontLeftCnt = prevProject.frontLeftCnt,
-                backLeftCnt = prevProject.backLeftCnt,
-                designLeftCnt = prevProject.designLeftCnt,
+                frontHeadCnt = prevProject.frontLeftCnt,
+                backHeadCnt = prevProject.backLeftCnt,
+                designHeadCnt = prevProject.designLeftCnt,
                 techStackIds = listOf(),
                 due = prevProject.due,
                 myPosition = null
@@ -543,9 +543,9 @@ class ProjectServiceSpec @Autowired constructor(
                 title = prevProject.title,
                 description = prevProject.description,
                 thumbnail = prevProject.thumbnail,
-                frontLeftCnt = prevProject.frontLeftCnt,
-                backLeftCnt = prevProject.backLeftCnt,
-                designLeftCnt = prevProject.designLeftCnt,
+                frontHeadCnt = prevProject.frontLeftCnt,
+                backHeadCnt = prevProject.backLeftCnt,
+                designHeadCnt = prevProject.designLeftCnt,
                 techStackIds = stacks.map { Pair(first = it.id, second = it.position) },
                 due = prevProject.due,
                 myPosition = null
@@ -768,7 +768,7 @@ class ProjectServiceSpec @Autowired constructor(
         val users = database.getUsers()
 
         val project = projectService.createProject(
-            command = DefaultCommand.CreateProject.copy(frontLeftCnt = 0),
+            command = DefaultCommand.CreateProject.copy(frontHeadCnt = 0),
             userId = users[0].id
         )
         shouldThrowExactly<JoinException> {
@@ -1134,9 +1134,9 @@ class ProjectServiceSpec @Autowired constructor(
             title = "Test Project",
             description = "Test Description",
             thumbnail = "Test Thumbnail",
-            frontLeftCnt = 3,
-            backLeftCnt = 3,
-            designLeftCnt = 3,
+            frontHeadCnt = 3,
+            backHeadCnt = 3,
+            designHeadCnt = 3,
             techStackIds = emptyList(),
             due = Due.SIX,
             myPosition = Position.WHATEVER

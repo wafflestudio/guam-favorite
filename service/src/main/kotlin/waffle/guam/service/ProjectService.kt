@@ -8,6 +8,7 @@ import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectStackEntity
+import waffle.guam.db.entity.ProjectView
 import waffle.guam.db.entity.State
 import waffle.guam.db.entity.TaskEntity
 import waffle.guam.db.repository.CommentRepository
@@ -25,6 +26,7 @@ import waffle.guam.model.Project
 import waffle.guam.model.ThreadOverView
 import waffle.guam.service.command.CreateProject
 import waffle.guam.service.command.CreateThread
+import waffle.guam.service.command.UpdateProject
 import java.time.LocalDateTime
 
 @Service
@@ -72,7 +74,41 @@ class ProjectService(
     }
 
     fun getAllProjects(pageable: Pageable): Page<Project> =
-        projectViewRepository.findAll(pageable).map { Project.of(it, false) }
+        projectViewRepository.findAll(pageable).map { project ->
+            Project.of(
+                entity = project,
+                fetchTasks = true,
+                thread =
+                project.noticeThreadId?.let { noticeThreadId ->
+                    threadViewRepository.findById(noticeThreadId).takeIf { it.isPresent }?.get()?.let { noticeThread ->
+                        ThreadOverView.of(
+                            noticeThread,
+                            { threadId -> commentRepository.countByThreadId(threadId) },
+                            { images ->
+                                images.filter { allImage -> allImage.type == ImageType.THREAD }
+                                    .map { threadImage -> Image.of(threadImage) }
+                            }
+                        )
+                    }
+                }
+            )
+        }
+
+    fun listAll(pageable: Pageable): Page<Project> =
+        projectViewRepository.listAllProjects(pageable).map{
+            Project.of(it, true, it.noticeThreadId?.let { noticeThreadId ->
+                threadViewRepository.findById(noticeThreadId).takeIf { it.isPresent }?.get()?.let { noticeThread ->
+                    ThreadOverView.of(
+                        noticeThread,
+                        { threadId -> commentRepository.countByThreadId(threadId) },
+                        { images ->
+                            images.filter { allImage -> allImage.type == ImageType.THREAD }
+                                .map { threadImage -> Image.of(threadImage) }
+                        }
+                    )
+                }
+            })
+        }
 
     fun findProject(id: Long): Project =
         projectViewRepository.findById(id).orElseThrow(::DataNotFoundException)
@@ -119,25 +155,25 @@ class ProjectService(
                 .map { Project.of(it.first) }
 
     @Transactional
-    fun updateProject(id: Long, command: CreateProject, userId: Long) =
-        taskRepository.findByUserIdAndProjectId(userId, id).orElseThrow(::DataNotFoundException).let {
+    fun updateProject(projectId: Long, command: UpdateProject, userId: Long) =
+        taskRepository.findByUserIdAndProjectId(userId, projectId).orElseThrow(::DataNotFoundException).let {
             if (it.state != State.LEADER) throw NotAllowedException("프로젝트 수정 권한이 없습니다.")
         }.run {
-            projectStackRepository.findByProjectId(id).map {
-                projectStackRepository.deleteByProjectIdAndTechStackId(id, it.techStackId)
+            projectStackRepository.findByProjectId(projectId).map {
+                projectStackRepository.deleteByProjectIdAndTechStackId(projectId, it.techStackId)
             }
 
             projectStackRepository.saveAll(
                 command.techStackIds.map {
-                    ProjectStackEntity(projectId = id, techStackId = it.first, position = it.second)
+                    ProjectStackEntity(projectId = projectId, techStackId = it.first, position = it.second)
                 }
             )
 
             projectViewRepository.save(
-                projectViewRepository.getById(id).copy(
+                projectViewRepository.getById(projectId).copy(
                     title = command.title, description = command.description,
-                    frontHeadcount = command.frontLeftCnt, backHeadcount = command.backLeftCnt,
-                    designerHeadcount = command.designLeftCnt, modifiedAt = LocalDateTime.now()
+                    frontHeadcount = command.frontHeadCnt, backHeadcount = command.backHeadCnt,
+                    designerHeadcount = command.designHeadCnt, modifiedAt = LocalDateTime.now()
                 )
             ).let {
                 Project.of(it, true)
@@ -190,6 +226,7 @@ class ProjectService(
                                 .let { "정상적으로 반려되었습니다." }
                     State.MEMBER -> throw NotAllowedException("이미 승인이 된 멤버입니다.")
                     State.LEADER -> throw NotAllowedException("리더를 승인할 수 없습니다.")
+                    else -> throw NotAllowedException("이미 운명이 정해진 유저입니다.")
                 }
             }
         }
@@ -202,6 +239,7 @@ class ProjectService(
                 State.GUEST -> throw NotAllowedException("나갈 수 없습니다. 팀의 멤버가 아닙니다")
                 State.LEADER -> throw NotAllowedException("리더는 나갈 수 없습니다. 권한을 위임하거나 프로젝트를 종료해 주세요")
                 State.MEMBER -> taskRepository.delete(it).let { true }
+                else -> throw NotAllowedException("이미 프로젝트에서 제외된 유저입니다.")
             }
         }
 

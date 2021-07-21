@@ -11,7 +11,6 @@ import waffle.guam.db.entity.Position
 import waffle.guam.service.ProjectService
 import waffle.guam.service.UserService
 import waffle.guam.service.command.CreateProject
-import java.lang.Math.random
 
 @Service
 class DataInitializer(
@@ -30,9 +29,9 @@ class DataInitializer(
         title = "",
         description = "",
         thumbnail = null,
-        frontLeftCnt = 3,
-        backLeftCnt = 3,
-        designLeftCnt = 3,
+        frontHeadCnt = 3,
+        backHeadCnt = 3,
+        designHeadCnt = 3,
         techStackIds = listOf(),
         due = Due.UNDEFINED,
         myPosition = Position.values().random()
