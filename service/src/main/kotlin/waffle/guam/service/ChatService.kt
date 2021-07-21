@@ -99,7 +99,7 @@ class ChatService(
         val threadId = if (command.content.isNullOrBlank()) {
             threadRepository.save(command.copy(content = null).toEntity()).id
         } else {
-            threadRepository.save(command.toEntity()).id
+            threadRepository.save(command.copy(content = command.content.trim()).toEntity()).id
         }
         if (!command.imageFiles.isNullOrEmpty())
             for (imageFile in command.imageFiles)
@@ -119,7 +119,7 @@ class ChatService(
                     threadRepository.save(it.copy(content = null, modifiedAt = LocalDateTime.now()))
                 }
             } else {
-                threadRepository.save(it.copy(content = command.content, modifiedAt = LocalDateTime.now()))
+                threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = LocalDateTime.now()))
             }
         }
         return true
@@ -163,7 +163,7 @@ class ChatService(
         val commentId = if (command.content.isNullOrBlank()) {
             commentRepository.save(command.copy(content = null).toEntity()).id
         } else {
-            commentRepository.save(command.toEntity()).id
+            commentRepository.save(command.copy(content = command.content.trim()).toEntity()).id
         }
         if (!command.imageFiles.isNullOrEmpty())
             for (imageFile in command.imageFiles)
@@ -184,7 +184,7 @@ class ChatService(
                     commentRepository.save(it.copy(content = null, modifiedAt = LocalDateTime.now()))
                 }
             } else {
-                commentRepository.save(it.copy(content = command.content, modifiedAt = LocalDateTime.now()))
+                commentRepository.save(it.copy(content = command.content.trim(), modifiedAt = LocalDateTime.now()))
             }
         }
         return true
