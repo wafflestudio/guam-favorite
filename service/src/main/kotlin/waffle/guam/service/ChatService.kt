@@ -41,8 +41,8 @@ class ChatService(
     private val imageRepository: ImageRepository,
     private val imageService: ImageService
 ) {
-    fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> {
-        return threadViewRepository.findByProjectId(projectId, pageable).map {
+    fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> =
+        threadViewRepository.findByProjectId(projectId, pageable).map {
             ThreadOverView.of(
                 it,
                 { threadId -> commentRepository.countByThreadId(threadId) },
@@ -52,7 +52,6 @@ class ChatService(
                 }
             )
         }
-    }
 
     fun getFullThread(threadId: Long): ThreadDetail {
         return threadViewRepository.findById(threadId).orElseThrow(::RuntimeException).let {
@@ -183,3 +182,4 @@ class ChatService(
         return true
     }
 }
+
