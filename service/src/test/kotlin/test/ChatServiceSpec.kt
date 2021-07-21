@@ -47,8 +47,8 @@ import waffle.guam.service.command.EditThreadContent
 import waffle.guam.service.command.RemoveNoticeThread
 import waffle.guam.service.command.SetNoticeThread
 import java.util.Optional
-import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldNotContainAnyOf
+import waffle.guam.DefaultDataInfo
 import waffle.guam.db.entity.CommentEntity
 import waffle.guam.db.entity.ThreadEntity
 
@@ -698,7 +698,7 @@ class ChatServiceSpec @Autowired constructor(
                 command = DefaultCommand.CreateThread.copy(
                     projectId = project.id,
                     userId = user.id,
-                    content = "Content for Comment $i",
+                    content = "Content for Thread $i",
                     imageFiles = DefaultInput.imageFiles
                 )
             )
@@ -709,11 +709,63 @@ class ChatServiceSpec @Autowired constructor(
         createdThread.id shouldBe targetThreadId
         createdThread.projectId shouldBe project.id
         createdThread.userId shouldBe user.id
-        createdThread.content shouldBe "Content for Comment 3"
+        createdThread.content shouldBe "Content for Thread 3"
         createdImages.size shouldBe 9
         createdImages[6].id shouldBe 7
         createdImages[6].type shouldBe ImageType.THREAD
         createdImages[6].parentId shouldBe targetThreadId
+    }
+
+    @DisplayName("쓰레드 생성 : content로 빈 문자열 입력시 null로 간주된다")
+    @Transactional
+    @Test
+    fun createThreadBlankInputBecomesNullOK() {
+        val targetThreadId = 1L
+        val user = database.getUser()
+        val project = database.getProject()
+        every {
+            imageService.upload(DefaultInput.imageFiles[0], ImageInfo(targetThreadId, ImageType.THREAD))
+        } returns imageRepository.save(ImageEntity(parentId = targetThreadId, type = ImageType.THREAD))
+
+        chatService.createThread(
+            command = DefaultCommand.CreateThread.copy(
+                projectId = project.id,
+                userId = user.id,
+                content = "             ",
+                imageFiles = listOf(DefaultInput.imageFiles[0])
+            )
+        )
+
+        val createdThread = threadRepository.findById(targetThreadId).get()
+
+        createdThread.id shouldBe targetThreadId
+        createdThread.content shouldBe null
+    }
+
+    @DisplayName("쓰레드 생성 : content로 입력된 문자열의 좌우 공백은 제거된다")
+    @Transactional
+    @Test
+    fun createThreadWhiteSpaceTrimOK() {
+        val targetThreadId = 1L
+        val user = database.getUser()
+        val project = database.getProject()
+        every {
+            imageService.upload(DefaultInput.imageFiles[0], ImageInfo(targetThreadId, ImageType.THREAD))
+        } returns imageRepository.save(ImageEntity(parentId = targetThreadId, type = ImageType.THREAD))
+
+        chatService.createThread(
+            command = DefaultCommand.CreateThread.copy(
+                projectId = project.id,
+                userId = user.id,
+                content = "      Content With Whitespace       ",
+                imageFiles = listOf(DefaultInput.imageFiles[0])
+            )
+        )
+
+        val createdThread = threadRepository.findById(targetThreadId).get()
+
+        createdThread.id shouldBe targetThreadId
+        createdThread.content shouldBe "Content With Whitespace"
     }
 
     @DisplayName("쓰레드 생성 : content와 imageFiles 배열 정보가 null이라면 예외가 발생한다")
@@ -783,20 +835,121 @@ class ChatServiceSpec @Autowired constructor(
         chatService.createThread(
             command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
         )
+        database.flush()
         val createdThread = threadRepository.findById(1).get().copy()
-
         val result = chatService.editThreadContent(
             command = DefaultCommand.EditThreadContent.copy(
                 threadId = 1,
                 userId = user.id,
             )
         )
+        database.flushAndClear()
         val editedThread = threadRepository.findById(1).get()
 
         result shouldBe true
         createdThread.content shouldBe "New Thread"
         editedThread.content shouldBe "edited Content"
         editedThread.createdAt shouldNotBe editedThread.modifiedAt
+    }
+
+    @DisplayName("쓰레드 수정 : 이미지가 달린 쓰레드의 content를 빈 문자열로 수정시 null로 수정된다")
+    @Transactional
+    @Test
+    fun editThreadContentBlankInputBecomesNullOK() {
+        val targetThreadId = 1L
+        val user = database.getUser()
+        database.getProject()
+        val prevThread = database.getThread().copy()
+        database.getImages()
+
+        chatService.editThreadContent(
+            command = DefaultCommand.EditThreadContent.copy(
+                threadId = targetThreadId,
+                userId = user.id,
+                content = "             ",
+            )
+        )
+        database.flushAndClear()
+        val editedThread = threadRepository.findById(targetThreadId).get()
+
+        prevThread.id shouldBe targetThreadId
+        prevThread.content shouldBe DefaultDataInfo.thread.content
+        editedThread.content shouldBe null
+    }
+
+    @DisplayName("쓰레드 수정 : 쓰레드의 content 수정시 좌우 공백은 제거되어 수정된다")
+    @Transactional
+    @Test
+    fun editThreadContentWhiteSpaceTrimOK() {
+        val targetThreadId = 1L
+        val user = database.getUser()
+        database.getProject()
+        val prevThread = database.getThread().copy()
+
+        chatService.editThreadContent(
+            command = DefaultCommand.EditThreadContent.copy(
+                threadId = targetThreadId,
+                userId = user.id,
+                content = "      Content With Whitespace       ",
+            )
+        )
+        database.flushAndClear()
+        val editedThread = threadRepository.findById(targetThreadId).get()
+
+        prevThread.id shouldBe targetThreadId
+        prevThread.content shouldBe DefaultDataInfo.thread.content
+        editedThread.content shouldBe "Content With Whitespace"
+    }
+
+    @DisplayName("쓰레드 수정 : 이미지가 없는 쓰레드의 content가 null이 되면 해당 쓰레드는 삭제된다")
+    @Transactional
+    @Test
+    fun editThreadContentDeletesEmptyThreadOK() {
+        val targetThreadId = 1L
+        val user = database.getUser()
+        database.getProject()
+        val prevThread = database.getThread()
+
+        chatService.editThreadContent(
+            command = DefaultCommand.EditThreadContent.copy(
+                threadId = targetThreadId,
+                userId = user.id,
+                content = "               ",
+            )
+        )
+        database.flushAndClear()
+        val editedThread = threadRepository.findById(targetThreadId)
+
+        prevThread.id shouldBe targetThreadId
+        prevThread.content shouldBe DefaultDataInfo.thread.content
+        editedThread shouldBe Optional.empty()
+    }
+
+    @DisplayName("쓰레드 수정 : 이미지가 없는 쓰레드의 content가 null이 되어도 댓글 존재시 해당 쓰레드는 삭제되지 않는다")
+    @Transactional
+    @Test
+    fun editThreadContentNotDeletesEmptyThreadWithCommentsOK() {
+        val targetThreadId = 1L
+        val user = database.getUser()
+        database.getProject()
+        val prevThread = database.getThread().copy()
+        val prevComment = database.getComment()
+
+        chatService.editThreadContent(
+            command = DefaultCommand.EditThreadContent.copy(
+                threadId = targetThreadId,
+                userId = user.id,
+                content = "               ",
+            )
+        )
+        database.flushAndClear()
+        val editedThread = threadRepository.findById(targetThreadId).get()
+        val commentsNotEffected = commentRepository.findByThreadId(targetThreadId)[0]
+
+        prevThread.id shouldBe targetThreadId
+        prevThread.content shouldBe DefaultDataInfo.thread.content
+        editedThread.content shouldBe null
+        prevComment.id shouldBe commentsNotEffected.id
     }
 
     @DisplayName("쓰레드 수정 : threadId에 해당하는 쓰레드가 없다면 예외가 발생한다.")
@@ -1193,6 +1346,58 @@ class ChatServiceSpec @Autowired constructor(
         createdImages[6].parentId shouldBe targetCommentId
     }
 
+    @DisplayName("댓글 생성 : content로 빈 문자열 입력시 null로 간주된다")
+    @Transactional
+    @Test
+    fun createCommentBlankInputBecomesNullOK() {
+        val targetCommentId = 1L
+        val user = database.getUser()
+        val thread = database.getThread()
+        every {
+            imageService.upload(DefaultInput.imageFiles[0], ImageInfo(targetCommentId, ImageType.COMMENT))
+        } returns imageRepository.save(ImageEntity(parentId = targetCommentId, type = ImageType.COMMENT))
+
+        chatService.createComment(
+            command = DefaultCommand.CreateComment.copy(
+                threadId = thread.id,
+                userId = user.id,
+                content = "             ",
+                imageFiles = listOf(DefaultInput.imageFiles[0])
+            )
+        )
+
+        val createdComment = commentRepository.findById(targetCommentId).get()
+
+        createdComment.id shouldBe targetCommentId
+        createdComment.content shouldBe null
+    }
+
+    @DisplayName("댓글 생성 : content로 입력된 문자열의 좌우 공백은 제거된다")
+    @Transactional
+    @Test
+    fun createCommentWhiteSpaceTrimOK() {
+        val targetCommentId = 1L
+        val user = database.getUser()
+        val thread = database.getThread()
+        every {
+            imageService.upload(DefaultInput.imageFiles[0], ImageInfo(targetCommentId, ImageType.COMMENT))
+        } returns imageRepository.save(ImageEntity(parentId = targetCommentId, type = ImageType.COMMENT))
+
+        chatService.createComment(
+            command = DefaultCommand.CreateComment.copy(
+                threadId = thread.id,
+                userId = user.id,
+                content = "      Content With Whitespace       ",
+                imageFiles = listOf(DefaultInput.imageFiles[0])
+            )
+        )
+
+        val createdComment = commentRepository.findById(targetCommentId).get()
+
+        createdComment.id shouldBe targetCommentId
+        createdComment.content shouldBe "Content With Whitespace"
+    }
+
     @DisplayName("댓글 생성 : threadId에 해당하는 쓰레드가 없다면 예외가 발생한다")
     @Transactional
     @Test
@@ -1213,6 +1418,7 @@ class ChatServiceSpec @Autowired constructor(
         chatService.createComment(
             command = DefaultCommand.CreateComment.copy(threadId = thread.id, userId = user.id)
         )
+        database.flush()
         val createdComment = commentRepository.findById(1).get().copy()
         val result = chatService.editCommentContent(
             command = DefaultCommand.EditCommentContent.copy(
@@ -1227,6 +1433,80 @@ class ChatServiceSpec @Autowired constructor(
         createdComment.content shouldBe "New Comment"
         editedComment.content shouldBe "edited Content"
         editedComment.createdAt shouldNotBe editedComment.modifiedAt
+    }
+
+    @DisplayName("댓글 수정 : 이미지가 달린 댓글의 content를 빈 문자열로 수정시 null로 수정된다")
+    @Transactional
+    @Test
+    fun editCommentContentBlankInputBecomesNullOK() {
+        val targetCommentId = 1L
+        val user = database.getUser()
+        database.getThread()
+        val prevComment = database.getComment().copy()
+        database.getImages()
+
+        chatService.editCommentContent(
+            command = DefaultCommand.EditCommentContent.copy(
+                commentId = targetCommentId,
+                userId = user.id,
+                content = "             ",
+            )
+        )
+        database.flushAndClear()
+        val editedComment = commentRepository.findById(targetCommentId).get()
+
+        prevComment.id shouldBe targetCommentId
+        prevComment.content shouldBe DefaultDataInfo.comment.content
+        editedComment.content shouldBe null
+    }
+
+    @DisplayName("댓글 수정 : 댓글의 content 수정시 좌우 공백은 제거되어 수정된다")
+    @Transactional
+    @Test
+    fun editCommentContentWhiteSpaceTrimOK() {
+        val targetCommentId = 1L
+        val user = database.getUser()
+        database.getThread()
+        val prevComment = database.getComment().copy()
+        database.getImages()
+
+        chatService.editCommentContent(
+            command = DefaultCommand.EditCommentContent.copy(
+                commentId = targetCommentId,
+                userId = user.id,
+                content = "      Content With Whitespace       ",
+            )
+        )
+        database.flushAndClear()
+        val editedComment = commentRepository.findById(targetCommentId).get()
+
+        prevComment.id shouldBe targetCommentId
+        prevComment.content shouldBe DefaultDataInfo.comment.content
+        editedComment.content shouldBe "Content With Whitespace"
+    }
+
+    @DisplayName("댓글 수정 : 이미지가 없는 댓글의 content가 null이 되면 해당 댓글은 삭제된다")
+    @Transactional
+    @Test
+    fun editCommentContentDeletesEmptyCommentOK() {
+        val targetCommentId = 1L
+        val user = database.getUser()
+        database.getThread()
+        val prevComment = database.getComment()
+
+        chatService.editCommentContent(
+            command = DefaultCommand.EditCommentContent.copy(
+                commentId = targetCommentId,
+                userId = user.id,
+                content = "                      ",
+            )
+        )
+        database.flushAndClear()
+        val editedComment = commentRepository.findById(targetCommentId)
+
+        prevComment.id shouldBe targetCommentId
+        prevComment.content shouldBe DefaultDataInfo.comment.content
+        editedComment shouldBe Optional.empty()
     }
 
     @DisplayName("댓글 수정 : commentId에 해당하는 댓글이 없다면 예외가 발생한다.")
