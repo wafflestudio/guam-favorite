@@ -1,6 +1,7 @@
 package waffle.guam.test
 
 import io.kotest.assertions.throwables.shouldThrowExactly
+import io.kotest.matchers.collections.shouldNotContainAnyOf
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.every
@@ -16,11 +17,14 @@ import org.springframework.mock.web.MockMultipartFile
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.Database
 import waffle.guam.DatabaseTest
+import waffle.guam.DefaultDataInfo
+import waffle.guam.db.entity.CommentEntity
 import waffle.guam.db.entity.ImageEntity
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.State
 import waffle.guam.db.entity.TaskEntity
+import waffle.guam.db.entity.ThreadEntity
 import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.ProjectRepository
@@ -47,10 +51,6 @@ import waffle.guam.service.command.EditThreadContent
 import waffle.guam.service.command.RemoveNoticeThread
 import waffle.guam.service.command.SetNoticeThread
 import java.util.Optional
-import io.kotest.matchers.collections.shouldNotContainAnyOf
-import waffle.guam.DefaultDataInfo
-import waffle.guam.db.entity.CommentEntity
-import waffle.guam.db.entity.ThreadEntity
 
 @DatabaseTest
 class ChatServiceSpec @Autowired constructor(
@@ -1040,11 +1040,13 @@ class ChatServiceSpec @Autowired constructor(
     fun deleteThreadImageDeletesEmptyThreadOK() {
         val user = database.getUser()
         val project = database.getProject()
-        val thread = threadRepository.save(ThreadEntity(
-            projectId = project.id,
-            userId = user.id,
-            content = null,
-        ))
+        val thread = threadRepository.save(
+            ThreadEntity(
+                projectId = project.id,
+                userId = user.id,
+                content = null,
+            )
+        )
         val prevDBImages = database.getImages()
         val prevThreadImages = imageRepository.findByParentIdAndType(thread.id, ImageType.THREAD)
         for (threadImage in prevThreadImages) {
@@ -1074,11 +1076,13 @@ class ChatServiceSpec @Autowired constructor(
     fun deleteThreadImageNotDeletesEmptyThreadWithCommentsOK() {
         val user = database.getUser()
         val project = database.getProject()
-        val thread = threadRepository.save(ThreadEntity(
-            projectId = project.id,
-            userId = user.id,
-            content = null,
-        ))
+        val thread = threadRepository.save(
+            ThreadEntity(
+                projectId = project.id,
+                userId = user.id,
+                content = null,
+            )
+        )
         database.getComment()
         val prevDBImages = database.getImages()
         val prevThreadImages = imageRepository.findByParentIdAndType(thread.id, ImageType.THREAD)
@@ -1598,11 +1602,13 @@ class ChatServiceSpec @Autowired constructor(
     fun deleteCommentImageDeletesEmptyCommentOK() {
         val user = database.getUser()
         val thread = database.getThread()
-        val comment = commentRepository.save(CommentEntity(
-            threadId = thread.id,
-            userId = user.id,
-            content = null,
-        ))
+        val comment = commentRepository.save(
+            CommentEntity(
+                threadId = thread.id,
+                userId = user.id,
+                content = null,
+            )
+        )
         val prevDBImages = database.getImages()
         val prevCommentImages = imageRepository.findByParentIdAndType(comment.id, ImageType.COMMENT)
         for (commentImage in prevCommentImages) {

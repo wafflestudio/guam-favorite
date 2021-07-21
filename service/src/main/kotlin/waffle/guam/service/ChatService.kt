@@ -212,11 +212,10 @@ class ChatService(
             commentRepository.delete(it)
 
             if (commentRepository.findByThreadId(it.threadId).isEmpty())
-                if(threadRepository.findById(it.threadId).get().content.isNullOrBlank())
+                if (threadRepository.findById(it.threadId).get().content.isNullOrBlank())
                     if (imageRepository.findByParentIdAndType(it.threadId, ImageType.THREAD).isEmpty())
                         threadRepository.deleteById(it.threadId)
         }
         return true
     }
 }
-
