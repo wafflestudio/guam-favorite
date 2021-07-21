@@ -34,7 +34,31 @@ data class TaskEntity(
     val modifiedAt: LocalDateTime = createdAt,
 
     @Enumerated(EnumType.STRING)
-    val state: State
+    val userState: UserState
+)
+
+@Table(name = "tasks")
+@Entity
+data class TaskOverView(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long,
+
+    @Enumerated(EnumType.STRING)
+    val position: Position,
+
+    val projectId: Long,
+
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    val user: UserEntity,
+
+    val createdAt: LocalDateTime,
+
+    val modifiedAt: LocalDateTime,
+
+    @Enumerated(EnumType.STRING)
+    val userState: UserState
 )
 
 @Table(name = "tasks")
@@ -61,13 +85,13 @@ data class TaskView(
     val modifiedAt: LocalDateTime,
 
     @Enumerated(EnumType.STRING)
-    val state: State
+    val userState: UserState
 )
 
 enum class Position {
     FRONTEND, BACKEND, DESIGNER, WHATEVER
 }
 
-enum class State {
+enum class UserState {
     GUEST, MEMBER, LEADER, QUIT, DECLINED
 }
