@@ -3,6 +3,7 @@ package waffle.guam.service.command
 import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectEntity
+import waffle.guam.db.entity.ProjectState
 
 sealed class ProjectCommand
 
@@ -25,7 +26,7 @@ data class CreateProject(
             frontHeadcount = frontHeadCnt,
             backHeadcount = backHeadCnt,
             designerHeadcount = designHeadCnt,
-            recruiting = true,
+            state = ProjectState.RECRUITING,
             due = due
         )
 }
@@ -48,7 +49,7 @@ data class UpdateProject(
             frontHeadcount = frontHeadCnt,
             backHeadcount = backHeadCnt,
             designerHeadcount = designHeadCnt,
-            recruiting = true,
+            state = ProjectState.RECRUITING,
             due = due
         )
 }

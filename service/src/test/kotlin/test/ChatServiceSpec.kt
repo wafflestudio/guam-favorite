@@ -19,8 +19,8 @@ import waffle.guam.DatabaseTest
 import waffle.guam.db.entity.ImageEntity
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.Position
-import waffle.guam.db.entity.State
 import waffle.guam.db.entity.TaskEntity
+import waffle.guam.db.entity.UserState
 import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.ProjectRepository
@@ -465,8 +465,8 @@ class ChatServiceSpec @Autowired constructor(
         val project = database.getProject()
         taskRepository.saveAll(
             listOf(
-                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
-                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, userState = UserState.LEADER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, userState = UserState.MEMBER),
             )
         )
         shouldThrowExactly<NotAllowedException> {
@@ -487,9 +487,9 @@ class ChatServiceSpec @Autowired constructor(
         val project = database.getProject()
         taskRepository.saveAll(
             listOf(
-                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
-                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
-                DefaultInput.task.copy(projectId = project.id, userId = users[2].id, state = State.GUEST),
+                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, userState = UserState.LEADER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, userState = UserState.MEMBER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[2].id, userState = UserState.GUEST),
             )
         )
         shouldThrowExactly<NotAllowedException> {
@@ -510,9 +510,9 @@ class ChatServiceSpec @Autowired constructor(
         val project = database.getProject()
         taskRepository.saveAll(
             listOf(
-                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
-                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
-                DefaultInput.task.copy(projectId = project.id, userId = users[2].id, state = State.GUEST),
+                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, userState = UserState.LEADER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, userState = UserState.MEMBER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[2].id, userState = UserState.GUEST),
             )
         )
         database.flush()
@@ -579,8 +579,8 @@ class ChatServiceSpec @Autowired constructor(
         val project = database.getProject()
         taskRepository.saveAll(
             listOf(
-                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
-                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, userState = UserState.LEADER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, userState = UserState.MEMBER),
             )
         )
         shouldThrowExactly<NotAllowedException> {
@@ -601,9 +601,9 @@ class ChatServiceSpec @Autowired constructor(
         val project = database.getProject()
         taskRepository.saveAll(
             listOf(
-                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, state = State.LEADER),
-                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, state = State.MEMBER),
-                DefaultInput.task.copy(projectId = project.id, userId = users[2].id, state = State.GUEST),
+                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, userState = UserState.LEADER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, userState = UserState.MEMBER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[2].id, userState = UserState.GUEST),
             )
         )
         shouldThrowExactly<NotAllowedException> {
@@ -1424,7 +1424,7 @@ class ChatServiceSpec @Autowired constructor(
             position = Position.FRONTEND,
             projectId = 1,
             userId = 1,
-            state = State.MEMBER
+            userState = UserState.MEMBER
         )
         val imageFiles = listOf(
             MockMultipartFile("파일1", "기존 파일명1.png", MediaType.IMAGE_PNG_VALUE, "파일 1 내용".toByteArray()),
