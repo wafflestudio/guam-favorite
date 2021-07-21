@@ -1,10 +1,10 @@
 package waffle.guam.model
 
-import waffle.guam.db.entity.UserState
 import waffle.guam.db.entity.TaskMessage
 import waffle.guam.db.entity.TaskOverView
 import waffle.guam.db.entity.TaskStatus
 import waffle.guam.db.entity.TaskView
+import waffle.guam.db.entity.UserState
 import java.time.LocalDateTime
 
 data class Task(
