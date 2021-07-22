@@ -57,7 +57,6 @@ class StackService(
         return map.toList().sortedWith(compareBy { -it.second }).map { it.first }
     }
 
-    // fixme : throw an error? or create one?
     fun searchIdByDTO(o: TechStack): Long {
         val target = stackRepository.findAll().filter { TechStack.of(it) == o }
         return if (target.isNotEmpty()) target[0].id else {

@@ -5,7 +5,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.db.entity.ImageType
-import waffle.guam.db.entity.State
+import waffle.guam.db.entity.UserState
 import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.ProjectRepository
@@ -72,7 +72,7 @@ class ChatService(
     fun setNoticeThread(command: SetNoticeThread): Boolean {
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
             taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::NotAllowedException).also {
-                if (it.state == State.GUEST) throw NotAllowedException()
+                if (it.userState == UserState.GUEST) throw NotAllowedException()
             }
             threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { thread ->
                 projectRepository.save(project.copy(noticeThreadId = thread.id, modifiedAt = LocalDateTime.now()))
@@ -85,7 +85,7 @@ class ChatService(
     fun removeNoticeThread(command: RemoveNoticeThread): Boolean {
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
             taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::NotAllowedException).also {
-                if (it.state == State.GUEST) throw NotAllowedException()
+                if (it.userState == UserState.GUEST) throw NotAllowedException()
             }
             projectRepository.save(project.copy(noticeThreadId = null, modifiedAt = LocalDateTime.now()))
         }

@@ -15,7 +15,7 @@ import waffle.guam.Database
 import waffle.guam.DatabaseTest
 import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.Position
-import waffle.guam.db.entity.State
+import waffle.guam.db.entity.UserState
 import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.ProjectStackRepository
@@ -95,7 +95,7 @@ class ProjectServiceSpec @Autowired constructor(
         result.tasks!![0].user.nickname shouldBe user.nickname
         result.tasks!![0].user.status shouldBe user.status.name
         result.tasks!![0].position shouldBe Position.WHATEVER.name
-        result.tasks!![0].state shouldBe State.LEADER
+        result.tasks!![0].userState shouldBe UserState.LEADER
         result.due shouldBe Due.SIX
         dbProjectStacks[0].projectId shouldBe 1
         dbProjectStacks[1].projectId shouldBe 1
@@ -213,7 +213,7 @@ class ProjectServiceSpec @Autowired constructor(
         result.tasks!![0].user.id shouldBe user.id
         result.tasks!![0].user.status shouldBe user.status.toString()
         result.tasks!![0].user.nickname shouldBe user.nickname
-        result.tasks!![0].state shouldBe State.LEADER
+        result.tasks!![0].userState shouldBe UserState.LEADER
         result.tasks!![0].position shouldBe Position.WHATEVER.toString()
         result.tasks!![0].projectId shouldBe createdProject.id
         result.due shouldBe createdProject.due
@@ -310,9 +310,9 @@ class ProjectServiceSpec @Autowired constructor(
             projectService.createProject(
                 command = DefaultCommand.CreateProject.copy(
                     title = "Need Everything",
-                    frontLeftCnt = 10,
-                    backLeftCnt = 10,
-                    designLeftCnt = 10,
+                    frontHeadCnt = 10,
+                    backHeadCnt = 10,
+                    designHeadCnt = 10,
                 ),
                 userId = users[0].id
             )
@@ -321,7 +321,7 @@ class ProjectServiceSpec @Autowired constructor(
             projectService.createProject(
                 command = DefaultCommand.CreateProject.copy(
                     title = "Need Only 1 Frontend",
-                    frontLeftCnt = 1,
+                    frontHeadCnt = 1,
                 ),
                 userId = users[1].id
             )
@@ -330,7 +330,7 @@ class ProjectServiceSpec @Autowired constructor(
             projectService.createProject(
                 command = DefaultCommand.CreateProject.copy(
                     title = "Need Only 1 Designer",
-                    backLeftCnt = 1,
+                    backHeadCnt = 1,
                 ),
                 userId = users[2].id
             )
@@ -352,9 +352,9 @@ class ProjectServiceSpec @Autowired constructor(
             projectService.createProject(
                 command = DefaultCommand.CreateProject.copy(
                     title = "Need Everything",
-                    frontLeftCnt = 10,
-                    backLeftCnt = 10,
-                    designLeftCnt = 10,
+                    frontHeadCnt = 10,
+                    backHeadCnt = 10,
+                    designHeadCnt = 10,
                 ),
                 userId = users[i % 3].id
             )
@@ -508,9 +508,9 @@ class ProjectServiceSpec @Autowired constructor(
                 title = "Changed Title",
                 description = prevProject.description,
                 thumbnail = prevProject.thumbnail,
-                frontLeftCnt = prevProject.frontLeftCnt,
-                backLeftCnt = prevProject.backLeftCnt,
-                designLeftCnt = prevProject.designLeftCnt,
+                frontHeadCnt = prevProject.frontLeftCnt,
+                backHeadCnt = prevProject.backLeftCnt,
+                designHeadCnt = prevProject.designLeftCnt,
                 techStackIds = listOf(),
                 due = prevProject.due,
                 myPosition = null
@@ -543,9 +543,9 @@ class ProjectServiceSpec @Autowired constructor(
                 title = prevProject.title,
                 description = prevProject.description,
                 thumbnail = prevProject.thumbnail,
-                frontLeftCnt = prevProject.frontLeftCnt,
-                backLeftCnt = prevProject.backLeftCnt,
-                designLeftCnt = prevProject.designLeftCnt,
+                frontHeadCnt = prevProject.frontLeftCnt,
+                backHeadCnt = prevProject.backLeftCnt,
+                designHeadCnt = prevProject.designLeftCnt,
                 techStackIds = stacks.map { Pair(first = it.id, second = it.position) },
                 due = prevProject.due,
                 myPosition = null
@@ -592,7 +592,7 @@ class ProjectServiceSpec @Autowired constructor(
         )
         val notLeaderMember = taskRepository.findByUserIdAndProjectId(users[1].id, project.id).get()
 
-        notLeaderMember.state shouldNotBe State.LEADER
+        notLeaderMember.userState shouldNotBe UserState.LEADER
         shouldThrowExactly<NotAllowedException> {
             projectService.updateProject(
                 id = project.id,
@@ -628,7 +628,7 @@ class ProjectServiceSpec @Autowired constructor(
         val introThread = threadViewRepository.findById(1L).get()
 
         result shouldBe true
-        newGuest.state shouldBe State.GUEST
+        newGuest.userState shouldBe UserState.GUEST
         newGuest.position shouldBe Position.FRONTEND
         project[0].tasks.map { it.user.id } shouldContainAll listOf(leaderId, guestId)
         project[0].tasks.map { it.position } shouldContainAll listOf(Position.BACKEND, Position.FRONTEND)
@@ -730,7 +730,7 @@ class ProjectServiceSpec @Autowired constructor(
 
         val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id)
         projectViewRepository.save(
-            projectViewRepository.getById(project.id).copy(recruiting = false)
+            projectViewRepository.getById(project.id).copy(state = false)
         )
 
         shouldThrowExactly<JoinException> {
@@ -768,7 +768,7 @@ class ProjectServiceSpec @Autowired constructor(
         val users = database.getUsers()
 
         val project = projectService.createProject(
-            command = DefaultCommand.CreateProject.copy(frontLeftCnt = 0),
+            command = DefaultCommand.CreateProject.copy(frontHeadCnt = 0),
             userId = users[0].id
         )
         shouldThrowExactly<JoinException> {
@@ -807,8 +807,8 @@ class ProjectServiceSpec @Autowired constructor(
         val memberTask = taskViewRepository.findByUserId(users[1].id)[0]
 
         resultMessage shouldBe "정상적으로 승인되었습니다."
-        guestTask.state shouldBe State.GUEST
-        memberTask.state shouldBe State.MEMBER
+        guestTask.userState shouldBe UserState.GUEST
+        memberTask.userState shouldBe UserState.MEMBER
     }
 
     @DisplayName("지원자 거부 : 프로젝트 리더는 guest 상태의 task를 삭제할 수 있다.")
@@ -837,7 +837,7 @@ class ProjectServiceSpec @Autowired constructor(
         val kickedOutTask = taskViewRepository.findByUserId(users[1].id)
 
         resultMessage shouldBe "정상적으로 반려되었습니다."
-        guestTask.state shouldBe State.GUEST
+        guestTask.userState shouldBe UserState.GUEST
         kickedOutTask shouldBe emptyList()
     }
 
@@ -971,7 +971,7 @@ class ProjectServiceSpec @Autowired constructor(
         val notMemberTask = taskViewRepository.findByUserId(users[1].id)
 
         result shouldBe true
-        memberTask.state shouldBe State.MEMBER
+        memberTask.userState shouldBe UserState.MEMBER
         notMemberTask shouldBe emptyList()
     }
 
@@ -1052,7 +1052,7 @@ class ProjectServiceSpec @Autowired constructor(
         val dbDeletedProject = projectRepository.findById(projectId)
 
         result shouldBe true
-        projectLeader.state shouldBe State.LEADER
+        projectLeader.userState shouldBe UserState.LEADER
         dbExistingProjects.size shouldBe 3
         remainingProjects.size shouldBe 2
         dbDeletedProject shouldBe Optional.empty()
@@ -1123,7 +1123,7 @@ class ProjectServiceSpec @Autowired constructor(
         )
         val notLeaderMember = taskRepository.findByUserIdAndProjectId(users[1].id, project.id).get()
 
-        notLeaderMember.state shouldNotBe State.LEADER
+        notLeaderMember.userState shouldNotBe UserState.LEADER
         shouldThrowExactly<NotAllowedException> {
             projectService.deleteProject(id = project.id, userId = users[1].id)
         }
@@ -1134,9 +1134,9 @@ class ProjectServiceSpec @Autowired constructor(
             title = "Test Project",
             description = "Test Description",
             thumbnail = "Test Thumbnail",
-            frontLeftCnt = 3,
-            backLeftCnt = 3,
-            designLeftCnt = 3,
+            frontHeadCnt = 3,
+            backHeadCnt = 3,
+            designHeadCnt = 3,
             techStackIds = emptyList(),
             due = Due.SIX,
             myPosition = Position.WHATEVER

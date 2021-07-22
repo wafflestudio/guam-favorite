@@ -16,30 +16,30 @@ import javax.persistence.Table
 data class ProjectEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0L,
+    var id: Long = 0L,
 
-    val title: String,
+    var title: String,
 
-    val description: String,
+    var description: String,
 
-    val thumbnail: String?,
+    var thumbnail: String?,
 
-    val frontHeadcount: Int,
+    var frontHeadcount: Int,
 
-    val backHeadcount: Int,
+    var backHeadcount: Int,
 
-    val designerHeadcount: Int,
+    var designerHeadcount: Int,
 
-    val recruiting: Boolean = true,
+    var state: ProjectState = ProjectState.RECRUITING,
 
-    val noticeThreadId: Long? = null,
+    var noticeThreadId: Long? = null,
 
-    val createdAt: LocalDateTime = LocalDateTime.now(),
+    var createdAt: LocalDateTime = LocalDateTime.now(),
 
-    val modifiedAt: LocalDateTime = createdAt,
+    var modifiedAt: LocalDateTime = createdAt,
 
     @Enumerated(EnumType.ORDINAL)
-    val due: Due
+    var due: Due
 )
 
 @Table(name = "projects")
@@ -49,31 +49,31 @@ data class ProjectView(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long,
 
-    val title: String,
+    var title: String,
 
-    val description: String,
+    var description: String,
 
     val thumbnail: String?,
 
-    val frontHeadcount: Int,
+    var frontHeadcount: Int,
 
-    val backHeadcount: Int,
+    var backHeadcount: Int,
 
-    val designerHeadcount: Int,
+    var designerHeadcount: Int,
 
-    val recruiting: Boolean,
+    val state: ProjectState,
 
     val noticeThreadId: Long?,
 
     val createdAt: LocalDateTime,
 
-    val modifiedAt: LocalDateTime,
+    var modifiedAt: LocalDateTime,
 
     @OneToMany(mappedBy = "projectId", fetch = FetchType.EAGER, orphanRemoval = true)
-    val techStacks: Set<ProjectStackView>,
+    var techStacks: Set<ProjectStackView>,
 
     @OneToMany(mappedBy = "projectId", fetch = FetchType.LAZY, orphanRemoval = true)
-    val tasks: Set<TaskView>,
+    val tasks: Set<TaskOverView>,
 
     @Enumerated(EnumType.ORDINAL)
     val due: Due
@@ -81,4 +81,8 @@ data class ProjectView(
 
 enum class Due {
     ONE, THREE, SIX, MORE, UNDEFINED
+}
+
+enum class ProjectState {
+    RECRUITING, ONGOING, PENDING, CLOSED
 }

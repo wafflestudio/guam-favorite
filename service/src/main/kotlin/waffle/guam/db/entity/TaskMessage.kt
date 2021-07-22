@@ -17,7 +17,7 @@ data class TaskMessage(
 
     val msg: String = "New task msg",
 
-    val status: TaskStatus = TaskStatus.ONGOING,
+    var status: TaskStatus = TaskStatus.ONGOING,
 
     val taskId: Long,
 
@@ -28,5 +28,5 @@ data class TaskMessage(
 )
 
 enum class TaskStatus {
-    DONE, ONGOING
+    DONE, ONGOING, DELETED
 }

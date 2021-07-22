@@ -13,7 +13,7 @@ class SearchEngine {
     }
 
     private fun isHangul(c: Char): Boolean {
-        return isChoSung(c) || (c.toInt() in begin..end)
+        return isChoSung(c) || (c.code in begin..end)
     }
 
     private fun findChoSung(c: Char): Char {
@@ -37,7 +37,7 @@ class SearchEngine {
                 // 한글 한글자를 28로 나눈 나머지 -> 그 글자의 종성이다.
                 // 종성으로 올 수 있는 가짓수가 28이라 그럼
                 if (c >= textArr[i] && c < textArr[i + 1])
-                    res = if ((textArr[i + 1].toInt() - c.toInt()) % 28 != 27) {
+                    res = if ((textArr[i + 1].code - c.code) % 28 != 27) {
                         // 종성이 있으면 깋, 닣, 딯 등등과의 종성 차이가 27보다 작음
                         c // 종성이 있으면 해당 종성까지 범위를 좁힘
                     } else {
@@ -65,7 +65,7 @@ class SearchEngine {
                     // 고로 다 찾을 수 있다.
                     if (findChoSung(b) > a || a > findJongSung(b))
                         flag = false
-                } else if (a.toLowerCase() != b.toLowerCase())
+                } else if (a.lowercaseChar() != b.lowercaseChar())
                     flag = false
             }
             if (flag) return i + kl
@@ -78,9 +78,9 @@ class SearchEngine {
         val queries = q.split(", ")
         var cnt = 0
         for (name in dic) {
-            for (q in queries) {
+            for (qs in queries) {
                 // OR 처리, AND 우선 -> cnt 로 구현 가능
-                if (containsQ(name, q) >= 0) cnt++
+                if (containsQ(name, qs) >= 0) cnt++
             }
         }
         return cnt

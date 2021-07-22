@@ -9,9 +9,9 @@ import org.springframework.transaction.annotation.Transactional
 import waffle.guam.Database
 import waffle.guam.DatabaseTest
 import waffle.guam.db.entity.Position
-import waffle.guam.db.entity.State
 import waffle.guam.db.entity.TaskEntity
 import waffle.guam.db.entity.TaskStatus
+import waffle.guam.db.entity.UserState
 import waffle.guam.db.repository.TaskMessageRepository
 import waffle.guam.db.repository.TaskRepository
 import waffle.guam.db.repository.TaskViewRepository
@@ -78,7 +78,7 @@ class TaskServiceSpec @Autowired constructor(
             position = Position.FRONTEND,
             projectId = 1,
             userId = 1,
-            state = State.MEMBER
+            userState = UserState.MEMBER
         )
     }
 }

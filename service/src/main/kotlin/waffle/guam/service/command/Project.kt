@@ -3,6 +3,7 @@ package waffle.guam.service.command
 import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectEntity
+import waffle.guam.db.entity.ProjectState
 
 sealed class ProjectCommand
 
@@ -10,9 +11,9 @@ data class CreateProject(
     val title: String,
     val description: String,
     val thumbnail: String?,
-    val frontLeftCnt: Int,
-    val backLeftCnt: Int,
-    val designLeftCnt: Int,
+    val frontHeadCnt: Int,
+    val backHeadCnt: Int,
+    val designHeadCnt: Int,
     val techStackIds: List<Pair<Long, Position>>,
     val due: Due,
     val myPosition: Position?
@@ -22,10 +23,33 @@ data class CreateProject(
             title = title,
             description = description,
             thumbnail = thumbnail,
-            frontHeadcount = frontLeftCnt,
-            backHeadcount = backLeftCnt,
-            designerHeadcount = designLeftCnt,
-            recruiting = true,
+            frontHeadcount = frontHeadCnt,
+            backHeadcount = backHeadCnt,
+            designerHeadcount = designHeadCnt,
+            state = ProjectState.RECRUITING,
+            due = due
+        )
+}
+
+data class UpdateProject(
+    val title: String,
+    val description: String,
+    val thumbnail: String?,
+    val frontHeadCnt: Int,
+    val backHeadCnt: Int,
+    val designHeadCnt: Int,
+    val techStackIds: List<Pair<Long, Position>>,
+    val due: Due
+) : ProjectCommand() {
+    fun toEntity(): ProjectEntity =
+        ProjectEntity(
+            title = title,
+            description = description,
+            thumbnail = thumbnail,
+            frontHeadcount = frontHeadCnt,
+            backHeadcount = backHeadCnt,
+            designerHeadcount = designHeadCnt,
+            state = ProjectState.RECRUITING,
             due = due
         )
 }

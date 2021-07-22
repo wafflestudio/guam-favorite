@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import waffle.guam.common.UserContext
+import waffle.guam.controller.request.SearchProject
 import waffle.guam.controller.response.PageableResponse
 import waffle.guam.controller.response.SuccessResponse
-import waffle.guam.db.entity.Due
-import waffle.guam.db.entity.Position
 import waffle.guam.model.Project
 import waffle.guam.service.ProjectService
 import waffle.guam.service.command.CreateProject
 import waffle.guam.service.command.JoinProject
+import waffle.guam.service.command.UpdateProject
 
 @RestController
 @RequestMapping
@@ -66,23 +66,23 @@ class ProjectController(
 
     @GetMapping("/project/search")
     fun searchProject(
-        @RequestParam keyword: String,
-        @RequestParam stackId: Long?,
-        @RequestParam position: Position?,
-        @RequestParam due: Due?
+        @RequestBody searchRequest: SearchProject
     ): SuccessResponse<List<Project>> =
         SuccessResponse(
-            data = projectService.search(keyword, due, stackId, position)
+            data = projectService.search(
+                searchRequest.keyword, searchRequest.due,
+                searchRequest.stackId, searchRequest.position
+            )
         )
 
     @PutMapping("/project/{id}")
     fun updateProject(
         @PathVariable id: Long,
-        @RequestBody createProject: CreateProject,
+        @RequestBody updateProject: UpdateProject,
         userContext: UserContext
-    ): SuccessResponse<Project> =
+    ): SuccessResponse<String> =
         SuccessResponse(
-            data = projectService.updateProject(id = id, command = createProject, userId = userContext.id)
+            data = projectService.updateProject(projectId = id, command = updateProject, userId = userContext.id)
         )
 
     @PostMapping("/project/{id}")
@@ -110,7 +110,7 @@ class ProjectController(
     fun quitProject(
         @PathVariable id: Long,
         userContext: UserContext
-    ): SuccessResponse<Boolean> =
+    ): SuccessResponse<String> =
         SuccessResponse(
             data = projectService.quit(id, userContext.id)
         )
@@ -119,7 +119,7 @@ class ProjectController(
     fun deleteProject(
         @PathVariable id: Long,
         userContext: UserContext
-    ): SuccessResponse<Boolean> =
+    ): SuccessResponse<String> =
         SuccessResponse(
             data = projectService.deleteProject(id, userContext.id)
         )

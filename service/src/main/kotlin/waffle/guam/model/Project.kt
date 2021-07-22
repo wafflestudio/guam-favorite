@@ -2,8 +2,9 @@ package waffle.guam.model
 
 import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.Position
+import waffle.guam.db.entity.ProjectState
 import waffle.guam.db.entity.ProjectView
-import waffle.guam.db.entity.State
+import waffle.guam.db.entity.UserState
 import java.time.LocalDateTime
 
 // TODO: DTO가 너무 더럽다.
@@ -18,7 +19,7 @@ data class Project(
     val frontLeftCnt: Int,
     val backLeftCnt: Int,
     val designLeftCnt: Int,
-    val isRecruiting: Boolean,
+    val state: ProjectState,
     val techStacks: List<TechStack>,
     val tasks: List<Task>?,
     val createdAt: LocalDateTime,
@@ -45,7 +46,7 @@ data class Project(
                     frontLeftCnt = entity.frontHeadcount - arr[0],
                     backLeftCnt = entity.backHeadcount - arr[1],
                     designLeftCnt = entity.designerHeadcount - arr[2],
-                    isRecruiting = entity.recruiting,
+                    state = entity.state,
                     techStacks = entity.techStacks.map { TechStack.of(it.techStack) },
                     tasks = when (fetchTasks) {
                         true -> entity.tasks.map { Task.of(it) }
@@ -56,7 +57,7 @@ data class Project(
                     due = entity.due,
                     leaderProfile = when (fetchTasks) {
                         true -> entity.tasks.single {
-                            it.state == State.LEADER
+                            it.userState == UserState.LEADER
                         }.let {
                             User.of(it.user)
                         }
@@ -68,7 +69,12 @@ data class Project(
 
         private fun currHeadCntOf(projectView: ProjectView): IntArray {
             val res = MutableList(3, fun(_: Int) = 0)
-            projectView.tasks.map {
+            projectView.tasks.filter {
+                when (it.userState) {
+                    UserState.LEADER, UserState.MEMBER -> true
+                    else -> false
+                }
+            }.map {
                 when (it.position) {
                     Position.WHATEVER -> 0
                     Position.DESIGNER -> res[2]++

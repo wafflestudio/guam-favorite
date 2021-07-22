@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.db.entity.TaskMessage
+import waffle.guam.db.entity.TaskStatus
 import waffle.guam.db.repository.TaskMessageRepository
 import waffle.guam.db.repository.TaskRepository
 import waffle.guam.db.repository.TaskViewRepository
@@ -20,7 +21,7 @@ class TaskService(
 ) {
     @Transactional
     fun getProjectIds(userId: Long): List<Long> =
-        taskRepository.findByUserId(userId).map { it.id }
+        taskRepository.findByUserId(userId).map { it.projectId }
 
     @Transactional
     fun getAllTaskMsg(pageable: Pageable, taskId: Long): Page<TaskMessage> =
@@ -45,5 +46,8 @@ class TaskService(
 
     @Transactional
     fun deleteTaskMsg(msgId: Long) =
-        taskMessageRepository.deleteById(msgId).let { true }
+        taskMessageRepository.findById(msgId).orElseThrow(::DataNotFoundException).let {
+            it.status = TaskStatus.DELETED
+            true
+        }
 }

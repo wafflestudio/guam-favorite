@@ -1,9 +1,10 @@
 package waffle.guam.model
 
-import waffle.guam.db.entity.State
 import waffle.guam.db.entity.TaskMessage
+import waffle.guam.db.entity.TaskOverView
 import waffle.guam.db.entity.TaskStatus
 import waffle.guam.db.entity.TaskView
+import waffle.guam.db.entity.UserState
 import java.time.LocalDateTime
 
 data class Task(
@@ -14,7 +15,7 @@ data class Task(
     val user: User,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime,
-    val state: State
+    val userState: UserState
 ) {
     companion object {
         fun of(e: TaskView, fetchMessage: Boolean = false) =
@@ -26,7 +27,19 @@ data class Task(
                 user = User.of(e.user),
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt,
-                state = e.state
+                userState = e.userState
+            )
+
+        fun of(e: TaskOverView) =
+            Task(
+                id = e.id,
+                position = e.position.name,
+                projectId = e.projectId,
+                taskMsg = null,
+                user = User.of(e.user),
+                createdAt = e.createdAt,
+                modifiedAt = e.modifiedAt,
+                userState = e.userState
             )
 
         private fun getLatestMsg(messages: Set<TaskMessage>): String =
@@ -48,7 +61,7 @@ data class TaskDetail(
     val user: User,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime,
-    val state: State
+    val userState: UserState
 ) {
     companion object {
         fun of(e: TaskView, fetchMessage: Boolean = false) =
@@ -60,7 +73,7 @@ data class TaskDetail(
                 user = User.of(e.user),
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt,
-                state = e.state
+                userState = e.userState
             )
     }
 }
