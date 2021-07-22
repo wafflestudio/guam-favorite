@@ -9,17 +9,16 @@ import waffle.guam.db.entity.UserEntity
 import javax.persistence.criteria.CriteriaBuilder
 import javax.persistence.criteria.JoinType
 
-class ProjectSpecs() {
+object ProjectSpecs {
 
-    companion object {
-        fun fetchJoinAll(): Specification<ProjectView> =
-            Specification { root, query, builder: CriteriaBuilder ->
-                root.fetch<ProjectView, Set<ProjectStackView>>("techStacks", JoinType.LEFT)
-                    .fetch<ProjectStackView, TechStackEntity>("techStack", JoinType.LEFT)
-                root.fetch<ProjectView, Set<TaskView>>("tasks", JoinType.LEFT).let {
-                    it.fetch<TaskView, UserEntity>("user", JoinType.LEFT)
-                }
-                builder.conjunction()
+    fun fetchJoinAll(ids: List<Long>): Specification<ProjectView> =
+        Specification { root, query, builder: CriteriaBuilder ->
+            root.fetch<ProjectView, Set<ProjectStackView>>("techStacks", JoinType.LEFT)
+                .fetch<ProjectStackView, TechStackEntity>("techStack", JoinType.LEFT)
+            root.fetch<ProjectView, Set<TaskView>>("tasks", JoinType.LEFT).let {
+                it.fetch<TaskView, UserEntity>("user", JoinType.LEFT)
             }
-    }
+            query.distinct(true)
+            builder.`in`(root.get<Any>("id")).value(ids)
+        }
 }

@@ -1,6 +1,7 @@
 package waffle.guam.service
 
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -77,12 +78,16 @@ class ProjectService(
     }
 
     fun getAllProjects(pageable: Pageable): Page<Project> =
-        projectViewRepository.findAll(ProjectSpecs.fetchJoinAll(), pageable).map { project ->
-            Project.of(
-                entity = project,
-                fetchTasks = true
-            )
-        }
+        projectRepository.findAll(pageable)
+            .map { it.id }.toList()
+            .let {
+                print(it.size)
+                PageImpl(
+                    projectViewRepository.findAll(ProjectSpecs.fetchJoinAll(it)).map { project ->
+                        Project.of(project, true)
+                    }
+                )
+            }
 
     fun findProject(id: Long): Project =
         projectViewRepository.findById(id).orElseThrow(::DataNotFoundException)
