@@ -79,12 +79,14 @@ class ProjectService(
 
     fun getAllProjects(pageable: Pageable): Page<Project> =
         projectRepository.findAll(pageable)
-            .map { it.id }.toList()
-            .let {
+            .map { it.id }
+            .let{
                 PageImpl(
-                    projectViewRepository.findAll(ProjectSpecs.fetchJoinAll(it)).map { project ->
+                    projectViewRepository.findAll(ProjectSpecs.fetchJoinAll(it.toList())).map { project ->
                         Project.of(project, true)
-                    }
+                    },
+                    pageable,
+                    it.totalElements
                 )
             }
 
