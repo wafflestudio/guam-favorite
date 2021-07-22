@@ -4,7 +4,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import waffle.guam.db.entity.CommentEntity
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.UserState
 import waffle.guam.db.repository.CommentRepository
@@ -41,8 +40,8 @@ class ChatService(
     private val imageRepository: ImageRepository,
     private val imageService: ImageService
 ) {
-    fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> {
-        return threadViewRepository.findByProjectId(projectId, pageable).map {
+    fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> =
+        threadViewRepository.findByProjectId(projectId, pageable).map {
             ThreadOverView.of(
                 it,
                 { threadId -> commentRepository.countByThreadId(threadId) },
@@ -52,7 +51,6 @@ class ChatService(
                 }
             )
         }
-    }
 
     fun getFullThread(threadId: Long): ThreadDetail {
         return threadViewRepository.findById(threadId).orElseThrow(::RuntimeException).let {
@@ -97,7 +95,11 @@ class ChatService(
     @Transactional
     fun createThread(command: CreateThread): Boolean {
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
-        val threadId = threadRepository.save(command.toEntity()).id
+        val threadId = if (command.content.isNullOrBlank()) {
+            threadRepository.save(command.copy(content = null).toEntity()).id
+        } else {
+            threadRepository.save(command.copy(content = command.content.trim()).toEntity()).id
+        }
         if (!command.imageFiles.isNullOrEmpty())
             for (imageFile in command.imageFiles)
                 imageService.upload(imageFile, ImageInfo(threadId, ImageType.THREAD))
@@ -109,7 +111,15 @@ class ChatService(
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) throw NotAllowedException()
             if (it.content == command.content) throw InvalidRequestException("수정 전과 동일한 내용입니다.")
-            threadRepository.save(it.copy(content = command.content, modifiedAt = LocalDateTime.now()))
+            if (command.content.isBlank()) {
+                if (imageRepository.findByParentIdAndType(it.id, ImageType.THREAD).isEmpty()) {
+                    this.deleteThread(DeleteThread(threadId = it.id, userId = command.userId))
+                } else {
+                    threadRepository.save(it.copy(content = null, modifiedAt = LocalDateTime.now()))
+                }
+            } else {
+                threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = LocalDateTime.now()))
+            }
         }
         return true
     }
@@ -120,23 +130,26 @@ class ChatService(
             threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).also {
                 if (it.userId != command.userId) throw NotAllowedException()
                 if (it.id != image.parentId) throw InvalidRequestException()
+                if (it.content.isNullOrBlank()) {
+                    if (imageRepository.findByParentIdAndType(it.id, ImageType.THREAD).size < 2)
+                        this.deleteThread(DeleteThread(threadId = it.id, userId = command.userId))
+                }
+                imageRepository.delete(image)
             }
-            imageRepository.delete(image)
         }
         return true
     }
 
     @Transactional
     fun deleteThread(command: DeleteThread): Boolean {
-        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { thread ->
-            if (thread.userId != command.userId) throw NotAllowedException()
-            val childComments: List<CommentEntity> = commentRepository.findByThreadId(command.threadId)
-            if (childComments.isNotEmpty()) {
-                imageRepository.deleteByParentIdInAndType(childComments.map { it.id }, ImageType.COMMENT)
-                commentRepository.deleteAll(childComments)
+        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
+            if (it.userId != command.userId) throw NotAllowedException()
+            if (commentRepository.findByThreadId(command.threadId).isEmpty()) {
+                threadRepository.delete(it)
+            } else {
+                threadRepository.save(it.copy(content = null))
             }
-            imageRepository.deleteByParentIdAndType(thread.id, ImageType.THREAD)
-            threadRepository.delete(thread)
+            imageRepository.deleteByParentIdAndType(it.id, ImageType.THREAD)
         }
         return true
     }
@@ -144,7 +157,11 @@ class ChatService(
     @Transactional
     fun createComment(command: CreateComment): Boolean {
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException)
-        val commentId = commentRepository.save(command.toEntity()).id
+        val commentId = if (command.content.isNullOrBlank()) {
+            commentRepository.save(command.copy(content = null).toEntity()).id
+        } else {
+            commentRepository.save(command.copy(content = command.content.trim()).toEntity()).id
+        }
         if (!command.imageFiles.isNullOrEmpty())
             for (imageFile in command.imageFiles)
                 imageService.upload(imageFile, ImageInfo(commentId, ImageType.COMMENT))
@@ -156,7 +173,16 @@ class ChatService(
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) throw NotAllowedException()
             if (it.content == command.content) throw InvalidRequestException("수정 전과 동일한 내용입니다.")
-            commentRepository.save(it.copy(content = command.content, modifiedAt = LocalDateTime.now()))
+
+            if (command.content.isBlank()) {
+                if (imageRepository.findByParentIdAndType(it.id, ImageType.COMMENT).isEmpty()) {
+                    this.deleteComment((DeleteComment(commentId = it.id, userId = command.userId)))
+                } else {
+                    commentRepository.save(it.copy(content = null, modifiedAt = LocalDateTime.now()))
+                }
+            } else {
+                commentRepository.save(it.copy(content = command.content.trim(), modifiedAt = LocalDateTime.now()))
+            }
         }
         return true
     }
@@ -167,8 +193,13 @@ class ChatService(
             commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).also {
                 if (it.userId != command.userId) throw NotAllowedException()
                 if (it.id != image.parentId) throw InvalidRequestException()
+
+                if (it.content.isNullOrBlank()) {
+                    if (imageRepository.findByParentIdAndType(it.id, ImageType.COMMENT).size < 2)
+                        commentRepository.delete(it)
+                }
+                imageRepository.delete(image)
             }
-            imageRepository.delete(image)
         }
         return true
     }
@@ -179,6 +210,11 @@ class ChatService(
             if (it.userId != command.userId) throw NotAllowedException()
             imageRepository.deleteByParentIdAndType(command.commentId, ImageType.COMMENT)
             commentRepository.delete(it)
+
+            if (commentRepository.findByThreadId(it.threadId).isEmpty())
+                if (threadRepository.findById(it.threadId).get().content.isNullOrBlank())
+                    if (imageRepository.findByParentIdAndType(it.threadId, ImageType.THREAD).isEmpty())
+                        threadRepository.deleteById(it.threadId)
         }
         return true
     }
