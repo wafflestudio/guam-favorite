@@ -81,7 +81,6 @@ class ProjectService(
         projectRepository.findAll(pageable)
             .map { it.id }.toList()
             .let {
-                print(it.size)
                 PageImpl(
                     projectViewRepository.findAll(ProjectSpecs.fetchJoinAll(it)).map { project ->
                         Project.of(project, true)
