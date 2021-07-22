@@ -80,7 +80,7 @@ class ProjectController(
         @PathVariable id: Long,
         @RequestBody updateProject: UpdateProject,
         userContext: UserContext
-    ): SuccessResponse<Project> =
+    ): SuccessResponse<String> =
         SuccessResponse(
             data = projectService.updateProject(projectId = id, command = updateProject, userId = userContext.id)
         )

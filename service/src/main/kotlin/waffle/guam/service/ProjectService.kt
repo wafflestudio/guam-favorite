@@ -80,7 +80,7 @@ class ProjectService(
     fun getAllProjects(pageable: Pageable): Page<Project> =
         projectRepository.findAll(pageable)
             .map { it.id }
-            .let{
+            .let {
                 PageImpl(
                     projectViewRepository.findAll(ProjectSpecs.fetchJoinAll(it.toList())).map { project ->
                         Project.of(project, true)
@@ -146,19 +146,19 @@ class ProjectService(
                 it.backHeadcount = command.backHeadCnt
                 it.designerHeadcount = command.designHeadCnt
                 it.modifiedAt = LocalDateTime.now()
-                it.techStacks =
-                    projectStackRepository.saveAll(
-                        command.techStackIds.map { stackInfo ->
-                            ProjectStackEntity(
-                                projectId = projectId,
-                                techStackId = stackInfo.first,
-                                position = stackInfo.second
-                            )
-                        }
-                    ).map { projectStackEntity ->
-                        projectStackViewRepository.getById(projectStackEntity.id)
-                    }.toSet()
-                Project.of(it, true)
+                projectStackViewRepository.deleteAll(it.techStacks)
+                projectStackRepository.saveAll(
+                    command.techStackIds.map { stackInfo ->
+                        ProjectStackEntity(
+                            projectId = projectId,
+                            techStackId = stackInfo.first,
+                            position = stackInfo.second
+                        )
+                    }
+                ).map { projectStackEntity ->
+                    it.techStacks.plus(projectStackViewRepository.getById(projectStackEntity.id))
+                }
+                "정상적으로 수정되었습니다."
             }
         }
 

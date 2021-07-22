@@ -23,8 +23,8 @@ import waffle.guam.db.entity.ImageEntity
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.TaskEntity
-import waffle.guam.db.entity.UserState
 import waffle.guam.db.entity.ThreadEntity
+import waffle.guam.db.entity.UserState
 import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.ProjectRepository
