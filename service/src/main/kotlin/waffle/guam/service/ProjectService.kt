@@ -42,7 +42,8 @@ class ProjectService(
     private val taskViewRepository: TaskViewRepository,
     private val threadViewRepository: ThreadViewRepository,
     private val commentRepository: CommentRepository,
-    private val chatService: ChatService
+    private val chatService: ChatService,
+    private val imageService: ImageService
 ) {
 
     private val searchEngine: SearchEngine = SearchEngine()
@@ -209,7 +210,7 @@ class ProjectService(
     // TODO 승인을 한번 거절하면 복구 할 수 없을까?
     @Transactional
     fun acceptOrNot(id: Long, guestId: Long, leaderId: Long, accept: Boolean): String =
-        taskRepository.findByUserIdAndProjectId(leaderId, id).orElseThrow(::DataNotFoundException).run {
+        taskRepository.findByUserIdAndProjectIdAndUserState(leaderId, id, UserState.LEADER).orElseThrow(::NotAllowedException).run {
             taskViewRepository.findByUserIdAndProjectId(guestId, id).orElseThrow(::DataNotFoundException).let {
                 when (it.userState) {
                     UserState.GUEST ->
