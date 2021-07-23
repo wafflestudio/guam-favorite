@@ -50,7 +50,7 @@ class ProjectService(
     @Transactional
     fun createProject(command: CreateProject, userId: Long): Project {
 
-        if (taskRepository.countByUserIdAndUserStateNotLike(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
+        if (taskRepository.countByUserIdAndUserStateNotIn(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
 
         val myPosition = command.myPosition ?: throw JoinException("포지션을 설정해주세요.")
 
@@ -165,7 +165,7 @@ class ProjectService(
     @Transactional
     fun join(id: Long, userId: Long, position: Position, introduction: String): Boolean =
         when {
-            taskRepository.countByUserIdAndUserStateNotLike(userId) >= 3 -> throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
+            taskRepository.countByUserIdAndUserStateNotIn(userId) >= 3 -> throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
             taskRepository.findByUserIdAndProjectId(userId, id).isPresent -> throw JoinException("이미 참여 중인 프로젝트입니다.")
             else -> projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).let {
 
@@ -198,7 +198,7 @@ class ProjectService(
     // TODO 승인을 한번 거절하면 복구 할 수 없을까?
     @Transactional
     fun acceptOrNot(id: Long, guestId: Long, leaderId: Long, accept: Boolean): String =
-        taskRepository.findByUserIdAndProjectIdAndUserState(leaderId, id, UserState.LEADER).orElseThrow(::NotAllowedException).run {
+        taskRepository.findByUserIdAndProjectId(leaderId, id).orElseThrow(::DataNotFoundException).run {
             taskViewRepository.findByUserIdAndProjectId(guestId, id).orElseThrow(::DataNotFoundException).let {
                 when (it.userState) {
                     UserState.GUEST ->
