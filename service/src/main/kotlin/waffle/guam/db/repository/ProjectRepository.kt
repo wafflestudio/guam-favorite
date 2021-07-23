@@ -6,7 +6,7 @@ import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.ProjectEntity
 import waffle.guam.db.entity.ProjectView
 
-interface ProjectRepository : JpaRepository<ProjectEntity, Long>
+interface ProjectRepository : JpaRepository<ProjectEntity, Long>, JpaSpecificationExecutor<ProjectEntity>
 
 interface ProjectViewRepository : JpaRepository<ProjectView, Long>, JpaSpecificationExecutor<ProjectView> {
 

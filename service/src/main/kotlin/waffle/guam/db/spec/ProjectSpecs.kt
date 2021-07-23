@@ -1,7 +1,9 @@
 package waffle.guam.db.spec
 
 import org.springframework.data.jpa.domain.Specification
+import waffle.guam.db.entity.ProjectEntity
 import waffle.guam.db.entity.ProjectStackView
+import waffle.guam.db.entity.ProjectState
 import waffle.guam.db.entity.ProjectView
 import waffle.guam.db.entity.TaskView
 import waffle.guam.db.entity.TechStackEntity
@@ -20,5 +22,19 @@ object ProjectSpecs {
             }
             query.distinct(true)
             builder.`in`(root.get<Any>("id")).value(ids)
+        }
+
+    fun fetchJoinImminent(): Specification<ProjectEntity> =
+        Specification { root, query, builder: CriteriaBuilder ->
+            builder.and(
+                builder.equal(root.get<Any>("state"), ProjectState.RECRUITING),
+                builder.or(
+                    builder.or(
+                        builder.lessThan(root.get<Long>("frontHeadcount"), 2),
+                        builder.lessThan(root.get<Long>("backHeadcount"), 2)
+                    ),
+                    builder.lessThan(root.get<Long>("designerHeadcount"), 2)
+                )
+            )
         }
 }
