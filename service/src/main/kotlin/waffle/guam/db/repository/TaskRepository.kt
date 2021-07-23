@@ -17,7 +17,10 @@ interface TaskRepository : JpaRepository<TaskEntity, Long> {
 
     fun deleteByUserIdAndProjectId(userId: Long, projectId: Long): Unit
 
-    fun countByUserIdAndUserStateNotLike(userId: Long, userState: UserState = UserState.GUEST): Int
+    fun countByUserIdAndUserStateNotIn(
+        userId: Long,
+        userState: Array<UserState> = arrayOf(UserState.DECLINED, UserState.QUIT)
+        ): Int
 
     fun countByProjectIdAndPosition(projectId: Long, position: Position): Int
 }
