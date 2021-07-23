@@ -59,10 +59,19 @@ class ProjectController(
         )
 
     @GetMapping("/project/tab")
-    fun imminentProjects(): SuccessResponse<List<Project>> =
-        SuccessResponse(
-            data = projectService.imminentProjects()
-        )
+    fun imminentProjects(
+        @RequestParam(required = true, defaultValue = "0") page: Int,
+        @RequestParam(required = false, defaultValue = "20") size: Int,
+    ): PageableResponse<Project> =
+        projectService.imminentProjects(PageRequest.of(page, size)).let {
+            PageableResponse(
+                data = it.content,
+                size = it.content.size,
+                offset = page * size,
+                totalCount = it.totalElements.toInt(),
+                hasNext = page * size + it.size < it.totalElements
+            )
+        }
 
     @GetMapping("/project/search")
     fun searchProject(
