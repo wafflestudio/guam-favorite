@@ -63,6 +63,7 @@ class UserServiceSpec(
                         blogUrl = "s.s",
                         introduction = null
                     ),
+                    image = null,
                     userId = userId
                 )
 
@@ -75,6 +76,7 @@ class UserServiceSpec(
                 shouldThrowExactly<DataNotFoundException> {
                     userService.update(
                         command = UpdateUser(introduction = null),
+                        image = null,
                         userId = 404
                     )
                 }
