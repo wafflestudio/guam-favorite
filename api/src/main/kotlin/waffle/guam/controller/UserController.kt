@@ -1,5 +1,7 @@
 package waffle.guam.controller
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -14,7 +16,6 @@ import waffle.guam.model.User
 import waffle.guam.service.TaskService
 import waffle.guam.service.UserService
 import waffle.guam.service.command.UpdateDevice
-import waffle.guam.service.command.UpdateUser
 
 @RequestMapping("user")
 @RestController
@@ -22,6 +23,7 @@ class UserController(
     private val userService: UserService,
     private val taskService: TaskService
 ) {
+    private val mapper = jacksonObjectMapper()
 
     @GetMapping("")
     fun getUser(
@@ -33,11 +35,16 @@ class UserController(
 
     @PostMapping("")
     fun updateUser(
-        @RequestBody command: UpdateUser,
+        @RequestParam("command") command: String,
+        @RequestParam("file") file: MultipartFile,
         userContext: UserContext
     ): SuccessResponse<User> =
         SuccessResponse(
-            userService.update(command, userContext.id)
+            userService.update(
+                command = mapper.readValue(command),
+                image = file,
+                userId = userContext.id
+            )
         )
 
     @PostMapping("/device")
@@ -47,15 +54,6 @@ class UserController(
     ): SuccessResponse<User> =
         SuccessResponse(
             userService.updateDeviceId(command, userContext.id)
-        )
-
-    @PostMapping("image")
-    fun updateImage(
-        @RequestParam("image") multipartFile: MultipartFile,
-        userContext: UserContext
-    ): SuccessResponse<User> =
-        SuccessResponse(
-            userService.updateImage(multipartFile, userContext.id)
         )
 
     @DeleteMapping("image")
