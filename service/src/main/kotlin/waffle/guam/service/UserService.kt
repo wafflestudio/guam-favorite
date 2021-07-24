@@ -36,7 +36,10 @@ class UserService(
             it.blogUrl = command.blogUrl ?: it.blogUrl
             it.introduction = command.introduction ?: it.introduction
             it.updatedAt = Instant.now()
-            it.image = image?.let { imageService.upload(it, ImageInfo(userId, ImageType.PROFILE)) } ?: it.image
+            it.image = when (command.willUploadImage) {
+                true -> { image?.let { imageService.upload(it, ImageInfo(userId, ImageType.PROFILE)) } }
+                false -> it.image
+            }
             User.of(it)
         }
 
