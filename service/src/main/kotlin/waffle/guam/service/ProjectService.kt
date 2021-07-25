@@ -83,7 +83,7 @@ class ProjectService(
             .map { it.id }
             .let {
                 PageImpl(
-                    projectViewRepository.findAll(ProjectSpecs.fetchJoinAll(it.toList())).map { project ->
+                    projectViewRepository.findAll(ProjectSpecs.fetchJoinList(it.toList())).map { project ->
                         Project.of(project, true)
                     },
                     pageable,
@@ -122,7 +122,7 @@ class ProjectService(
             .map { it.id }
             .let {
                 PageImpl(
-                    projectViewRepository.findAll(ProjectSpecs.fetchJoinAll(it.toList())).map { project ->
+                    projectViewRepository.findAll(ProjectSpecs.fetchJoinList(it.toList())).map { project ->
                         Project.of(project, true)
                     },
                     pageable,
@@ -132,19 +132,19 @@ class ProjectService(
 
     // FIXME: 효율성 문제 -> 갈아엎어
     // TODO: db 상에서 남은 인원을 바로 가지고 있지 않음. 또한 stack 의 경우에도 자식 테이블을 전부 참조 해보아야한다.
-    fun search(query: String, due: Due?, stackId: Long?, position: Position?): List<Project> =
-        if (due == null)
-            projectViewRepository.findAll()
-                .map { it to searchEngine.search(dic = listOf(it.title, it.description), q = query) }
-                .filter { it.second > 0 }
-                .sortedBy { -it.second }
-                .map { Project.of(it.first, true) }
-        else
-            projectViewRepository.findByDueEquals(due)
-                .map { it to searchEngine.search(dic = listOf(it.title, it.description), q = query) }
-                .filter { it.second > 0 }
-                .sortedBy { -it.second }
-                .map { Project.of(it.first, true) }
+    fun search(query: String, due: Due?, stackId: Long?, position: Position?, pageable: Pageable): Page<Project> =
+        projectRepository.findAll(pageable)
+            .map{ it.id }
+            .let{
+                PageImpl(
+                    projectViewRepository.findAll(ProjectSpecs.search(due, stackId, position))
+                        .map { it to searchEngine.search(dic = listOf(it.title, it.description), q = query) }
+                        .filter { it.second > 0 }
+                        .sortedBy { -it.second }
+                        .map { Project.of(it.first, true) }
+                )
+            }
+
 
     @Transactional
     fun updateProject(projectId: Long, command: UpdateProject, userId: Long) =
