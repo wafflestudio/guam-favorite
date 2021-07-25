@@ -36,7 +36,7 @@ class UserController(
     @PostMapping("")
     fun updateUser(
         @RequestParam("command") command: String,
-        @RequestParam("file", required = false) file: MultipartFile?,
+        @RequestParam("imageFiles", required = false) file: MultipartFile?,
         userContext: UserContext
     ): SuccessResponse<User> =
         SuccessResponse(
