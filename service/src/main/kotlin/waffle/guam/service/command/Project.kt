@@ -52,8 +52,8 @@ data class UpdateProject(
     val due: Due
 ) : ProjectCommand() {
     init {
-        if (thumbnail != null) {
-            TypeCheck.validImageFile(thumbnail!!)
+        thumbnail?.let {
+            TypeCheck.validImageFile(it)
         }
         techStackIds.map {
             TypeCheck.validStackInfo(it)
