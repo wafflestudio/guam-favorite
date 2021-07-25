@@ -13,6 +13,7 @@ import waffle.guam.db.entity.ProjectState
 import waffle.guam.db.entity.TaskEntity
 import waffle.guam.db.entity.UserState
 import waffle.guam.db.repository.CommentRepository
+import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.ProjectStackRepository
 import waffle.guam.db.repository.ProjectStackViewRepository
@@ -29,6 +30,7 @@ import waffle.guam.model.Project
 import waffle.guam.model.ThreadOverView
 import waffle.guam.service.command.CreateProject
 import waffle.guam.service.command.CreateThread
+import waffle.guam.service.command.StackInfo
 import waffle.guam.service.command.UpdateProject
 import java.time.LocalDateTime
 
@@ -42,6 +44,7 @@ class ProjectService(
     private val taskViewRepository: TaskViewRepository,
     private val threadViewRepository: ThreadViewRepository,
     private val commentRepository: CommentRepository,
+    private val imageRepository: ImageRepository,
     private val chatService: ChatService,
     private val imageService: ImageService
 ) {
@@ -55,13 +58,21 @@ class ProjectService(
 
         val myPosition = command.myPosition ?: throw JoinException("포지션을 설정해주세요.")
 
-        return projectRepository.save(command.toEntity()).let { project ->
+        return projectRepository.save(
+            command.toEntity().also {
+                command.thumbnail?.let { thumbnail ->
+                    it.thumbnail =
+                        imageService.upload(thumbnail, imageInfo = ImageInfo(it.id, ImageType.PROJECT))
+                }
+            }
+        ).also { project ->
             projectStackRepository.saveAll(
-                command.techStackIds.map { stackInfo ->
+                command.techStackIds.map {
+                    val stackInfo = StackInfo.of(it)
                     ProjectStackEntity(
                         projectId = project.id,
-                        techStackId = stackInfo.first,
-                        position = stackInfo.second
+                        techStackId = stackInfo.stackId,
+                        position = stackInfo.position
                     )
                 }
             )
@@ -71,9 +82,8 @@ class ProjectService(
                     position = myPosition, userState = UserState.LEADER
                 )
             )
-            project.id
-        }.let { projectId ->
-            projectViewRepository.findById(projectId).orElseThrow(::DataNotFoundException)
+        }.let { project ->
+            projectViewRepository.findById(project.id).orElseThrow(::DataNotFoundException)
                 .let { Project.of(entity = it, fetchTasks = true) }
         }
     }
@@ -114,10 +124,6 @@ class ProjectService(
             }
 
     fun imminentProjects(pageable: Pageable): Page<Project> =
-//        projectViewRepository
-//            .findByFrontHeadcountIsLessThanOrBackHeadcountIsLessThanOrDesignerHeadcountIsLessThan()
-//            .filter { it.state !in arrayOf(ProjectState.CLOSED, ProjectState.PENDING) }
-//            .map { Project.of(it, true) }
         projectRepository.findAll(ProjectSpecs.fetchJoinImminent(), pageable)
             .map { it.id }
             .let {
@@ -134,8 +140,8 @@ class ProjectService(
     // TODO: db 상에서 남은 인원을 바로 가지고 있지 않음. 또한 stack 의 경우에도 자식 테이블을 전부 참조 해보아야한다.
     fun search(query: String, due: Due?, stackId: Long?, position: Position?, pageable: Pageable): Page<Project> =
         projectRepository.findAll(pageable)
-            .map{ it.id }
-            .let{
+            .map { it.id }
+            .let {
                 PageImpl(
                     projectViewRepository.findAll(ProjectSpecs.search(due, stackId, position))
                         .map { it to searchEngine.search(dic = listOf(it.title, it.description), q = query) }
@@ -144,7 +150,6 @@ class ProjectService(
                         .map { Project.of(it.first, true) }
                 )
             }
-
 
     @Transactional
     fun updateProject(projectId: Long, command: UpdateProject, userId: Long) =
@@ -160,15 +165,22 @@ class ProjectService(
                 it.modifiedAt = LocalDateTime.now()
                 projectStackViewRepository.deleteAll(it.techStacks)
                 projectStackRepository.saveAll(
-                    command.techStackIds.map { stackInfo ->
+                    command.techStackIds.map { ids ->
+                        val stackInfo = StackInfo.of(ids)
                         ProjectStackEntity(
-                            projectId = projectId,
-                            techStackId = stackInfo.first,
-                            position = stackInfo.second
+                            projectId = it.id,
+                            techStackId = stackInfo.stackId,
+                            position = stackInfo.position
                         )
                     }
                 ).map { projectStackEntity ->
                     it.techStacks.plus(projectStackViewRepository.getById(projectStackEntity.id))
+                }
+                command.thumbnail?.let { file ->
+                    imageRepository.deleteByParentIdAndType(it.id, ImageType.PROJECT)
+                    it.thumbnail = imageService.upload(
+                        file, ImageInfo(it.id, ImageType.PROJECT)
+                    )
                 }
                 "정상적으로 수정되었습니다."
             }

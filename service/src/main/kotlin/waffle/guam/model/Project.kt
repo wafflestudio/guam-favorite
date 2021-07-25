@@ -12,7 +12,7 @@ data class Project(
     val id: Long,
     val title: String,
     val description: String,
-    val thumbnail: String?,
+    val thumbnail: Image?,
     val frontHeadCnt: Int,
     val backHeadCnt: Int,
     val designHeadCnt: Int,
@@ -39,7 +39,9 @@ data class Project(
                     id = entity.id,
                     title = entity.title,
                     description = entity.description,
-                    thumbnail = entity.thumbnail,
+                    thumbnail =
+                    if (entity.thumbnail != null) Image.of(entity.thumbnail!!)
+                    else null,
                     frontHeadCnt = entity.frontHeadcount,
                     backHeadCnt = entity.backHeadcount,
                     designHeadCnt = entity.designerHeadcount,
