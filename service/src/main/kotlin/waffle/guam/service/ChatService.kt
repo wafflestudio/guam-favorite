@@ -155,7 +155,11 @@ class ChatService(
     @Transactional
     fun deleteThread(command: DeleteThread): Boolean {
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
-            if (it.userId != command.userId) throw NotAllowedException()
+            if (it.userId != command.userId) throw NotAllowedException("타인이 작성한 쓰레드를 삭제할 수는 없습니다.")
+            taskRepository.findByUserIdAndProjectId(command.userId, it.projectId)
+                .orElseThrow(::DataNotFoundException).let { task ->
+                    if (task.userState in nonMemberUserStates) throw NotAllowedException("해당 프로젝트의 쓰레드를 삭제할 권한이 없습니다.")
+                }
             if (commentRepository.findByThreadId(command.threadId).isEmpty()) {
                 threadRepository.delete(it)
             } else {
@@ -168,7 +172,19 @@ class ChatService(
 
     @Transactional
     fun createComment(command: CreateComment): Boolean {
-        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException)
+        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { parentThread ->
+            taskRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId)
+                .orElseThrow(::DataNotFoundException).let {
+                    if (it.userState in nonMemberUserStates)
+                        if (it.userState == UserState.GUEST) {
+                            if(threadRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId)
+                                    .orElseThrow(::DataNotFoundException).id != command.threadId)
+                                throw NotAllowedException("아직 다른 쓰레드에 댓글을 생성할 권한이 없습니다.")
+                        } else {
+                            throw NotAllowedException("해당 프로젝트에 댓글을 생성할 권한이 없습니다.")
+                        }
+                }
+        }
         val commentId = if (command.content.isNullOrBlank()) {
             commentRepository.save(command.copy(content = null).toEntity()).id
         } else {
@@ -219,7 +235,7 @@ class ChatService(
     @Transactional
     fun deleteComment(command: DeleteComment): Boolean {
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
-            if (it.userId != command.userId) throw NotAllowedException()
+            if (it.userId != command.userId) throw NotAllowedException("타인이 작성한 댓글을 삭제할 수는 없습니다.")
             imageRepository.deleteByParentIdAndType(command.commentId, ImageType.COMMENT)
             commentRepository.delete(it)
 
