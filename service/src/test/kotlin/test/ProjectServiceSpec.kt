@@ -1,4 +1,3 @@
-
 package waffle.guam.test
 
 import io.kotest.assertions.throwables.shouldNotThrowExactly
@@ -57,7 +56,7 @@ class ProjectServiceSpec @Autowired constructor(
     private val projectStackViewRepository: ProjectStackViewRepository,
     private val imageRepository: ImageRepository
 ) {
-
+//
     private val projectService = ProjectService(
         projectRepository = projectRepository,
         projectViewRepository = projectViewRepository,
@@ -362,11 +361,11 @@ class ProjectServiceSpec @Autowired constructor(
             )
         }
 
-        val result = projectService.imminentProjects(PageRequest.of(100, 100))
+        val result = projectService.imminentProjects(PageRequest.of(0, 20))
 
-        result.size shouldBe 6
-        result.map { it.title } shouldContainAll listOf("Need Only 1 Frontend", "Need Only 1 Designer")
-        result.forEach { it.tasks shouldBe null }
+        result.content.size shouldBe 6
+        result.content.map { it.title } shouldContainAll listOf("Need Only 1 Frontend", "Need Only 1 Designer")
+        result.content.forEach { it.tasks shouldBe null }
     }
 
     @DisplayName("리크루팅 마감 임박 프로젝트 목록 조회 : 마감 직전의 프로젝트가 없어도 예외는 발생하지 않는다")
@@ -792,7 +791,9 @@ class ProjectServiceSpec @Autowired constructor(
 
         val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id)
         projectViewRepository.save(
-            projectViewRepository.getById(project.id).copy(state = ProjectState.RECRUITING)
+            projectViewRepository.getById(project.id).copy(
+                state = ProjectState.ONGOING
+            )
         )
 
         shouldThrowExactly<JoinException> {
@@ -1032,7 +1033,7 @@ class ProjectServiceSpec @Autowired constructor(
         )
         val notMemberTask = taskViewRepository.findByUserId(users[1].id)
 
-        result shouldBe true
+        result shouldBe "프로젝트에서 정상적으로 탈퇴되었습니다."
         memberTask.userState shouldBe UserState.MEMBER
         notMemberTask shouldBe emptyList()
     }
@@ -1164,7 +1165,7 @@ class ProjectServiceSpec @Autowired constructor(
         val user = database.getUser()
         val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = user.id)
 
-        shouldThrowExactly<NotAllowedException> {
+        shouldThrowExactly<DataNotFoundException> {
             projectService.deleteProject(id = project.id, userId = 99999999999)
         }
     }

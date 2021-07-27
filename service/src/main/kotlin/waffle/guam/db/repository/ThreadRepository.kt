@@ -6,7 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository
 import waffle.guam.db.entity.ThreadEntity
 import waffle.guam.db.entity.ThreadView
 
-interface ThreadRepository : JpaRepository<ThreadEntity, Long>
+interface ThreadRepository : JpaRepository<ThreadEntity, Long> {
+    fun countByUserIdAndProjectId(userId: Long, projectId: Long): Int
+}
 
 interface ThreadViewRepository : JpaRepository<ThreadView, Long> {
     fun findByProjectId(projectId: Long, pageable: Pageable): Page<ThreadView>

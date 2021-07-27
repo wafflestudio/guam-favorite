@@ -152,7 +152,7 @@ object DefaultDataInfo {
     val project = ProjectEntity(
         title = "Test Project",
         description = "Test Project Description",
-        thumbnail = "Image",
+        thumbnail = null,
         frontHeadcount = 0,
         backHeadcount = 0,
         designerHeadcount = 0,

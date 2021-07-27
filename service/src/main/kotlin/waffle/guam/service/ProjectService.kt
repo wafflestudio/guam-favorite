@@ -54,7 +54,7 @@ class ProjectService(
     @Transactional
     fun createProject(command: CreateProject, userId: Long): Project {
 
-        if (taskRepository.countByUserIdAndUserStateNotIn(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
+        if (taskRepository.countByUserIdAndUserStateNotIn(userId) >= 3) throw JoinException("프로젝트는 최대 3개까지만 참여할 수 있습니다.")
 
         val myPosition = command.myPosition ?: throw JoinException("포지션을 설정해주세요.")
 
@@ -189,8 +189,8 @@ class ProjectService(
     @Transactional
     fun join(id: Long, userId: Long, position: Position, introduction: String): Boolean =
         when {
-            taskRepository.countByUserIdAndUserStateNotIn(userId) >= 3 -> throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
-            taskRepository.findByUserIdAndProjectId(userId, id).isPresent -> throw JoinException("이미 참여 중인 프로젝트입니다.")
+            taskRepository.countByUserIdAndUserStateNotIn(userId) >= 3 -> throw JoinException("프로젝트는 최대 3개까지만 참여할 수 있습니다.")
+            taskRepository.findByUserIdAndProjectId(userId, id).isPresent -> throw JoinException("지원할 수 없는 프로젝트입니다.")
             else -> projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).let {
 
                 if (it.state != ProjectState.RECRUITING)
@@ -235,7 +235,7 @@ class ProjectService(
                     UserState.MEMBER -> throw NotAllowedException("이미 승인이 된 멤버입니다.")
                     UserState.LEADER -> throw NotAllowedException("리더를 승인할 수 없습니다.")
                     UserState.QUIT -> throw NotAllowedException("이미 프로젝트를 나간 멤버입니다.")
-                    UserState.DECLINED -> throw NotAllowedException("이미 승인이 거절된 멤버입니다.")
+                    UserState.DECLINED -> throw NotAllowedException("이미 반려된 멤버입니다.")
                 }
             }
         }

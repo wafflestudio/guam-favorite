@@ -5,7 +5,6 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.db.entity.ImageType
-import waffle.guam.db.entity.UserState
 import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.ProjectRepository
@@ -29,6 +28,7 @@ import waffle.guam.service.command.EditThreadContent
 import waffle.guam.service.command.RemoveNoticeThread
 import waffle.guam.service.command.SetNoticeThread
 import java.time.LocalDateTime
+import waffle.guam.db.entity.UserState
 
 @Service
 class ChatService(
@@ -40,6 +40,8 @@ class ChatService(
     private val imageRepository: ImageRepository,
     private val imageService: ImageService
 ) {
+    private val nonMemberUserStates = listOf(UserState.GUEST, UserState.QUIT, UserState.DECLINED)
+
     fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> =
         threadViewRepository.findByProjectId(projectId, pageable).map {
             ThreadOverView.of(
@@ -72,7 +74,7 @@ class ChatService(
     fun setNoticeThread(command: SetNoticeThread): Boolean {
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
             taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::NotAllowedException).also {
-                if (it.userState == UserState.GUEST) throw NotAllowedException()
+                if (it.userState in nonMemberUserStates) throw NotAllowedException()
             }
             threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { thread ->
                 projectRepository.save(project.copy(noticeThreadId = thread.id, modifiedAt = LocalDateTime.now()))
@@ -85,7 +87,7 @@ class ChatService(
     fun removeNoticeThread(command: RemoveNoticeThread): Boolean {
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
             taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::NotAllowedException).also {
-                if (it.userState == UserState.GUEST) throw NotAllowedException()
+                if (it.userState in nonMemberUserStates) throw NotAllowedException()
             }
             projectRepository.save(project.copy(noticeThreadId = null, modifiedAt = LocalDateTime.now()))
         }
@@ -95,6 +97,16 @@ class ChatService(
     @Transactional
     fun createThread(command: CreateThread): Boolean {
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
+        taskRepository.findByUserIdAndProjectId(command.userId, command.projectId)
+            .orElseThrow(::DataNotFoundException).let {
+                if (it.userState in nonMemberUserStates)
+                    if (it.userState == UserState.GUEST) {
+                        if (threadRepository.countByUserIdAndProjectId(command.userId, command.projectId) > 0)
+                            throw NotAllowedException("아직 새로운 쓰레드를 생성할 권한이 없습니다.")
+                    } else {
+                        throw NotAllowedException("해당 프로젝트에 쓰레드를 생성할 권한이 없습니다.")
+                    }
+                }
         val threadId = if (command.content.isNullOrBlank()) {
             threadRepository.save(command.copy(content = null).toEntity()).id
         } else {
