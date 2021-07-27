@@ -86,6 +86,7 @@ class ChatServiceSpec @Autowired constructor(
     fun getThreadsOK() {
         database.getUser()
         val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
         for (i in 0 until 15) {
             chatService.createThread(
                 command = DefaultCommand.CreateThread.copy(content = "Thread Number $i")
@@ -115,17 +116,28 @@ class ChatServiceSpec @Autowired constructor(
         result.totalElements shouldBe 15
     }
 
+    // TODO("됐다 안됐다 거림")
     @DisplayName("복수의 쓰레드 조회 : projectId, page, size 정보에 해당되는 쓰레드들의 세부 정보를 조회할 수 있다")
     @Transactional
     @Test
     fun getThreadsEveryDetailOK() {
         val users = database.getUsers()
         val project = database.getProject()
+        database.flush()
+        val tasks = taskRepository.saveAll(
+            listOf(
+                DefaultInput.task.copy(userId = users[0].id, userState = UserState.LEADER),
+                DefaultInput.task.copy(userId = users[1].id, userState = UserState.MEMBER),
+                DefaultInput.task.copy(userId = users[2].id, userState = UserState.MEMBER)
+            )
+        )
+        database.flush()
         for (i in 1 until 16) {
             chatService.createThread(
                 command = DefaultCommand.CreateThread.copy(userId = users[i % 3].id, content = "Thread Number $i")
             )
         }
+        database.flush()
         for (i in 0 until 7) {
             chatService.createComment(
                 command = DefaultCommand.CreateComment.copy(userId = users[i % 3].id, threadId = 10, content = "filterImages test")
@@ -195,6 +207,7 @@ class ChatServiceSpec @Autowired constructor(
     fun getThreadsNoImageOrContentOK() {
         database.getUsers()
         val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
         chatService.createThread(command = DefaultCommand.CreateThread.copy(content = "Only Content Thread"))
 
         every {
@@ -235,6 +248,7 @@ class ChatServiceSpec @Autowired constructor(
         val size = 100
         database.getUsers()
         val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
         for (i in 0 until totalThreadNum) {
             chatService.createThread(command = DefaultCommand.CreateThread)
         }
@@ -271,24 +285,29 @@ class ChatServiceSpec @Autowired constructor(
         result.totalElements shouldBe totalThreadNum
     }
 
+    // TODO("됐다 안됐다 거림")
     @DisplayName("쓰레드 상세 조회 : threadId에 해당하는 쓰레드를 찾아준다")
     @Transactional
     @Test
     fun getFullThreadOK() {
-        val threadId = 5L
+        val threadId = 3L
         val users = database.getUsers()
-        database.getProject()
-        for (i in 1 until 11) {
-            chatService.createThread(
-                command = DefaultCommand.CreateThread.copy(userId = users[0].id, content = "Thread Number $i")
+        val project = database.getProject()
+        taskRepository.saveAll(
+            listOf(
+                DefaultInput.task.copy(userId = users[0].id, userState = UserState.LEADER),
+                DefaultInput.task.copy(userId = users[1].id, userState = UserState.MEMBER),
+                DefaultInput.task.copy(userId = users[2].id, userState = UserState.MEMBER)
+            )
+        )
+        for (i in 1 until 6) {
+            threadRepository.save(
+                DefaultDataInfo.thread.copy(projectId = project.id, userId = users[0].id, content = "Thread Number $i")
             )
         }
-        chatService.createComment(
-            command = DefaultCommand.CreateComment.copy(threadId = threadId, content = "First", userId = users[1].id)
-        )
-        chatService.createComment(
-            command = DefaultCommand.CreateComment.copy(threadId = threadId, content = "Second", userId = users[2].id)
-        )
+        commentRepository.save(DefaultDataInfo.comment.copy(threadId = threadId, content = "First", userId = users[1].id))
+        commentRepository.save(DefaultDataInfo.comment.copy(threadId = threadId, content = "Second", userId = users[2].id))
+        database.flushAndClear()
         val result: ThreadDetail = chatService.getFullThread(threadId)
         result.id shouldBe threadId
         result.creatorId shouldBe users[0].id
@@ -301,20 +320,33 @@ class ChatServiceSpec @Autowired constructor(
         result.comments[1].creatorNickname shouldBe users[2].nickname
     }
 
+    // TODO("됐다 안됐다 거림")
     @DisplayName("쓰레드 상세 조회 : threadId에 해당하는 쓰레드와 관련 댓글들의 세부 정보를 조회할 수 있다")
     @Transactional
     @Test
     fun getFullThreadEveryDetailOK() {
+        val targetThreadId = 1L
         val users = database.getUsers()
-        database.getProject()
-        chatService.createThread(
-            command = DefaultCommand.CreateThread.copy(userId = users[0].id, content = "Thread Number 1")
+        val project = database.getProject()
+        taskRepository.saveAll(
+            listOf(
+                DefaultInput.task.copy(userId = users[0].id, userState = UserState.LEADER),
+                DefaultInput.task.copy(userId = users[1].id, userState = UserState.MEMBER),
+                DefaultInput.task.copy(userId = users[2].id, userState = UserState.MEMBER)
+            )
         )
-        for (i in 1 until 16) {
-            chatService.createComment(
-                command = DefaultCommand.CreateComment.copy(threadId = 1, content = "Comment Number $i", userId = users[i % 3].id)
+        threadRepository.save(
+            DefaultDataInfo.thread.copy(projectId = project.id, userId = users[0].id, content = "Thread Number 1")
+        )
+        database.flush()
+        for (i in 1 until 6) {
+            commentRepository.save(
+                DefaultDataInfo.comment.copy(
+                    threadId = targetThreadId, content = "Comment Number $i", userId = users[i % 3].id
+                )
             )
         }
+        database.flush()
         imageRepository.saveAll(
             listOf(
                 ImageEntity(parentId = 1, type = ImageType.THREAD),
@@ -325,22 +357,22 @@ class ChatServiceSpec @Autowired constructor(
                 ImageEntity(parentId = 5, type = ImageType.COMMENT),
             )
         )
+        database.flushAndClear()
         chatService.editCommentContent(
             command = DefaultCommand.EditCommentContent.copy(
                 commentId = 2,
-                userId = users[2 % 3].id,
-                content = "Comment Number 2 that has been edited"
+                content = "Comment Number 2 that has been edited",
+                userId = users[2 % 3].id
             )
         )
-        database.flush()
-
-        val threadImages = imageRepository.findByParentIdAndType(1, ImageType.THREAD)
+        database.flushAndClear()
+        val threadImages = imageRepository.findByParentIdAndType(targetThreadId, ImageType.THREAD)
         val commentImages = imageRepository.findByParentIdAndType(1, ImageType.COMMENT)
         val emptyImageList = imageRepository.findByParentIdAndType(2, ImageType.COMMENT).map { Image.of(it) }
 
-        val result: ThreadDetail = chatService.getFullThread(1)
+        val result: ThreadDetail = chatService.getFullThread(targetThreadId)
 
-        result.id shouldBe 1
+        result.id shouldBe targetThreadId
         result.content shouldBe "Thread Number 1"
         result.isEdited shouldBe false
         result.creatorId shouldBe users[0].id
@@ -375,6 +407,7 @@ class ChatServiceSpec @Autowired constructor(
     fun getFullThreadNoImageOrContentOK() {
         database.getUsers()
         val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
         chatService.createThread(command = DefaultCommand.CreateThread.copy(content = "Only Content Thread"))
         chatService.createComment(command = DefaultCommand.CreateComment.copy(threadId = 1, content = "Only Content Comment"))
 
@@ -432,7 +465,11 @@ class ChatServiceSpec @Autowired constructor(
     fun setNoticeThreadOK() {
         val user = database.getUser()
         val prevProject = database.getProject().copy()
-        taskRepository.save(DefaultInput.task.copy())
+        taskRepository.save(
+            DefaultInput.task.copy(
+                userState = UserState.MEMBER
+            )
+        )
         val thread = database.getThread()
 
         val result = chatService.setNoticeThread(
@@ -461,19 +498,16 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("공지 쓰레드 설정 : 프로젝트와 연관이 없는 사용자(=task가 없는 경우)가 쓰레드를 설정하려고 하면 예외가 발생한다")
+    @DisplayName("공지 쓰레드 설정 : 프로젝트와 아무런 연관이 없는 사용자(=task가 없는 경우)가 쓰레드를 설정하려고 하면 예외가 발생한다")
     @Transactional
     @Test
     fun setNoticeThreadTaskNotFoundException() {
         val users = database.getUsers()
         val project = database.getProject()
-        taskRepository.saveAll(
-            listOf(
-                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, userState = UserState.LEADER),
-                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, userState = UserState.MEMBER),
-            )
+        taskRepository.save(
+            DefaultInput.task.copy(projectId = project.id, userId = users[0].id, userState = UserState.LEADER)
         )
-        shouldThrowExactly<NotAllowedException> {
+        shouldThrowExactly<DataNotFoundException> {
             chatService.setNoticeThread(
                 command = DefaultCommand.SetNoticeThread.copy(
                     projectId = project.id,
@@ -506,26 +540,44 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
-    @DisplayName("공지 쓰레드 설정 : threadId에 해당하는 쓰레드가 존재하지 않을 때 해당 쓰레드를 공지 쓰레드로 설정하려고 하면 예외가 발생한다")
+    @DisplayName("공지 쓰레드 설정 : DECLINED 상태의 사용자가 쓰레드를 설정하려고 하면 예외가 발생한다")
     @Transactional
     @Test
-    fun setNoticeThreadThreadNotFoundException() {
+    fun setNoticeThreadDeclinedTaskNotAllowedException() {
         val users = database.getUsers()
         val project = database.getProject()
         taskRepository.saveAll(
             listOf(
                 DefaultInput.task.copy(projectId = project.id, userId = users[0].id, userState = UserState.LEADER),
                 DefaultInput.task.copy(projectId = project.id, userId = users[1].id, userState = UserState.MEMBER),
-                DefaultInput.task.copy(projectId = project.id, userId = users[2].id, userState = UserState.GUEST),
+                DefaultInput.task.copy(projectId = project.id, userId = users[2].id, userState = UserState.DECLINED),
             )
         )
-        database.flush()
+        shouldThrowExactly<NotAllowedException> {
+            chatService.setNoticeThread(
+                command = DefaultCommand.SetNoticeThread.copy(
+                    projectId = project.id,
+                    userId = users[2].id
+                )
+            )
+        }
+    }
+
+    // TODO(됐다가 안됐다 거림)
+    @DisplayName("공지 쓰레드 설정 : threadId에 해당하는 쓰레드가 존재하지 않을 때 해당 쓰레드를 공지 쓰레드로 설정하려고 하면 예외가 발생한다")
+    @Transactional
+    @Test
+    fun setNoticeThreadThreadNotFoundException() {
+        val user = database.getUser()
+        val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
+        database.flushAndClear()
         shouldThrowExactly<DataNotFoundException> {
             chatService.setNoticeThread(
                 command = DefaultCommand.SetNoticeThread.copy(
                     projectId = project.id,
                     threadId = 9999999999999999,
-                    userId = users[1].id
+                    userId = user.id
                 )
             )
         }
@@ -587,7 +639,7 @@ class ChatServiceSpec @Autowired constructor(
                 DefaultInput.task.copy(projectId = project.id, userId = users[1].id, userState = UserState.MEMBER),
             )
         )
-        shouldThrowExactly<NotAllowedException> {
+        shouldThrowExactly<DataNotFoundException> {
             chatService.removeNoticeThread(
                 command = DefaultCommand.RemoveNoticeThread.copy(
                     projectId = project.id,
@@ -620,13 +672,36 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
+    @DisplayName("공지 쓰레드 제거 : DECLINED 상태의 사용자가 쓰레드를 삭제하려고 하면 예외가 발생한다")
+    @Transactional
+    @Test
+    fun removeNoticeThreadDeclinedTaskNotAllowedException() {
+        val users = database.getUsers()
+        val project = database.getProject()
+        taskRepository.saveAll(
+            listOf(
+                DefaultInput.task.copy(projectId = project.id, userId = users[0].id, userState = UserState.LEADER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[1].id, userState = UserState.MEMBER),
+                DefaultInput.task.copy(projectId = project.id, userId = users[2].id, userState = UserState.DECLINED),
+            )
+        )
+        shouldThrowExactly<NotAllowedException> {
+            chatService.removeNoticeThread(
+                command = DefaultCommand.RemoveNoticeThread.copy(
+                    projectId = project.id,
+                    userId = users[2].id
+                )
+            )
+        }
+    }
+
     @DisplayName("쓰레드 생성 : projectId에 해당하는 프로젝트에 content 정보로 쓰레드를 생성한다")
     @Transactional
     @Test
     fun createThreadWithContentOK() {
         val user = database.getUser()
         val project = database.getProject()
-
+        taskRepository.save(DefaultInput.task)
         val result = chatService.createThread(
             command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
         )
@@ -646,7 +721,7 @@ class ChatServiceSpec @Autowired constructor(
         val targetThreadId = 2L
         val user = database.getUser()
         val project = database.getProject()
-
+        taskRepository.save(DefaultInput.task)
         for (threadId in listOf(1L, 2L, 3L)) {
             for (imageFile in DefaultInput.imageFiles) {
                 every {
@@ -685,7 +760,7 @@ class ChatServiceSpec @Autowired constructor(
         val targetThreadId = 3L
         val user = database.getUser()
         val project = database.getProject()
-
+        taskRepository.save(DefaultInput.task)
         for (threadId in listOf(1L, 2L, 3L)) {
             for (imageFile in DefaultInput.imageFiles) {
                 every {
@@ -723,6 +798,7 @@ class ChatServiceSpec @Autowired constructor(
         val targetThreadId = 1L
         val user = database.getUser()
         val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
         every {
             imageService.upload(DefaultInput.imageFiles[0], ImageInfo(targetThreadId, ImageType.THREAD))
         } returns imageRepository.save(ImageEntity(parentId = targetThreadId, type = ImageType.THREAD))
@@ -749,6 +825,7 @@ class ChatServiceSpec @Autowired constructor(
         val targetThreadId = 1L
         val user = database.getUser()
         val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
         every {
             imageService.upload(DefaultInput.imageFiles[0], ImageInfo(targetThreadId, ImageType.THREAD))
         } returns imageRepository.save(ImageEntity(parentId = targetThreadId, type = ImageType.THREAD))
@@ -766,6 +843,69 @@ class ChatServiceSpec @Autowired constructor(
 
         createdThread.id shouldBe targetThreadId
         createdThread.content shouldBe "Content With Whitespace"
+    }
+
+    @DisplayName("쓰레드 생성 : 프로젝트와 관련없는 사용자(=task가 없는 경우)가 쓰레드를 생성하려고 하면 예외가 발생한다")
+    @Transactional
+    @Test
+    fun createThreadTaskNotFoundException() {
+        database.getUser()
+        val project = database.getProject()
+        shouldThrowExactly<DataNotFoundException> {
+            chatService.createThread(
+                command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = 999)
+            )
+        }
+    }
+
+    @DisplayName("쓰레드 생성 : GUEST는 프로젝트 지원을 위한 쓰레드 1개는 생성 가능하다")
+    @Transactional
+    @Test
+    fun createThreadGuestOneThreadOK() {
+        val user = database.getUser()
+        val project = database.getProject()
+        taskRepository.save(DefaultInput.task.copy(userState = UserState.GUEST))
+        val result = chatService.createThread(
+            command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
+        )
+        val createdThread = threadRepository.findById(1).get()
+
+        result shouldBe true
+        createdThread.id shouldBe 1
+        createdThread.projectId shouldBe project.id
+        createdThread.userId shouldBe user.id
+        createdThread.content shouldBe "New Thread"
+    }
+
+    @DisplayName("쓰레드 생성 : GUEST가 2번째 쓰레드를 생성하려고 시도하면 예외가 발생한다")
+    @Transactional
+    @Test
+    fun createThreadGuestMoreThreadNotAllowedException() {
+        val user = database.getUser()
+        val project = database.getProject()
+        taskRepository.save(DefaultInput.task.copy(userState = UserState.GUEST))
+        chatService.createThread(
+            command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
+        )
+        shouldThrowExactly<NotAllowedException> {
+            chatService.createThread(
+                command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
+            )
+        }
+    }
+
+    @DisplayName("쓰레드 생성 : 프로젝트를 그만둔 사용자(QUIT)가 쓰레드를 생성하려고 시도하면 예외가 발생한다")
+    @Transactional
+    @Test
+    fun createThreadQuitTaskAllowedException() {
+        val user = database.getUser()
+        val project = database.getProject()
+        taskRepository.save(DefaultInput.task.copy(userState = UserState.QUIT))
+        shouldThrowExactly<NotAllowedException> {
+            chatService.createThread(
+                command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
+            )
+        }
     }
 
     @DisplayName("쓰레드 생성 : content와 imageFiles 배열 정보가 null이라면 예외가 발생한다")
@@ -832,11 +972,12 @@ class ChatServiceSpec @Autowired constructor(
     fun editThreadContentOK() {
         val user = database.getUser()
         val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
         chatService.createThread(
             command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
         )
-        database.flush()
         val createdThread = threadRepository.findById(1).get().copy()
+        Thread.sleep(10)
         val result = chatService.editThreadContent(
             command = DefaultCommand.EditThreadContent.copy(
                 threadId = 1,
@@ -845,7 +986,6 @@ class ChatServiceSpec @Autowired constructor(
         )
         database.flushAndClear()
         val editedThread = threadRepository.findById(1).get()
-
         result shouldBe true
         createdThread.content shouldBe "New Thread"
         editedThread.content shouldBe "edited Content"
@@ -908,6 +1048,7 @@ class ChatServiceSpec @Autowired constructor(
         val targetThreadId = 1L
         val user = database.getUser()
         database.getProject()
+        taskRepository.save(DefaultInput.task)
         val prevThread = database.getThread()
 
         chatService.editThreadContent(
@@ -932,6 +1073,7 @@ class ChatServiceSpec @Autowired constructor(
         val targetThreadId = 1L
         val user = database.getUser()
         database.getProject()
+        taskRepository.save(DefaultInput.task)
         val prevThread = database.getThread().copy()
         val prevComment = database.getComment()
 
@@ -971,6 +1113,7 @@ class ChatServiceSpec @Autowired constructor(
     fun editThreadNotCreatorException() {
         val user = database.getUser()
         val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
         chatService.createThread(
             command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
         )
@@ -989,6 +1132,7 @@ class ChatServiceSpec @Autowired constructor(
     fun editThreadSameContentException() {
         val user = database.getUser()
         val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
         chatService.createThread(
             command = DefaultCommand.CreateThread.copy(
                 projectId = project.id,
@@ -1040,6 +1184,7 @@ class ChatServiceSpec @Autowired constructor(
     fun deleteThreadImageDeletesEmptyThreadOK() {
         val user = database.getUser()
         val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
         val thread = threadRepository.save(
             ThreadEntity(
                 projectId = project.id,
@@ -1076,6 +1221,7 @@ class ChatServiceSpec @Autowired constructor(
     fun deleteThreadImageNotDeletesEmptyThreadWithCommentsOK() {
         val user = database.getUser()
         val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
         val thread = threadRepository.save(
             ThreadEntity(
                 projectId = project.id,
@@ -1180,6 +1326,8 @@ class ChatServiceSpec @Autowired constructor(
     fun deleteThreadOK() {
         val user = database.getUser()
         val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
+        taskRepository.save(DefaultInput.task)
         database.getImages()
         chatService.createThread(
             command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
@@ -1201,6 +1349,7 @@ class ChatServiceSpec @Autowired constructor(
     fun deleteThreadWithCommentsOK() {
         val user = database.getUser()
         val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
         database.getImages()
         chatService.createThread(command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id))
         for (i in 0 until 3) {
@@ -1240,6 +1389,7 @@ class ChatServiceSpec @Autowired constructor(
     fun deleteThreadNotCreatorException() {
         val user = database.getUser()
         val project = database.getProject()
+        taskRepository.save(DefaultInput.task)
         chatService.createThread(
             command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
         )
@@ -1252,11 +1402,84 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
+    @DisplayName("쓰레드 삭제 : 프로젝트와 관련없는 사용자(=task가 없는 경우)가 쓰레드를 삭제하려고 하면 예외가 발생한다")
+    @Transactional
+    @Test
+    fun deleteThreadTaskNotFoundException() {
+        val user = database.getUser()
+        val project = database.getProject()
+        val creatorTask = taskRepository.save(DefaultInput.task)
+        chatService.createThread(
+            command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
+        )
+        taskRepository.delete(creatorTask)
+        shouldThrowExactly<DataNotFoundException> {
+            chatService.deleteThread(
+                command = DefaultCommand.DeleteThread.copy(
+                    userId = user.id,
+                )
+            )
+        }
+    }
+
+    @DisplayName("쓰레드 삭제 : GUEST가 자신이 작성할 쓰레드를 삭제하려고 하면 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun deleteThreadGuestNotAllowedException() {
+        val user = database.getUser()
+        val project = database.getProject()
+        taskRepository.save(
+            DefaultInput.task.copy(
+                userState = UserState.GUEST
+            )
+        )
+        chatService.createThread(
+            command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
+        )
+        shouldThrowExactly<NotAllowedException> {
+            chatService.deleteThread(
+                command = DefaultCommand.DeleteThread.copy(
+                    userId = user.id,
+                )
+            )
+        }
+    }
+
+    @DisplayName("쓰레드 삭제 : 프로젝트를 그만둔 사용자(QUIT)이 자신이 작성했던 쓰레드를 삭제하려고 하면 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun deleteThreadQuitNotAllowedException() {
+        val user = database.getUser()
+        val project = database.getProject()
+        val creatorTask = taskRepository.save(
+            DefaultInput.task.copy(
+                userState = UserState.MEMBER
+            )
+        )
+        chatService.createThread(
+            command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
+        )
+        taskRepository.save(
+            creatorTask.copy(
+                userState = UserState.QUIT
+            )
+        )
+        database.flushAndClear()
+        shouldThrowExactly<NotAllowedException> {
+            chatService.deleteThread(
+                command = DefaultCommand.DeleteThread.copy(
+                    userId = user.id,
+                )
+            )
+        }
+    }
+
     @DisplayName("댓글 생성 : threadId에 해당하는 쓰레드에 content 정보로 댓글을 생성한다.")
     @Transactional
     @Test
     fun createCommentWithContentOK() {
         val user = database.getUser()
+        taskRepository.save(DefaultInput.task)
         val thread = database.getThread()
         val result = chatService.createComment(
             command = DefaultCommand.CreateComment.copy(threadId = thread.id, userId = user.id)
@@ -1277,6 +1500,7 @@ class ChatServiceSpec @Autowired constructor(
         val targetCommentId = 2L
         val user = database.getUser()
         database.getProject()
+        taskRepository.save(DefaultInput.task)
         val thread = database.getThread()
 
         for (commentId in listOf(1L, 2L, 3L)) {
@@ -1317,6 +1541,7 @@ class ChatServiceSpec @Autowired constructor(
         val targetCommentId = 3L
         val user = database.getUser()
         database.getProject()
+        taskRepository.save(DefaultInput.task)
         val thread = database.getThread()
 
         for (commentId in listOf(1L, 2L, 3L)) {
@@ -1357,6 +1582,7 @@ class ChatServiceSpec @Autowired constructor(
         val targetCommentId = 1L
         val user = database.getUser()
         val thread = database.getThread()
+        taskRepository.save(DefaultInput.task)
         every {
             imageService.upload(DefaultInput.imageFiles[0], ImageInfo(targetCommentId, ImageType.COMMENT))
         } returns imageRepository.save(ImageEntity(parentId = targetCommentId, type = ImageType.COMMENT))
@@ -1383,6 +1609,7 @@ class ChatServiceSpec @Autowired constructor(
         val targetCommentId = 1L
         val user = database.getUser()
         val thread = database.getThread()
+        taskRepository.save(DefaultInput.task)
         every {
             imageService.upload(DefaultInput.imageFiles[0], ImageInfo(targetCommentId, ImageType.COMMENT))
         } returns imageRepository.save(ImageEntity(parentId = targetCommentId, type = ImageType.COMMENT))
@@ -1413,16 +1640,104 @@ class ChatServiceSpec @Autowired constructor(
         }
     }
 
+    @DisplayName("댓글 생성 : 프로젝트와 관련없는 사용자(task 없는 경우)가 댓글을 삭제하려고 하면 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun createCommentTaskNotFound() {
+        database.getUser()
+        database.getThread()
+        shouldThrowExactly<DataNotFoundException> {
+            chatService.createComment(
+                command = DefaultCommand.CreateComment
+            )
+        }
+    }
+
+    @DisplayName("댓글 생성 : GUEST는 본인이 생성한 쓰레드 내부에 댓글을 생성할 수 있다.")
+    @Transactional
+    @Test
+    fun createCommentGuestCommentInOwnerThreadOK() {
+        val user = database.getUser()
+        val project = database.getProject()
+        taskRepository.save(
+            DefaultInput.task.copy(
+                userState = UserState.GUEST
+            )
+        )
+        chatService.createThread(
+            command = DefaultCommand.CreateThread.copy(projectId = project.id, userId = user.id)
+        )
+        database.flush()
+        val result = chatService.createComment(command = DefaultCommand.CreateComment)
+
+        val createdComment = commentRepository.findById(1).get()
+
+        result shouldBe true
+        createdComment.id shouldBe 1
+        createdComment.threadId shouldBe 1
+        createdComment.userId shouldBe user.id
+        createdComment.content shouldBe "New Comment"
+    }
+
+    @DisplayName("댓글 생성 : GUEST 본인이 작성하지 않은 타인의 쓰레드 내부에 댓글을 생성하려고 하면 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun createCommentGuestOtherThreadNotAllowedException() {
+        val users = database.getUsers()
+        database.getProject()
+        taskRepository.save(
+            DefaultInput.task.copy(userId = users[0].id, userState = UserState.LEADER)
+        )
+        val guest = taskRepository.save(
+            DefaultInput.task.copy(userId = users[1].id, userState = UserState.GUEST)
+        )
+        val otherThread = database.getThread()
+        chatService.createThread(
+            command = DefaultCommand.CreateThread.copy(userId = guest.userId)
+        )
+        database.flush()
+        shouldThrowExactly<NotAllowedException> {
+            chatService.createComment(
+                command = DefaultCommand.CreateComment.copy(
+                    threadId = otherThread.id,
+                    userId = guest.userId
+                )
+            )
+        }
+    }
+
+    @DisplayName("댓글 생성 : 그만둔 사용자(QUIT)가 댓글을 생성하려고 하면 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun createCommentQuitTaskNotAllowedException() {
+        val user = database.getUser()
+        database.getProject()
+        val thread = database.getThread()
+        val quitTask = taskRepository.save(
+            DefaultInput.task.copy(userId = user.id, userState = UserState.QUIT)
+        )
+        database.flush()
+        shouldThrowExactly<NotAllowedException> {
+            chatService.createComment(
+                command = DefaultCommand.CreateComment.copy(
+                    threadId = thread.id,
+                    userId = quitTask.userId
+                )
+            )
+        }
+    }
+
     @DisplayName("댓글 수정 : commentId에 해당하는 댓글의 작성자는 댓글을 수정할 수 있다.")
     @Transactional
     @Test
     fun editCommentContentOK() {
         val user = database.getUser()
         val thread = database.getThread()
+        taskRepository.save(DefaultInput.task)
         chatService.createComment(
             command = DefaultCommand.CreateComment.copy(threadId = thread.id, userId = user.id)
         )
-        database.flush()
+        Thread.sleep(10)
         val createdComment = commentRepository.findById(1).get().copy()
         val result = chatService.editCommentContent(
             command = DefaultCommand.EditCommentContent.copy(
@@ -1532,6 +1847,7 @@ class ChatServiceSpec @Autowired constructor(
     fun editCommentNotCreatorException() {
         val user = database.getUser()
         val thread = database.getThread()
+        taskRepository.save(DefaultInput.task)
         chatService.createComment(
             command = DefaultCommand.CreateComment.copy(threadId = thread.id, userId = user.id)
         )
@@ -1551,6 +1867,7 @@ class ChatServiceSpec @Autowired constructor(
     fun editCommentSameContentException() {
         val user = database.getUser()
         val thread = database.getThread()
+        taskRepository.save(DefaultInput.task)
         chatService.createComment(
             command = DefaultCommand.CreateComment.copy(
                 threadId = thread.id,
@@ -1574,6 +1891,7 @@ class ChatServiceSpec @Autowired constructor(
     @Test
     fun deleteCommentImageOK() {
         val user = database.getUser()
+        taskRepository.save(DefaultInput.task)
         val thread = database.getThread()
         chatService.createComment(command = DefaultCommand.CreateComment.copy(threadId = thread.id, userId = user.id))
         val comment = commentRepository.findById(1).get().copy()
@@ -1704,6 +2022,7 @@ class ChatServiceSpec @Autowired constructor(
     fun deleteCommentOK() {
         val user = database.getUser()
         val thread = database.getThread()
+        taskRepository.save(DefaultInput.task)
         chatService.createComment(
             command = DefaultCommand.CreateComment.copy(threadId = thread.id, userId = user.id)
         )
@@ -1724,6 +2043,7 @@ class ChatServiceSpec @Autowired constructor(
     @Test
     fun deleteCommentDeletesEmptyThreadOK() {
         val user = database.getUser()
+        taskRepository.save(DefaultInput.task)
         val thread = database.getThread()
         chatService.createComment(
             command = DefaultCommand.CreateComment.copy(threadId = thread.id, userId = user.id)
@@ -1765,6 +2085,7 @@ class ChatServiceSpec @Autowired constructor(
     fun deleteCommentNotCreatorException() {
         val user = database.getUser()
         val thread = database.getThread()
+        taskRepository.save(DefaultInput.task)
         chatService.createComment(
             command = DefaultCommand.CreateComment.copy(threadId = thread.id, userId = user.id)
         )
@@ -1838,6 +2159,7 @@ class ChatServiceSpec @Autowired constructor(
             userId = 1,
             userState = UserState.MEMBER
         )
+
         val imageFiles = listOf(
             MockMultipartFile("파일1", "기존 파일명1.png", MediaType.IMAGE_PNG_VALUE, "파일 1 내용".toByteArray()),
             MockMultipartFile("파일2", "기존 파일명2.png", MediaType.IMAGE_PNG_VALUE, "파일 2 내용".toByteArray()),
