@@ -1,12 +1,12 @@
 package waffle.guam.controller
 
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -28,7 +28,7 @@ class ProjectController(
 
     @PostMapping("/project")
     fun createProject(
-        @RequestBody createProject: CreateProject,
+        createProject: CreateProject,
         userContext: UserContext
     ): SuccessResponse<Project> =
         SuccessResponse(
@@ -40,7 +40,9 @@ class ProjectController(
         @RequestParam(required = true, defaultValue = "0") page: Int,
         @RequestParam(required = false, defaultValue = "20") size: Int,
     ): PageableResponse<Project> =
-        projectService.getAllProjects(PageRequest.of(page, size)).let {
+        projectService.getAllProjects(
+            PageRequest.of(page, size, Sort.by("modifiedAt").descending())
+        ).let {
             PageableResponse(
                 data = it.content,
                 size = it.content.size,
@@ -63,7 +65,9 @@ class ProjectController(
         @RequestParam(required = true, defaultValue = "0") page: Int,
         @RequestParam(required = false, defaultValue = "20") size: Int,
     ): PageableResponse<Project> =
-        projectService.imminentProjects(PageRequest.of(page, size)).let {
+        projectService.imminentProjects(
+            PageRequest.of(page, size, Sort.by("modifiedAt").descending())
+        ).let {
             PageableResponse(
                 data = it.content,
                 size = it.content.size,
@@ -75,19 +79,28 @@ class ProjectController(
 
     @GetMapping("/project/search")
     fun searchProject(
-        @RequestBody searchRequest: SearchProject
-    ): SuccessResponse<List<Project>> =
-        SuccessResponse(
-            data = projectService.search(
-                searchRequest.keyword, searchRequest.due,
-                searchRequest.stackId, searchRequest.position
+        @RequestParam(required = true, defaultValue = "0") page: Int,
+        @RequestParam(required = false, defaultValue = "20") size: Int,
+        searchRequest: SearchProject
+    ): PageableResponse<Project> =
+        projectService.search(
+            searchRequest.keyword, searchRequest.due,
+            searchRequest.stackId, searchRequest.position,
+            PageRequest.of(page, size, Sort.by("modifiedAt").descending())
+        ).let {
+            PageableResponse(
+                data = it.content,
+                size = it.content.size,
+                offset = page * size,
+                totalCount = it.totalElements.toInt(),
+                hasNext = page * size + it.size < it.totalElements
             )
-        )
+        }
 
     @PutMapping("/project/{id}")
     fun updateProject(
         @PathVariable id: Long,
-        @RequestBody updateProject: UpdateProject,
+        updateProject: UpdateProject,
         userContext: UserContext
     ): SuccessResponse<String> =
         SuccessResponse(
@@ -97,7 +110,7 @@ class ProjectController(
     @PostMapping("/project/{id}")
     fun joinProject(
         @PathVariable id: Long,
-        @RequestBody jp: JoinProject,
+        jp: JoinProject,
         userContext: UserContext
     ): SuccessResponse<Boolean> =
         SuccessResponse(

@@ -61,8 +61,10 @@ class UserServiceSpec(
                         skills = listOf("kotlin"),
                         githubUrl = "s.s",
                         blogUrl = "s.s",
-                        introduction = null
+                        introduction = null,
+                        willUploadImage = false
                     ),
+                    image = null,
                     userId = userId
                 )
 
@@ -74,7 +76,8 @@ class UserServiceSpec(
             scenario("id에 해당하는 유저가 없다면 예외가 발생한다.") {
                 shouldThrowExactly<DataNotFoundException> {
                     userService.update(
-                        command = UpdateUser(introduction = null),
+                        command = UpdateUser(introduction = null, willUploadImage = false),
+                        image = null,
                         userId = 404
                     )
                 }

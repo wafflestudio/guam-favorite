@@ -28,7 +28,7 @@ class UserService(
         )
 
     @Transactional
-    fun update(command: UpdateUser, userId: Long): User =
+    fun update(command: UpdateUser, image: MultipartFile?, userId: Long): User =
         userRepository.findById(userId).orElseThrow(::DataNotFoundException).let {
             it.nickname = command.nickname ?: it.nickname
             it.skills = command.skills?.joinToString(",") ?: it.skills
@@ -36,14 +36,10 @@ class UserService(
             it.blogUrl = command.blogUrl ?: it.blogUrl
             it.introduction = command.introduction ?: it.introduction
             it.updatedAt = Instant.now()
-            User.of(it)
-        }
-
-    @Transactional
-    fun updateImage(image: MultipartFile, userId: Long) =
-        userRepository.findById(userId).orElseThrow(::DataNotFoundException).also { userEntity ->
-            userEntity.image = imageService.upload(image, ImageInfo(userId, ImageType.PROFILE))
-        }.let {
+            it.image = when (command.willUploadImage) {
+                true -> { image?.let { imageService.upload(it, ImageInfo(userId, ImageType.PROFILE)) } }
+                false -> it.image
+            }
             User.of(it)
         }
 
