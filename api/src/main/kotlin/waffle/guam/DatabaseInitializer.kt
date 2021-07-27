@@ -28,7 +28,7 @@ class DataInitializer(
     val protoCommand = CreateProject(
         title = "",
         description = "",
-        thumbnail = null,
+        imageFiles = null,
         frontHeadCnt = 3,
         backHeadCnt = 3,
         designHeadCnt = 3,

@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.OneToMany
+import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Table(name = "projects")
@@ -22,7 +23,8 @@ data class ProjectEntity(
 
     var description: String,
 
-    var thumbnail: String?,
+    @OneToOne(fetch = FetchType.LAZY)
+    var thumbnail: ImageEntity? = null,
 
     var frontHeadcount: Int,
 
@@ -53,7 +55,8 @@ data class ProjectView(
 
     var description: String,
 
-    val thumbnail: String?,
+    @OneToOne(fetch = FetchType.LAZY)
+    var thumbnail: ImageEntity? = null,
 
     var frontHeadcount: Int,
 

@@ -1,6 +1,9 @@
 package waffle.guam.db.spec
 
 import org.springframework.data.jpa.domain.Specification
+import waffle.guam.db.entity.Due
+import waffle.guam.db.entity.ImageEntity
+import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectEntity
 import waffle.guam.db.entity.ProjectStackView
 import waffle.guam.db.entity.ProjectState
@@ -8,8 +11,6 @@ import waffle.guam.db.entity.ProjectView
 import waffle.guam.db.entity.TaskView
 import waffle.guam.db.entity.TechStackEntity
 import waffle.guam.db.entity.UserEntity
-import waffle.guam.db.entity.Due
-import waffle.guam.db.entity.Position
 import waffle.guam.exception.NotAllowedException
 import javax.persistence.criteria.CriteriaBuilder
 import javax.persistence.criteria.JoinType
@@ -23,6 +24,7 @@ object ProjectSpecs {
             root.fetch<ProjectView, Set<TaskView>>("tasks", JoinType.LEFT).let {
                 it.fetch<TaskView, UserEntity>("user", JoinType.LEFT)
             }
+            root.fetch<ProjectView, ImageEntity>("thumbnail", JoinType.LEFT)
             query.distinct(true)
             builder.conjunction()
         }
@@ -32,30 +34,29 @@ object ProjectSpecs {
             builder.`in`(root.get<Any>("id")).value(ids)
         }
 
-
     fun search(due: Due?, stackId: Long?, position: Position?): Specification<ProjectView> =
-        fetchJoinAll().and { root, query, builder: CriteriaBuilder ->
+        fetchJoinAll().and { root, _, builder: CriteriaBuilder ->
             var predicate = builder.conjunction()
-            due?.let{
+            due?.let {
                 predicate = builder.and(
                     builder.equal(root.get<Any>("due"), due),
                     predicate
                 )
             }
-            stackId?.let{
+            stackId?.let {
                 val q = root
                     .join<ProjectView, ProjectStackView>("techStacks")
                     .join<ProjectStackView, TechStackEntity>("techStack")
                     .get<Any>("id")
-                //TODO : 이거 맞나?
+                // TODO : 이거 맞나?
                 predicate = builder.and(
                     builder.equal(q, stackId),
                     predicate
                 )
             }
-            position?.let{
+            position?.let {
                 val rt =
-                    when(it){
+                    when (it) {
                         Position.FRONTEND -> root.get<Int>("frontHeadcount")
                         Position.BACKEND -> root.get<Int>("backHeadcount")
                         Position.DESIGNER -> root.get<Int>("designerHeadcount")
@@ -73,7 +74,7 @@ object ProjectSpecs {
         }
 
     fun fetchJoinImminent(): Specification<ProjectEntity> =
-        Specification { root, query, builder: CriteriaBuilder ->
+        Specification { root, _, builder: CriteriaBuilder ->
             builder.and(
                 builder.equal(root.get<Any>("state"), ProjectState.RECRUITING),
                 builder.or(
