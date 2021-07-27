@@ -12,7 +12,7 @@ sealed class ProjectCommand
 data class CreateProject(
     val title: String,
     val description: String,
-    var thumbnail: MultipartFile?,
+    var imageFiles: MultipartFile?,
     val frontHeadCnt: Int,
     val backHeadCnt: Int,
     val designHeadCnt: Int,
@@ -22,8 +22,8 @@ data class CreateProject(
     val myPosition: Position?
 ) : ProjectCommand() {
     init {
-        if (thumbnail != null) {
-            TypeCheck.validImageFile(thumbnail!!)
+        if (imageFiles != null) {
+            TypeCheck.validImageFile(imageFiles!!)
         }
         techStackIds.map {
             TypeCheck.validStackInfo(it)
@@ -44,7 +44,7 @@ data class CreateProject(
 data class UpdateProject(
     val title: String,
     val description: String,
-    val thumbnail: MultipartFile?,
+    var imageFiles: MultipartFile?,
     val frontHeadCnt: Int,
     val backHeadCnt: Int,
     val designHeadCnt: Int,
@@ -52,7 +52,7 @@ data class UpdateProject(
     val due: Due
 ) : ProjectCommand() {
     init {
-        thumbnail?.let {
+        imageFiles?.let {
             TypeCheck.validImageFile(it)
         }
         techStackIds.map {

@@ -539,7 +539,7 @@ class ProjectServiceSpec @Autowired constructor(
             command = UpdateProject(
                 title = "Changed Title",
                 description = prevProject.description,
-                thumbnail =
+                imageFiles =
                 MockMultipartFile("업뎃확인1", "기존 파일명1.png", MediaType.IMAGE_PNG_VALUE, "파일 1 내용".toByteArray()),
                 frontHeadCnt = prevProject.frontLeftCnt,
                 backHeadCnt = prevProject.backLeftCnt,
@@ -578,7 +578,7 @@ class ProjectServiceSpec @Autowired constructor(
             command = UpdateProject(
                 title = "Changed Title",
                 description = prevProject.description,
-                thumbnail =
+                imageFiles =
                 MockMultipartFile("업뎃확인1", "기존 파일명1.png", MediaType.IMAGE_PNG_VALUE, "파일 1 내용".toByteArray()),
                 frontHeadCnt = prevProject.frontLeftCnt,
                 backHeadCnt = prevProject.backLeftCnt,
@@ -614,7 +614,7 @@ class ProjectServiceSpec @Autowired constructor(
                     UpdateProject(
                         title = "Changed Title",
                         description = it.description,
-                        thumbnail =
+                        imageFiles =
                         MockMultipartFile("업뎃확인1", "기존 파일명1.png", MediaType.IMAGE_PNG_VALUE, "파일 1 내용".toByteArray()),
                         frontHeadCnt = it.frontHeadCnt,
                         backHeadCnt = it.backHeadCnt,
@@ -650,7 +650,7 @@ class ProjectServiceSpec @Autowired constructor(
                     UpdateProject(
                         title = "Changed Title",
                         description = it.description,
-                        thumbnail =
+                        imageFiles =
                         MockMultipartFile("업뎃확인1", "기존 파일명1.png", MediaType.IMAGE_PNG_VALUE, "파일 1 내용".toByteArray()),
                         frontHeadCnt = it.frontHeadCnt,
                         backHeadCnt = it.backHeadCnt,
@@ -1193,7 +1193,7 @@ class ProjectServiceSpec @Autowired constructor(
         val CreateProject = CreateProject(
             title = "Test Project",
             description = "Test Description",
-            thumbnail =
+            imageFiles =
             MockMultipartFile("파일1", "기존 파일명1.png", MediaType.IMAGE_PNG_VALUE, "파일 1 내용".toByteArray()),
             frontHeadCnt = 3,
             backHeadCnt = 3,

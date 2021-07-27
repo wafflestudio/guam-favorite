@@ -60,7 +60,7 @@ class ProjectService(
 
         return projectRepository.save(
             command.toEntity().also {
-                command.thumbnail?.let { thumbnail ->
+                command.imageFiles?.let { thumbnail ->
                     it.thumbnail =
                         imageService.upload(thumbnail, imageInfo = ImageInfo(it.id, ImageType.PROJECT))
                 }
@@ -176,7 +176,7 @@ class ProjectService(
                 ).map { projectStackEntity ->
                     it.techStacks.plus(projectStackViewRepository.getById(projectStackEntity.id))
                 }
-                command.thumbnail?.let { file ->
+                command.imageFiles?.let { file ->
                     imageRepository.deleteByParentIdAndType(it.id, ImageType.PROJECT)
                     it.thumbnail = imageService.upload(
                         file, ImageInfo(it.id, ImageType.PROJECT)
