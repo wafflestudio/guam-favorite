@@ -4,8 +4,8 @@ import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.UserState
 
 data class SearchTask(
-    val userId: Long?,
-    val projectId: Long?,
-    val userStates: List<UserState>,
-    val positions: List<Position>,
+    val userId: Long? = null,
+    val projectId: Long? = null,
+    val userStates: List<UserState> = emptyList(),
+    val positions: List<Position> = emptyList(),
 )
