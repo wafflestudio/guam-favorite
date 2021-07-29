@@ -30,7 +30,6 @@ import waffle.guam.model.Project
 import waffle.guam.model.ThreadOverView
 import waffle.guam.service.command.CreateProject
 import waffle.guam.service.command.CreateThread
-import waffle.guam.service.command.StackInfo
 import waffle.guam.service.command.UpdateProject
 import java.time.LocalDateTime
 
@@ -66,15 +65,36 @@ class ProjectService(
                 }
             }
         ).also { project ->
-            projectStackRepository.saveAll(
-                command.techStackIds.map {
-                    val stackInfo = StackInfo.of(it)
+            val l = mutableListOf<ProjectStackEntity>()
+            command.backStackId?.let { it1 ->
+                l.add(
                     ProjectStackEntity(
                         projectId = project.id,
-                        techStackId = stackInfo.stackId,
-                        position = stackInfo.position
+                        techStackId = it1.toLong(),
+                        position = Position.BACKEND
                     )
-                }
+                )
+            }
+            command.frontStackId?.let { it1 ->
+                l.add(
+                    ProjectStackEntity(
+                        projectId = project.id,
+                        techStackId = it1.toLong(),
+                        position = Position.FRONTEND
+                    )
+                )
+            }
+            command.designStackId?.let { it1 ->
+                l.add(
+                    ProjectStackEntity(
+                        projectId = project.id,
+                        techStackId = it1.toLong(),
+                        position = Position.DESIGNER
+                    )
+                )
+            }
+            projectStackRepository.saveAll(
+                l
             )
             taskRepository.save(
                 TaskEntity(
@@ -157,24 +177,45 @@ class ProjectService(
             if (it.userState != UserState.LEADER) throw NotAllowedException("프로젝트 수정 권한이 없습니다.")
         }.run {
             projectViewRepository.getById(projectId).let {
-                it.title = command.title
-                it.description = command.description
-                it.frontHeadcount = command.frontHeadCnt
-                it.backHeadcount = command.backHeadCnt
-                it.designerHeadcount = command.designHeadCnt
+                it.title = command.title ?: it.title
+                it.description = command.description ?: it.description
+                it.frontHeadcount = command.frontHeadCnt.toInt()
+                it.backHeadcount = command.backHeadCnt.toInt()
+                it.designerHeadcount = command.designHeadCnt.toInt()
                 it.modifiedAt = LocalDateTime.now()
                 projectStackViewRepository.deleteAll(it.techStacks)
-                projectStackRepository.saveAll(
-                    command.techStackIds.map { ids ->
-                        val stackInfo = StackInfo.of(ids)
+                val l = mutableListOf<ProjectStackEntity>()
+                command.backStackId?.let { it1 ->
+                    l.add(
                         ProjectStackEntity(
                             projectId = it.id,
-                            techStackId = stackInfo.stackId,
-                            position = stackInfo.position
+                            techStackId = it1.toLong(),
+                            position = Position.BACKEND
                         )
-                    }
+                    )
+                }
+                command.frontStackId?.let { it1 ->
+                    l.add(
+                        ProjectStackEntity(
+                            projectId = it.id,
+                            techStackId = it1.toLong(),
+                            position = Position.FRONTEND
+                        )
+                    )
+                }
+                command.designStackId?.let { it1 ->
+                    l.add(
+                        ProjectStackEntity(
+                            projectId = it.id,
+                            techStackId = it1.toLong(),
+                            position = Position.DESIGNER
+                        )
+                    )
+                }
+                projectStackRepository.saveAll(
+                    l
                 ).map { projectStackEntity ->
-                    it.techStacks.plus(projectStackViewRepository.getById(projectStackEntity.id))
+                    it.techStacks.plus(projectStackEntity?.let { it1 -> projectStackViewRepository.getById(it1.id) })
                 }
                 command.imageFiles?.let { file ->
                     imageRepository.deleteByParentIdAndType(it.id, ImageType.PROJECT)
@@ -256,8 +297,11 @@ class ProjectService(
         taskRepository.findByUserIdAndProjectId(userId, id)
             .orElseThrow(::DataNotFoundException).let {
                 if (it.userState != UserState.LEADER) throw NotAllowedException("프로젝트 삭제 권한이 없습니다.")
-                projectRepository.findById(id).orElseThrow(::DataNotFoundException).let { project ->
+                projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).let { project ->
                     project.state = ProjectState.CLOSED
+                    project.tasks.map {
+                        it.userState = UserState.QUIT
+                    }
                 }
                 return "프로젝트가 정상적으로 종료되었습니다."
             }
