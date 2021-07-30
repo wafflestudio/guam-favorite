@@ -13,13 +13,13 @@ data class CreateProject(
     val title: String?,
     val description: String?,
     var imageFiles: MultipartFile?,
-    val frontHeadCnt: String,
-    val backHeadCnt: String,
-    val designHeadCnt: String,
+    val frontHeadCnt: Int,
+    val backHeadCnt: Int,
+    val designHeadCnt: Int,
     // TODO rename techStackIds
-    val frontStackId: String?,
-    val backStackId: String?,
-    val designStackId: String?,
+    val frontStackId: Long?,
+    val backStackId: Long?,
+    val designStackId: Long?,
     val due: Due?,
     val myPosition: Position?
 ) : ProjectCommand() {
@@ -32,9 +32,9 @@ data class CreateProject(
         ProjectEntity(
             title = title ?: "default project title",
             description = description ?: "default project description",
-            frontHeadcount = frontHeadCnt.toInt(),
-            backHeadcount = backHeadCnt.toInt(),
-            designerHeadcount = designHeadCnt.toInt(),
+            frontHeadcount = frontHeadCnt,
+            backHeadcount = backHeadCnt,
+            designerHeadcount = designHeadCnt,
             state = ProjectState.RECRUITING,
             due = due ?: Due.SIX
         )
@@ -44,12 +44,12 @@ data class UpdateProject(
     val title: String?,
     val description: String?,
     var imageFiles: MultipartFile?,
-    val frontHeadCnt: String,
-    val backHeadCnt: String,
-    val designHeadCnt: String,
-    val frontStackId: String?,
-    val backStackId: String?,
-    val designStackId: String?,
+    val frontHeadCnt: Int,
+    val backHeadCnt: Int,
+    val designHeadCnt: Int,
+    val frontStackId: Long?,
+    val backStackId: Long?,
+    val designStackId: Long?,
     val due: Due?
 ) : ProjectCommand() {
     init {
@@ -64,6 +64,7 @@ data class JoinProject(
     val introduction: String
 )
 
+// legacy code
 data class StackInfo(
     val stackId: Long,
     val position: Position

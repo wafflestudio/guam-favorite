@@ -70,7 +70,7 @@ class ProjectService(
                 l.add(
                     ProjectStackEntity(
                         projectId = project.id,
-                        techStackId = it1.toLong(),
+                        techStackId = it1,
                         position = Position.BACKEND
                     )
                 )
@@ -79,7 +79,7 @@ class ProjectService(
                 l.add(
                     ProjectStackEntity(
                         projectId = project.id,
-                        techStackId = it1.toLong(),
+                        techStackId = it1,
                         position = Position.FRONTEND
                     )
                 )
@@ -88,7 +88,7 @@ class ProjectService(
                 l.add(
                     ProjectStackEntity(
                         projectId = project.id,
-                        techStackId = it1.toLong(),
+                        techStackId = it1,
                         position = Position.DESIGNER
                     )
                 )
@@ -179,9 +179,9 @@ class ProjectService(
             projectViewRepository.getById(projectId).let {
                 it.title = command.title ?: it.title
                 it.description = command.description ?: it.description
-                it.frontHeadcount = command.frontHeadCnt.toInt()
-                it.backHeadcount = command.backHeadCnt.toInt()
-                it.designerHeadcount = command.designHeadCnt.toInt()
+                it.frontHeadcount = command.frontHeadCnt
+                it.backHeadcount = command.backHeadCnt
+                it.designerHeadcount = command.designHeadCnt
                 it.modifiedAt = LocalDateTime.now()
                 projectStackViewRepository.deleteAll(it.techStacks)
                 val l = mutableListOf<ProjectStackEntity>()
@@ -189,7 +189,7 @@ class ProjectService(
                     l.add(
                         ProjectStackEntity(
                             projectId = it.id,
-                            techStackId = it1.toLong(),
+                            techStackId = it1,
                             position = Position.BACKEND
                         )
                     )
@@ -198,7 +198,7 @@ class ProjectService(
                     l.add(
                         ProjectStackEntity(
                             projectId = it.id,
-                            techStackId = it1.toLong(),
+                            techStackId = it1,
                             position = Position.FRONTEND
                         )
                     )
@@ -207,7 +207,7 @@ class ProjectService(
                     l.add(
                         ProjectStackEntity(
                             projectId = it.id,
-                            techStackId = it1.toLong(),
+                            techStackId = it1,
                             position = Position.DESIGNER
                         )
                     )
