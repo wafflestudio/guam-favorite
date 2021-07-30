@@ -10,65 +10,53 @@ import waffle.guam.util.TypeCheck
 sealed class ProjectCommand
 
 data class CreateProject(
-    val title: String,
-    val description: String,
+    val title: String?,
+    val description: String?,
     var imageFiles: MultipartFile?,
     val frontHeadCnt: Int,
     val backHeadCnt: Int,
     val designHeadCnt: Int,
     // TODO rename techStackIds
-    val techStackIds: List<String>,
-    val due: Due,
+    val frontStackId: Long?,
+    val backStackId: Long?,
+    val designStackId: Long?,
+    val due: Due?,
     val myPosition: Position?
 ) : ProjectCommand() {
     init {
         if (imageFiles != null) {
             TypeCheck.validImageFile(imageFiles!!)
         }
-        techStackIds.map {
-            TypeCheck.validStackInfo(it)
-        }
     }
     fun toEntity(): ProjectEntity =
         ProjectEntity(
-            title = title,
-            description = description,
+            title = title ?: "default project title",
+            description = description ?: "default project description",
             frontHeadcount = frontHeadCnt,
             backHeadcount = backHeadCnt,
             designerHeadcount = designHeadCnt,
             state = ProjectState.RECRUITING,
-            due = due
+            due = due ?: Due.SIX
         )
 }
 
 data class UpdateProject(
-    val title: String,
-    val description: String,
+    val title: String?,
+    val description: String?,
     var imageFiles: MultipartFile?,
     val frontHeadCnt: Int,
     val backHeadCnt: Int,
     val designHeadCnt: Int,
-    val techStackIds: List<String>,
-    val due: Due
+    val frontStackId: Long?,
+    val backStackId: Long?,
+    val designStackId: Long?,
+    val due: Due?
 ) : ProjectCommand() {
     init {
         imageFiles?.let {
             TypeCheck.validImageFile(it)
         }
-        techStackIds.map {
-            TypeCheck.validStackInfo(it)
-        }
     }
-    fun toEntity(): ProjectEntity =
-        ProjectEntity(
-            title = title,
-            description = description,
-            frontHeadcount = frontHeadCnt,
-            backHeadcount = backHeadCnt,
-            designerHeadcount = designHeadCnt,
-            state = ProjectState.RECRUITING,
-            due = due
-        )
 }
 
 data class JoinProject(
@@ -76,6 +64,7 @@ data class JoinProject(
     val introduction: String
 )
 
+// legacy code
 data class StackInfo(
     val stackId: Long,
     val position: Position

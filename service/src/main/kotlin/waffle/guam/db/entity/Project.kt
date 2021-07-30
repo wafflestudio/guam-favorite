@@ -64,7 +64,7 @@ data class ProjectView(
 
     var designerHeadcount: Int,
 
-    val state: ProjectState,
+    var state: ProjectState,
 
     val noticeThreadId: Long?,
 

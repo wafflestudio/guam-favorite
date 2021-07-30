@@ -32,7 +32,9 @@ class DataInitializer(
         frontHeadCnt = 3,
         backHeadCnt = 3,
         designHeadCnt = 3,
-        techStackIds = listOf(),
+        backStackId = null,
+        frontStackId = null,
+        designStackId = null,
         due = Due.UNDEFINED,
         myPosition = Position.values().random()
     )
