@@ -58,10 +58,9 @@ data class Project(
                     modifiedAt = entity.modifiedAt,
                     due = entity.due,
                     leaderProfile = when {
-                        entity.state == ProjectState.CLOSED -> null
-                        fetchTasks -> entity.tasks.single {
+                        fetchTasks -> entity.tasks.singleOrNull {
                             it.userState == UserState.LEADER
-                        }.let {
+                        }?.let {
                             User.of(it.user)
                         }
                         else -> null
