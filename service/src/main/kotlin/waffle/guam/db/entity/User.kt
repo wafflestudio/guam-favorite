@@ -9,6 +9,7 @@ import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.Lob
+import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
 
@@ -40,6 +41,9 @@ data class UserEntity(
     @OneToOne(cascade = [CascadeType.ALL], orphanRemoval = true)
     @JoinColumn(name = "image_id")
     var image: ImageEntity? = null,
+
+    @OneToMany(mappedBy = "userId")
+    val tasks: Set<TaskProjectView> = emptySet(),
 
     val createdAt: Instant = Instant.now(),
 
