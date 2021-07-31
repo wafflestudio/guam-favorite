@@ -44,14 +44,6 @@ class UserService(
         }
 
     @Transactional
-    fun deleteImage(userId: Long) =
-        userRepository.findById(userId).orElseThrow(::DataNotFoundException).also { userEntity ->
-            userEntity.image = null
-        }.let {
-            User.of(it)
-        }
-
-    @Transactional
     fun updateDeviceId(command: UpdateDevice, userId: Long) =
         userRepository.findById(userId).orElseThrow(::DataNotFoundException).also { userEntity ->
             userEntity.deviceId = command.deviceId
