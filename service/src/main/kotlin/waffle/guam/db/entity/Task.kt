@@ -10,6 +10,7 @@ import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
+import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
@@ -24,6 +25,7 @@ data class TaskEntity(
     @Enumerated(EnumType.STRING)
     val position: Position,
 
+    @Column(name = "project_id")
     val projectId: Long,
 
     @Column(name = "user_id")
@@ -47,6 +49,7 @@ data class TaskOverView(
     @Enumerated(EnumType.STRING)
     val position: Position,
 
+    @Column(name = "project_id")
     val projectId: Long,
 
     @OneToOne
@@ -74,11 +77,37 @@ data class TaskView(
     @OneToMany(mappedBy = "taskId", fetch = FetchType.LAZY, orphanRemoval = true)
     val tasks: Set<TaskMessage>,
 
+    @Column(name = "project_id")
     val projectId: Long,
 
     @OneToOne
     @JoinColumn(name = "user_id")
     val user: UserEntity,
+
+    val createdAt: LocalDateTime,
+
+    val modifiedAt: LocalDateTime,
+
+    @Enumerated(EnumType.STRING)
+    val userState: UserState
+)
+
+@Table(name = "tasks")
+@Entity
+data class TaskProjectView(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long,
+
+    @Enumerated(EnumType.STRING)
+    val position: Position,
+
+    @ManyToOne
+    @JoinColumn(name = "project_id")
+    val project: ProjectEntity,
+
+    @Column(name = "user_id")
+    val userId: Long,
 
     val createdAt: LocalDateTime,
 

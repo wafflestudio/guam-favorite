@@ -3,6 +3,7 @@ package waffle.guam.db.repository
 import org.springframework.data.jpa.repository.JpaRepository
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.TaskEntity
+import waffle.guam.db.entity.TaskProjectView
 import waffle.guam.db.entity.TaskView
 import waffle.guam.db.entity.UserState
 import java.util.Optional
@@ -38,4 +39,8 @@ interface TaskViewRepository : JpaRepository<TaskView, Long> {
     fun countByUserIdAndUserStateNotLike(userId: Long, userState: UserState = UserState.GUEST): Int
 
     fun countByProjectIdAndPosition(projectId: Long, position: Position): Int
+}
+
+interface TaskProjectViewRepository : JpaRepository<TaskProjectView, Long> {
+    fun findByUserId(userId: Long): List<TaskProjectView>
 }
