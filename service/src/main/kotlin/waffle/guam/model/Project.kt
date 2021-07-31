@@ -57,10 +57,10 @@ data class Project(
                     createdAt = entity.createdAt,
                     modifiedAt = entity.modifiedAt,
                     due = entity.due,
-                    leaderProfile = when (fetchTasks) {
-                        true -> entity.tasks.single {
+                    leaderProfile = when {
+                        fetchTasks -> entity.tasks.singleOrNull {
                             it.userState == UserState.LEADER
-                        }.let {
+                        }?.let {
                             User.of(it.user)
                         }
                         else -> null
