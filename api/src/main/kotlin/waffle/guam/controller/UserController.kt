@@ -2,7 +2,6 @@ package waffle.guam.controller
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -54,14 +53,6 @@ class UserController(
     ): SuccessResponse<User> =
         SuccessResponse(
             userService.updateDeviceId(command, userContext.id)
-        )
-
-    @DeleteMapping("image")
-    fun deleteImage(
-        userContext: UserContext
-    ): SuccessResponse<User> =
-        SuccessResponse(
-            userService.deleteImage(userContext.id)
         )
 
     @GetMapping("project/ids")
