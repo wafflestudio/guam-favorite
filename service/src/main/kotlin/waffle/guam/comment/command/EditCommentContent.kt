@@ -6,5 +6,4 @@ data class EditCommentContent(
     val commentId: Long,
     val userId: Long,
     val content: String,
-    val currentComment: CommentEntity?
 ) : CommentCommand
