@@ -3,21 +3,22 @@ package waffle.guam.comment
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-
-import waffle.guam.db.repository.CommentRepository
-import waffle.guam.db.repository.ImageRepository
-import waffle.guam.db.repository.ThreadRepository
-import waffle.guam.exception.InvalidRequestException
-import waffle.guam.exception.NotAllowedException
 import waffle.guam.comment.command.CreateComment
 import waffle.guam.comment.command.DeleteComment
 import waffle.guam.comment.command.DeleteCommentImage
 import waffle.guam.comment.command.EditCommentContent
+import waffle.guam.comment.event.CommentContentEdited
 import waffle.guam.comment.event.CommentCreated
 import waffle.guam.comment.event.CommentDeleted
+import waffle.guam.comment.event.CommentImageDeleted
 import waffle.guam.db.entity.UserState
+import waffle.guam.db.repository.CommentRepository
+import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.TaskRepository
+import waffle.guam.db.repository.ThreadRepository
 import waffle.guam.exception.DataNotFoundException
+import waffle.guam.exception.InvalidRequestException
+import waffle.guam.exception.NotAllowedException
 
 @Primary
 @Service
@@ -38,7 +39,7 @@ class CommentServiceImplPrimary(
                 .orElseThrow(::DataNotFoundException).let {
                     if (it.userState in nonMemberUserStates)
                         if (it.userState == UserState.GUEST) {
-//   TODO([GUAM-94] 수정 사항 - findByUserIdAndProjectId 메서드 때문에 컨플릭 날까봐 일단 주석처리)
+//   TODO([GUAM-94] 수정 사항 - findByUserIdAndProjectId 메서드 필요. 컨플릭 날까봐 일단 주석처리)
 //                            if (threadRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId)
 //                                    .orElseThrow(::DataNotFoundException).id != command.threadId
 //                            )
@@ -52,7 +53,7 @@ class CommentServiceImplPrimary(
     }
 
     @Transactional
-    override fun editCommentContent(command: EditCommentContent): Boolean {
+    override fun editCommentContent(command: EditCommentContent): CommentContentEdited {
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) throw NotAllowedException()
             if (it.content == command.content) throw InvalidRequestException("수정 전과 동일한 내용입니다.")
@@ -61,7 +62,7 @@ class CommentServiceImplPrimary(
     }
 
     @Transactional
-    override fun deleteCommentImage(command: DeleteCommentImage): Boolean {
+    override fun deleteCommentImage(command: DeleteCommentImage): CommentImageDeleted {
         imageRepository.findById(command.imageId).orElseThrow(::DataNotFoundException).let { image ->
             commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).also {
                 if (it.userId != command.userId) throw NotAllowedException()
