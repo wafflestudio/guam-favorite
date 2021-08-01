@@ -1,18 +1,19 @@
 package waffle.guam.comment
 
-import java.time.LocalDateTime
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-
-import waffle.guam.db.entity.ImageType
-import waffle.guam.db.repository.CommentRepository
-import waffle.guam.db.repository.ImageRepository
 import waffle.guam.comment.command.CreateComment
 import waffle.guam.comment.command.DeleteComment
 import waffle.guam.comment.command.DeleteCommentImage
 import waffle.guam.comment.command.EditCommentContent
+import waffle.guam.comment.event.CommentContentEdited
 import waffle.guam.comment.event.CommentCreated
 import waffle.guam.comment.event.CommentDeleted
+import waffle.guam.comment.event.CommentImageDeleted
+import waffle.guam.db.entity.ImageType
+import waffle.guam.db.repository.CommentRepository
+import waffle.guam.db.repository.ImageRepository
+import java.time.LocalDateTime
 
 @Service
 class CommentServiceImpl(
@@ -35,27 +36,27 @@ class CommentServiceImpl(
     }
 
     @Transactional
-    override fun editCommentContent(command: EditCommentContent): Boolean {
+    override fun editCommentContent(command: EditCommentContent): CommentContentEdited {
         if (command.content.isNotBlank()) {
             commentRepository.updateContent(id = command.commentId, content = command.content.trim(), modifiedAt = LocalDateTime.now())
-            return true
+            return CommentContentEdited()
         }
         if (imageRepository.findByParentIdAndType(command.commentId, ImageType.COMMENT).isNotEmpty()) {
             commentRepository.updateContent(id = command.commentId, content = null, modifiedAt = LocalDateTime.now())
-            return true
+            return CommentContentEdited()
         }
         this.deleteComment(DeleteComment(commentId = command.commentId, userId = command.userId))
-        return true
+        return CommentContentEdited()
     }
 
     @Transactional
-    override fun deleteCommentImage(command: DeleteCommentImage): Boolean {
+    override fun deleteCommentImage(command: DeleteCommentImage): CommentImageDeleted {
         if (command.commentContent.isNullOrBlank()) {
             if (imageRepository.findByParentIdAndType(command.commentId, ImageType.COMMENT).size < 2)
                 commentRepository.deleteById(command.commentId)
         }
         imageRepository.deleteById(command.imageId)
-        return true
+        return CommentImageDeleted()
     }
 
     @Transactional
