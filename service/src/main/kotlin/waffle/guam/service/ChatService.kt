@@ -40,6 +40,8 @@ class ChatService(
     private val imageRepository: ImageRepository,
     private val imageService: ImageService
 ) {
+    private val nonMemberUserStates = listOf(UserState.GUEST, UserState.QUIT, UserState.DECLINED)
+
     fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> =
         threadViewRepository.findByProjectId(projectId, pageable).map {
             ThreadOverView.of(
@@ -71,8 +73,8 @@ class ChatService(
     @Transactional
     fun setNoticeThread(command: SetNoticeThread): Boolean {
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
-            taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::NotAllowedException).also {
-                if (it.userState == UserState.GUEST) throw NotAllowedException()
+            taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::DataNotFoundException).also {
+                if (it.userState in nonMemberUserStates) throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
             }
             threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { thread ->
                 projectRepository.save(project.copy(noticeThreadId = thread.id, modifiedAt = LocalDateTime.now()))
@@ -84,8 +86,8 @@ class ChatService(
     @Transactional
     fun removeNoticeThread(command: RemoveNoticeThread): Boolean {
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
-            taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::NotAllowedException).also {
-                if (it.userState == UserState.GUEST) throw NotAllowedException()
+            taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::DataNotFoundException).also {
+                if (it.userState in nonMemberUserStates) throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
             }
             projectRepository.save(project.copy(noticeThreadId = null, modifiedAt = LocalDateTime.now()))
         }
@@ -95,6 +97,16 @@ class ChatService(
     @Transactional
     fun createThread(command: CreateThread): Boolean {
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
+        taskRepository.findByUserIdAndProjectId(command.userId, command.projectId)
+            .orElseThrow(::DataNotFoundException).let {
+                if (it.userState in nonMemberUserStates)
+                    if (it.userState == UserState.GUEST) {
+                        if (threadRepository.countByUserIdAndProjectId(command.userId, command.projectId) > 0)
+                            throw NotAllowedException("아직 새로운 쓰레드를 생성할 권한이 없습니다.")
+                    } else {
+                        throw NotAllowedException("해당 프로젝트에 쓰레드를 생성할 권한이 없습니다.")
+                    }
+            }
         val threadId = if (command.content.isNullOrBlank()) {
             threadRepository.save(command.copy(content = null).toEntity()).id
         } else {
@@ -143,7 +155,11 @@ class ChatService(
     @Transactional
     fun deleteThread(command: DeleteThread): Boolean {
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
-            if (it.userId != command.userId) throw NotAllowedException()
+            if (it.userId != command.userId) throw NotAllowedException("타인이 작성한 쓰레드를 삭제할 수는 없습니다.")
+            taskRepository.findByUserIdAndProjectId(command.userId, it.projectId)
+                .orElseThrow(::DataNotFoundException).let { task ->
+                    if (task.userState in nonMemberUserStates) throw NotAllowedException("해당 프로젝트의 쓰레드를 삭제할 권한이 없습니다.")
+                }
             if (commentRepository.findByThreadId(command.threadId).isEmpty()) {
                 threadRepository.delete(it)
             } else {
@@ -156,7 +172,20 @@ class ChatService(
 
     @Transactional
     fun createComment(command: CreateComment): Boolean {
-        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException)
+        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { parentThread ->
+            taskRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId)
+                .orElseThrow(::DataNotFoundException).let {
+                    if (it.userState in nonMemberUserStates)
+                        if (it.userState == UserState.GUEST) {
+                            if (threadRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId)
+                                .orElseThrow(::DataNotFoundException).id != command.threadId
+                            )
+                                throw NotAllowedException("아직 다른 쓰레드에 댓글을 생성할 권한이 없습니다.")
+                        } else {
+                            throw NotAllowedException("해당 프로젝트에 댓글을 생성할 권한이 없습니다.")
+                        }
+                }
+        }
         val commentId = if (command.content.isNullOrBlank()) {
             commentRepository.save(command.copy(content = null).toEntity()).id
         } else {
@@ -207,7 +236,7 @@ class ChatService(
     @Transactional
     fun deleteComment(command: DeleteComment): Boolean {
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
-            if (it.userId != command.userId) throw NotAllowedException()
+            if (it.userId != command.userId) throw NotAllowedException("타인이 작성한 댓글을 삭제할 수는 없습니다.")
             imageRepository.deleteByParentIdAndType(command.commentId, ImageType.COMMENT)
             commentRepository.delete(it)
 
