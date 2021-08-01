@@ -1,4 +1,3 @@
-
 package waffle.guam.test
 
 import io.kotest.assertions.throwables.shouldNotThrowExactly
