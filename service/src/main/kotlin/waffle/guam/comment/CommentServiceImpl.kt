@@ -27,48 +27,46 @@ class CommentServiceImpl(
         } else {
             commentRepository.save(command.copy(content = command.content.trim()).toEntity()).id
         }
-        return CommentCreated(commentId)
-        // TODO(event handler)
-        //        if (!command.imageFiles.isNullOrEmpty())
-        //            for (imageFile in command.imageFiles)
-        //                imageService.upload(imageFile, ImageInfo(commentId, ImageType.COMMENT))
+        return CommentCreated(commentId, command.imageFiles)
+        //   TODO(event handler : 생성한 댓글 ID와 업로드하려는 imageFiles 정보 필요)
+        //    if (!command.imageFiles.isNullOrEmpty())
+        //        for (imageFile in command.imageFiles)
+        //            imageService.upload(imageFile, ImageInfo(commentId, ImageType.COMMENT))
     }
 
     @Transactional
     override fun editCommentContent(command: EditCommentContent): Boolean {
-            if (command.content.isBlank()) {
-                if (imageRepository.findByParentIdAndType(command.commentId, ImageType.COMMENT).isEmpty()) {
-                    this.deleteComment(
-                        DeleteComment(commentId = command.commentId, userId = command.userId, targetComment = command.currentComment)
-                    )
-                } else {
-                    commentRepository.save(command.currentComment!!.copy(content = null, modifiedAt = LocalDateTime.now()))
-                }
-            } else {
-                commentRepository.save(command.currentComment!!.copy(content = command.content.trim(), modifiedAt = LocalDateTime.now()))
-            }
+        if (command.content.isNotBlank()) {
+            commentRepository.updateContent(id = command.commentId, content = command.content.trim(), modifiedAt = LocalDateTime.now())
+            return true
+        }
+        if (imageRepository.findByParentIdAndType(command.commentId, ImageType.COMMENT).isNotEmpty()) {
+            commentRepository.updateContent(id = command.commentId, content = null, modifiedAt = LocalDateTime.now())
+            return true
+        }
+        this.deleteComment(DeleteComment(commentId = command.commentId, userId = command.userId))
         return true
     }
 
     @Transactional
     override fun deleteCommentImage(command: DeleteCommentImage): Boolean {
-        if (command.parentComment!!.content.isNullOrBlank()) {
-            if (imageRepository.findByParentIdAndType(command.parentComment.id, ImageType.COMMENT).size < 2)
-                commentRepository.delete(command.parentComment)
+        if (command.commentContent.isNullOrBlank()) {
+            if (imageRepository.findByParentIdAndType(command.commentId, ImageType.COMMENT).size < 2)
+                commentRepository.deleteById(command.commentId)
         }
-        command.targetImage?.let { imageRepository.delete(it) }
+        imageRepository.deleteById(command.imageId)
         return true
     }
 
     @Transactional
     override fun deleteComment(command: DeleteComment): CommentDeleted {
-        command.targetComment?.let { commentRepository.delete(it) }
-            return CommentDeleted(commentId = command.commentId, targetComment = command.targetComment)
-            //    TODO(event handler)
-            //    imageRepository.deleteByParentIdAndType(command.commentId, ImageType.COMMENT)
-            //    if (commentRepository.findByThreadId(it.threadId).isEmpty())
-            //        if (threadRepository.findById(it.threadId).get().content.isNullOrBlank())
-            //            if (imageRepository.findByParentIdAndType(it.threadId, ImageType.THREAD).isEmpty())
-            //                threadRepository.deleteById(it.threadId
+        commentRepository.deleteById(command.commentId)
+        return CommentDeleted(command.commentId, command.threadId)
+        //   TODO(event handler : 삭제한 댓글의 id & threadId 정보 필요)
+        //    imageRepository.deleteByParentIdAndType(command.commentId, ImageType.COMMENT)
+        //    if (commentRepository.findByThreadId(it.threadId).isEmpty())
+        //        if (threadRepository.findById(it.threadId).get().content.isNullOrBlank())
+        //            if (imageRepository.findByParentIdAndType(it.threadId, ImageType.THREAD).isEmpty())
+        //                threadRepository.deleteById(it.threadId)
     }
 }

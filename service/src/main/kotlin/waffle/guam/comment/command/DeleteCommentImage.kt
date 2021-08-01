@@ -9,6 +9,6 @@ data class DeleteCommentImage(
     val commentId: Long,
     val type: ImageType = ImageType.COMMENT,
     val userId: Long,
-    val parentComment: CommentEntity?,
-    val targetImage: ImageEntity?
-) : CommentCommand
+) : CommentCommand {
+    var commentContent: String? = null
+}
