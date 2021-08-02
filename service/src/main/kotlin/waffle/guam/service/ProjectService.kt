@@ -115,7 +115,7 @@ class ProjectService(
                 PageImpl(
                     projectViewRepository.findAll(ProjectSpecs.fetchJoinList(it.toList())).map { project ->
                         Project.of(project, true)
-                    },
+                    }.sortedByDescending { project ->  project.modifiedAt },
                     pageable,
                     it.totalElements
                 )
@@ -150,7 +150,7 @@ class ProjectService(
                 PageImpl(
                     projectViewRepository.findAll(ProjectSpecs.fetchJoinList(it.toList())).map { project ->
                         Project.of(project, true)
-                    },
+                    }.sortedByDescending { project ->  project.modifiedAt },
                     pageable,
                     it.totalElements
                 )
