@@ -29,30 +29,25 @@ class CommentServiceImpl(
     private val imageRepository: ImageRepository,
 ) : CommentService {
 
-    private val nonMemberUserStates = listOf(UserState.GUEST, UserState.QUIT, UserState.DECLINED)
-
     @Transactional
     override fun createComment(command: CreateComment): CommentCreated {
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { parentThread ->
-            taskRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId)
-                .orElseThrow(::DataNotFoundException).let {
-                    if (it.userState in nonMemberUserStates)
-                        if (it.userState == UserState.GUEST) {
-                            if (threadRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId)
-                                .orElseThrow(::DataNotFoundException).id != command.threadId
-                            )
+            taskRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId).orElseThrow(::DataNotFoundException).let {
+                if (it.userState == UserState.GUEST)
+                    if (threadRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId)
+                            .orElseThrow(::DataNotFoundException).id != command.threadId)
                                 throw NotAllowedException("아직 다른 쓰레드에 댓글을 생성할 권한이 없습니다.")
-                        } else {
-                            throw NotAllowedException("해당 프로젝트에 댓글을 생성할 권한이 없습니다.")
-                        }
-                }
+                if (it.userState == UserState.QUIT || it.userState == UserState.DECLINED)
+                    throw NotAllowedException("해당 프로젝트에 댓글을 생성할 권한이 없습니다.")
+            }
         }
-        val commentId = if (command.content.isNullOrBlank()) {
-            commentRepository.save(command.copy(content = null).toEntity()).id
+        if (command.content.isNullOrBlank()) {
+            commentRepository.save(command.copy(content = null).toEntity())
         } else {
-            commentRepository.save(command.copy(content = command.content.trim()).toEntity()).id
+            commentRepository.save(command.copy(content = command.content.trim()).toEntity())
+        }.let {
+            return CommentCreated(it.id, command.imageFiles)
         }
-        return CommentCreated(commentId, command.imageFiles)
         //   TODO(event listener : 생성한 댓글 ID와 업로드하려는 imageFiles 정보 필요)
         //    if (!command.imageFiles.isNullOrEmpty())
         //        for (imageFile in command.imageFiles)
@@ -72,7 +67,7 @@ class CommentServiceImpl(
                 commentRepository.save(it.copy(content = null, modifiedAt = LocalDateTime.now()))
                 return CommentContentEdited(it.id)
             }
-            commentRepository.delete(it)
+            this.deleteComment(DeleteComment(commentId = command.commentId, userId = command.userId))
             return CommentContentEdited(it.id)
         }
     }
