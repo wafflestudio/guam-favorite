@@ -1,3 +1,5 @@
 package waffle.guam.comment.event
 
-class CommentContentEdited : CommentEvent()
+data class CommentContentEdited(
+    val commentId: Long,
+) : CommentEvent()
