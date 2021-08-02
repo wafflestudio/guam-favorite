@@ -113,9 +113,11 @@ class ProjectService(
             .map { it.id }
             .let {
                 PageImpl(
-                    projectViewRepository.findAll(ProjectSpecs.fetchJoinList(it.toList())).map { project ->
+                    projectViewRepository.findAll(
+                        ProjectSpecs.fetchJoinList(it.toList()), pageable.sort
+                    ).map { project ->
                         Project.of(project, true)
-                    },
+                    }.sortedByDescending { project ->  project.modifiedAt },
                     pageable,
                     it.totalElements
                 )
@@ -148,7 +150,9 @@ class ProjectService(
             .map { it.id }
             .let {
                 PageImpl(
-                    projectViewRepository.findAll(ProjectSpecs.fetchJoinList(it.toList())).map { project ->
+                    projectViewRepository.findAll(
+                        ProjectSpecs.fetchJoinList(it.toList()), pageable.sort
+                    ).map { project ->
                         Project.of(project, true)
                     },
                     pageable,
@@ -163,7 +167,9 @@ class ProjectService(
             .map { it.id }
             .let {
                 PageImpl(
-                    projectViewRepository.findAll(ProjectSpecs.search(due, stackId, position))
+                    projectViewRepository.findAll(
+                        ProjectSpecs.search(due, stackId, position), pageable.sort
+                    )
                         .map { it to searchEngine.search(dic = listOf(it.title, it.description), q = query) }
                         .filter { it.second > 0 }
                         .sortedBy { -it.second }
