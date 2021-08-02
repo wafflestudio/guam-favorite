@@ -1,3 +1,6 @@
 package waffle.guam.comment.event
 
-class CommentImageDeleted : CommentEvent()
+data class CommentImageDeleted(
+    val commentId: Long,
+    val imageId: Long,
+) : CommentEvent()
