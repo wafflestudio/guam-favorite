@@ -6,7 +6,13 @@ import waffle.guam.db.entity.UserEntity
 import java.util.Optional
 
 interface UserRepository : JpaRepository<UserEntity, Long> {
-    @Query("select u from UserEntity u left join fetch u.image join fetch u.tasks t join fetch t.project where u.id = :userId")
+    @Query(
+        "select u from UserEntity u " +
+                "left join fetch u.image " +
+                "left join fetch u.tasks t " +
+                "left join fetch t.project " +
+                "where u.id = :userId"
+    )
     override fun findById(userId: Long): Optional<UserEntity>
 
     fun findByFirebaseUid(firebaseUid: String): UserEntity?
