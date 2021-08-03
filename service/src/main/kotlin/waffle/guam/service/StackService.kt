@@ -1,16 +1,22 @@
 package waffle.guam.service
 
 import org.springframework.stereotype.Service
+import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.TechStackEntity
+import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.StackRepository
+import waffle.guam.exception.DataNotFoundException
 import waffle.guam.model.TechStack
+import waffle.guam.service.command.CreateUpdateStack
 import javax.annotation.PostConstruct
 import javax.persistence.EntityNotFoundException
 
 @Service
 class StackService(
-    private val stackRepository: StackRepository
+    private val stackRepository: StackRepository,
+    private val imageService: ImageService,
+    private val imageRepository: ImageRepository
 ) {
 
     private val searchEngine: SearchEngine = SearchEngine()
@@ -31,8 +37,34 @@ class StackService(
         }
     }
 
-    fun create(o: TechStack): Boolean {
-        stackRepository.save(o.toEntity())
+    fun create(o: CreateUpdateStack): Boolean {
+        stackRepository.save(
+            o.toEntity().also {
+                o.imageFiles?.let { image ->
+                    it.thumbnail = imageService.upload(
+                        image,
+                        imageInfo = ImageInfo(
+                            it.id, ImageType.STACK
+                        )
+                    )
+                }
+            }
+        )
+        return true
+    }
+
+    fun update(stackId: Long, o: CreateUpdateStack): Boolean {
+        stackRepository.findById(stackId).orElseThrow(::DataNotFoundException).let {
+            it.position = o.position
+            it.aliases = o.aliases
+            it.name = o.name
+            o.imageFiles?.let { image ->
+                imageRepository.deleteByParentIdAndType(it.id, ImageType.PROJECT)
+                it.thumbnail = imageService.upload(
+                    image, ImageInfo(it.id, ImageType.PROJECT)
+                )
+            }
+        }
         return true
     }
 
