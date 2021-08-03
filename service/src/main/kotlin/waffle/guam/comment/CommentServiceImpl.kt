@@ -80,7 +80,7 @@ class CommentServiceImpl(
                 if (it.id != image.parentId) throw InvalidRequestException()
                 if (it.content.isNullOrBlank()) {
                     if (imageRepository.findByParentIdAndType(it.id, ImageType.COMMENT).size < 2)
-                        this.deleteComment(DeleteComment(commentId = command.commentId, userId = command.userId))
+                        commentRepository.delete(it)
                 }
                 imageRepository.deleteById(image.id)
                 return CommentImageDeleted(it.id, image.id)

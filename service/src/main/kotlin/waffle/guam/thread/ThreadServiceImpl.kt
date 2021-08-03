@@ -92,16 +92,13 @@ class ThreadServiceImpl(
     @Transactional
     override fun createThread(command: CreateThread): ThreadCreated {
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
-        taskRepository.findByUserIdAndProjectId(command.userId, command.projectId)
-            .orElseThrow(::DataNotFoundException).let {
-                if (it.userState in nonMemberUserStates)
-                    if (it.userState == UserState.GUEST) {
-                        if (threadRepository.countByUserIdAndProjectId(command.userId, command.projectId) > 0)
-                            throw NotAllowedException("아직 새로운 쓰레드를 생성할 권한이 없습니다.")
-                    } else {
-                        throw NotAllowedException("해당 프로젝트에 쓰레드를 생성할 권한이 없습니다.")
-                    }
-            }
+        taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::DataNotFoundException).let {
+            if (it.userState == UserState.GUEST)
+                if (threadRepository.countByUserIdAndProjectId(command.userId, command.projectId) > 0)
+                    throw NotAllowedException("아직 새로운 쓰레드를 생성할 권한이 없습니다.")
+            if (it.userState == UserState.QUIT || it.userState == UserState.DECLINED)
+                throw NotAllowedException("해당 프로젝트에 쓰레드를 생성할 권한이 없습니다.")
+        }
         if (command.content.isNullOrBlank()) {
             threadRepository.save(command.copy(content = null).toEntity())
         } else {
@@ -120,16 +117,16 @@ class ThreadServiceImpl(
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) throw NotAllowedException()
             if (it.content == command.content) throw InvalidRequestException("수정 전과 동일한 내용입니다.")
-            if (command.content.isBlank()) {
-                if (imageRepository.findByParentIdAndType(it.id, ImageType.THREAD).isEmpty()) {
-                    this.deleteThread(DeleteThread(threadId = it.id, userId = command.userId))
-                } else {
-                    threadRepository.save(it.copy(content = null, modifiedAt = LocalDateTime.now()))
-                }
-            } else {
+            if (command.content.isNotBlank()){
                 threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = LocalDateTime.now()))
+                return ThreadContentEdited(it.id)
             }
-            return ThreadContentEdited(command.threadId)
+            if (imageRepository.findByParentIdAndType(it.id, ImageType.THREAD).isNotEmpty()) {
+                threadRepository.save(it.copy(content = null, modifiedAt = LocalDateTime.now()))
+                return ThreadContentEdited(it.id)
+            }
+            this.deleteThread(DeleteThread(threadId = it.id, userId = command.userId))
+            return ThreadContentEdited(it.id)
         }
     }
 
