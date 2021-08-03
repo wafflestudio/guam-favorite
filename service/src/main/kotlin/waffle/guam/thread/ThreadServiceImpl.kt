@@ -1,5 +1,38 @@
 package waffle.guam.thread
 
+import java.time.LocalDateTime
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import waffle.guam.db.entity.ImageType
+import waffle.guam.db.entity.UserState
+import waffle.guam.db.repository.CommentRepository
+import waffle.guam.db.repository.ImageRepository
+import waffle.guam.db.repository.ProjectRepository
+import waffle.guam.db.repository.TaskRepository
+import waffle.guam.db.repository.ThreadRepository
+import waffle.guam.db.repository.ThreadViewRepository
+import waffle.guam.exception.NotAllowedException
+import waffle.guam.exception.DataNotFoundException
+import waffle.guam.exception.InvalidRequestException
+import waffle.guam.model.Image
+import waffle.guam.thread.command.CreateThread
+import waffle.guam.thread.command.DeleteThread
+import waffle.guam.thread.command.DeleteThreadImage
+import waffle.guam.thread.command.EditThreadContent
+import waffle.guam.thread.command.RemoveNoticeThread
+import waffle.guam.thread.command.SetNoticeThread
+import waffle.guam.thread.event.NoticeThreadRemoved
+import waffle.guam.thread.event.NoticeThreadSet
+import waffle.guam.thread.event.ThreadContentEdited
+import waffle.guam.thread.event.ThreadCreated
+import waffle.guam.thread.event.ThreadDeleted
+import waffle.guam.thread.event.ThreadImageDeleted
+import waffle.guam.thread.model.ThreadDetail
+import waffle.guam.thread.model.ThreadOverView
+import waffle.guam.util.FilterList
+
 @Service
 class ThreadServiceImpl(
     private val threadRepository: ThreadRepository,
@@ -17,33 +50,24 @@ class ThreadServiceImpl(
             ThreadOverView.of(
                 it,
                 { threadId -> commentRepository.countByThreadId(threadId) },
-                { images ->
-                    images.filter { allImage -> allImage.type == ImageType.THREAD }
-                        .map { threadImage -> Image.of(threadImage) }
-                }
+                { images -> FilterList.targetImages(images, ImageType.THREAD) },
             )
         }
 
-    override fun getFullThread(threadId: Long): ThreadDetail {
-        return threadViewRepository.findById(threadId).orElseThrow(::RuntimeException).let {
+    override fun getFullThread(threadId: Long): ThreadDetail =
+        threadViewRepository.findById(threadId).orElseThrow(::RuntimeException).let {
             ThreadDetail.of(
                 it,
-                { images ->
-                    images.filter { allImage -> allImage.type == ImageType.THREAD }
-                        .map { threadImage -> Image.of(threadImage) }
-                },
-                { images ->
-                    images.filter { allImage -> allImage.type == ImageType.COMMENT }
-                        .map { commentImage -> Image.of(commentImage) }
-                },
+                { images -> FilterList.targetImages(images, ImageType.THREAD) },
+                { images -> FilterList.targetImages(images, ImageType.COMMENT) },
             )
         }
-    }
 
     @Transactional
-    override fun setNoticeThread(command: SetNoticeThread): NoticeThreadSet =
+    override fun setNoticeThread(command: SetNoticeThread): NoticeThreadSet {
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
-            taskRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::DataNotFoundException).also {
+            taskRepository.findByUserIdAndProjectId(command.userId, command.projectId)
+                .orElseThrow(::DataNotFoundException).also {
                 if (it.userState in nonMemberUserStates) throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
             }
             threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { thread ->
@@ -51,16 +75,19 @@ class ThreadServiceImpl(
                 return NoticeThreadSet(thread.id, project.id)
             }
         }
+    }
 
     @Transactional
-    override fun removeNoticeThread(command: RemoveNoticeThread): NoticeThreadRemoved =
+    override fun removeNoticeThread(command: RemoveNoticeThread): NoticeThreadRemoved {
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
-            taskRepository.findByUserIdAndProjectId(command.userId, project.id).orElseThrow(::DataNotFoundException).also {
-                if (it.userState in nonMemberUserStates) throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
-            }
+            taskRepository.findByUserIdAndProjectId(command.userId, project.id).orElseThrow(::DataNotFoundException)
+                .also {
+                    if (it.userState in nonMemberUserStates) throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
+                }
             projectRepository.save(project.copy(noticeThreadId = null, modifiedAt = LocalDateTime.now()))
             return NoticeThreadRemoved(project.id)
         }
+    }
 
     @Transactional
     override fun createThread(command: CreateThread): ThreadCreated {
@@ -89,7 +116,7 @@ class ThreadServiceImpl(
     }
 
     @Transactional
-    override fun editThreadContent(command: EditThreadContent): ThreadContentEdited =
+    override fun editThreadContent(command: EditThreadContent): ThreadContentEdited {
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) throw NotAllowedException()
             if (it.content == command.content) throw InvalidRequestException("수정 전과 동일한 내용입니다.")
@@ -104,10 +131,10 @@ class ThreadServiceImpl(
             }
             return ThreadContentEdited(command.threadId)
         }
-
+    }
 
     @Transactional
-    override fun deleteThreadImage(command: DeleteThreadImage): ThreadImageDeleted =
+    override fun deleteThreadImage(command: DeleteThreadImage): ThreadImageDeleted {
         imageRepository.findById(command.imageId).orElseThrow(::DataNotFoundException).let { image ->
             threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).also {
                 if (it.userId != command.userId) throw NotAllowedException()
@@ -117,12 +144,13 @@ class ThreadServiceImpl(
                         this.deleteThread(DeleteThread(threadId = it.id, userId = command.userId))
                 }
                 imageRepository.delete(image)
+                return ThreadImageDeleted(it.id, image.id)
             }
-            return ThreadImageDeleted(it.id, image.id)
         }
+    }
 
     @Transactional
-    override fun deleteThread(command: DeleteThread): ThreadDeleted =
+    override fun deleteThread(command: DeleteThread): ThreadDeleted {
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) throw NotAllowedException("타인이 작성한 쓰레드를 삭제할 수는 없습니다.")
             taskRepository.findByUserIdAndProjectId(command.userId, it.projectId)
@@ -138,39 +166,5 @@ class ThreadServiceImpl(
             // TODO(event listener : 삭제한 쓰레드의 id 정보 필요)
             // imageRepository.deleteByParentIdAndType(it.id, ImageType.THREAD)
         }
-}
-import java.time.LocalDateTime
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
-import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
-import waffle.guam.db.entity.ImageType
-import waffle.guam.db.entity.UserState
-import waffle.guam.db.repository.CommentRepository
-import waffle.guam.db.repository.ImageRepository
-import waffle.guam.db.repository.ProjectRepository
-import waffle.guam.db.repository.TaskRepository
-import waffle.guam.db.repository.ThreadRepository
-import waffle.guam.db.repository.ThreadViewRepository
-import waffle.guam.exception.NotAllowedException
-import waffle.guam.exception.DataNotFoundException
-import waffle.guam.exception.InvalidRequestException
-import waffle.guam.model.Image
-import waffle.guam.service.ImageInfo
-import waffle.guam.service.ImageService
-import waffle.guam.thread.command.CreateThread
-import waffle.guam.thread.command.DeleteThread
-import waffle.guam.thread.command.DeleteThreadImage
-import waffle.guam.thread.command.EditThreadContent
-import waffle.guam.thread.command.RemoveNoticeThread
-import waffle.guam.thread.command.SetNoticeThread
-import waffle.guam.thread.event.NoticeThreadRemoved
-import waffle.guam.thread.event.NoticeThreadSet
-import waffle.guam.thread.event.ThreadContentEdited
-import waffle.guam.thread.event.ThreadCreated
-import waffle.guam.thread.event.ThreadDeleted
-import waffle.guam.thread.event.ThreadImageDeleted
-import waffle.guam.thread.model.ThreadDetail
-import waffle.guam.thread.model.ThreadOverView
-
+    }
 }
