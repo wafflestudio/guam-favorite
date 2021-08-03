@@ -44,6 +44,12 @@ data class ProjectList(
     val title: String,
     val description: String,
     val thumbnail: Image?,
+    val frontHeadCnt: Int,
+    val backHeadCnt: Int,
+    val designHeadCnt: Int,
+    val frontLeftCnt: Int,
+    val backLeftCnt: Int,
+    val designLeftCnt: Int,
     val state: ProjectState,
     val techStacks: List<TechStack>,
     val tasks: List<Task>?,
@@ -59,7 +65,7 @@ data class ProjectList(
             fetchTasks: Boolean,
             thread: ThreadOverView?
         ): ProjectList =
-            (entity as ProjectView).let { _ ->
+            super.currHeadCntOf(entity as ProjectDetailView).let { arr ->
                 ProjectList(
                     id = entity.id,
                     title = entity.title,
@@ -67,6 +73,12 @@ data class ProjectList(
                     thumbnail =
                     if (entity.thumbnail != null) Image.of(entity.thumbnail!!)
                     else null,
+                    frontHeadCnt = entity.frontHeadcount,
+                    backHeadCnt = entity.backHeadcount,
+                    designHeadCnt = entity.designerHeadcount,
+                    frontLeftCnt = entity.frontHeadcount - arr[0],
+                    backLeftCnt = entity.backHeadcount - arr[1],
+                    designLeftCnt = entity.designerHeadcount - arr[2],
                     state = entity.state,
                     techStacks = entity.techStacks.map { TechStack.of(it.techStack) },
                     tasks = when (fetchTasks) {
