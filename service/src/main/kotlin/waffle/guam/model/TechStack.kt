@@ -7,14 +7,13 @@ data class TechStack(
     val id: Long,
     val name: String,
     val aliases: String,
-    val thumbnail: String?,
+    val thumbnail: Image?,
     val position: Position
 ) {
     fun toEntity(): TechStackEntity =
         TechStackEntity(
             name = name,
             aliases = aliases,
-            thumbnail = thumbnail,
             position = position
         )
 
@@ -24,7 +23,9 @@ data class TechStack(
                 id = e.id,
                 name = e.name,
                 aliases = e.aliases,
-                thumbnail = e.thumbnail,
+                thumbnail =
+                if (e.thumbnail != null) Image.of(e.thumbnail!!)
+                else null,
                 position = e.position
             )
     }
