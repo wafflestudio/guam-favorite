@@ -1,15 +1,13 @@
 package waffle.guam.service
 
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import waffle.guam.db.entity.TaskMessage
 import waffle.guam.db.entity.TaskStatus
 import waffle.guam.db.repository.TaskMessageRepository
 import waffle.guam.db.repository.TaskRepository
 import waffle.guam.db.repository.TaskViewRepository
 import waffle.guam.exception.DataNotFoundException
+import waffle.guam.model.TaskDetail
 import waffle.guam.service.command.CreateTaskMsg
 import waffle.guam.service.command.UpdateTaskMsg
 
@@ -24,8 +22,12 @@ class TaskService(
         taskRepository.findByUserId(userId).map { it.projectId }
 
     @Transactional
-    fun getAllTaskMsg(pageable: Pageable, taskId: Long): Page<TaskMessage> =
-        taskMessageRepository.findAllByTaskId(taskId, pageable)
+    fun getTaskWithMessages(taskId: Long): TaskDetail =
+        taskViewRepository.findById(taskId).orElseThrow(::DataNotFoundException).let {
+            TaskDetail.of(
+                it, true
+            )
+        }
 
     @Transactional
     fun createTaskMsg(command: CreateTaskMsg) =

@@ -14,6 +14,7 @@ import waffle.guam.db.entity.TaskEntity
 import waffle.guam.db.entity.UserState
 import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ImageRepository
+import waffle.guam.db.repository.ProjectDetailViewRepository
 import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.ProjectStackRepository
 import waffle.guam.db.repository.ProjectStackViewRepository
@@ -27,6 +28,8 @@ import waffle.guam.exception.JoinException
 import waffle.guam.exception.NotAllowedException
 import waffle.guam.model.Image
 import waffle.guam.model.Project
+import waffle.guam.model.ProjectDetail
+import waffle.guam.model.ProjectList
 import waffle.guam.model.ThreadOverView
 import waffle.guam.service.command.CreateProject
 import waffle.guam.service.command.CreateThread
@@ -37,6 +40,7 @@ import java.time.LocalDateTime
 class ProjectService(
     private val projectRepository: ProjectRepository,
     private val projectViewRepository: ProjectViewRepository,
+    private val projectDetailViewRepository: ProjectDetailViewRepository,
     private val projectStackRepository: ProjectStackRepository,
     private val projectStackViewRepository: ProjectStackViewRepository,
     private val taskRepository: TaskRepository,
@@ -103,8 +107,8 @@ class ProjectService(
                 )
             )
         }.let { project ->
-            projectViewRepository.findById(project.id).orElseThrow(::DataNotFoundException)
-                .let { Project.of(entity = it, fetchTasks = true) }
+            projectDetailViewRepository.findById(project.id).orElseThrow(::DataNotFoundException)
+                .let { ProjectDetail.of(entity = it, fetchTasks = true) }
         }
     }
 
@@ -116,17 +120,17 @@ class ProjectService(
                     projectViewRepository.findAll(
                         ProjectSpecs.fetchJoinList(it.toList()), pageable.sort
                     ).map { project ->
-                        Project.of(project, true)
-                    }.sortedByDescending { project ->  project.modifiedAt },
+                        ProjectList.of(project, true)
+                    },
                     pageable,
                     it.totalElements
                 )
             }
 
     fun findProject(id: Long): Project =
-        projectViewRepository.findById(id).orElseThrow(::DataNotFoundException)
+        projectDetailViewRepository.findById(id).orElseThrow(::DataNotFoundException)
             .let { project ->
-                Project.of(
+                ProjectDetail.of(
                     entity = project,
                     fetchTasks = true,
                     thread =
@@ -153,7 +157,7 @@ class ProjectService(
                     projectViewRepository.findAll(
                         ProjectSpecs.fetchJoinList(it.toList()), pageable.sort
                     ).map { project ->
-                        Project.of(project, true)
+                        ProjectList.of(project, true)
                     },
                     pageable,
                     it.totalElements
@@ -173,7 +177,7 @@ class ProjectService(
                         .map { it to searchEngine.search(dic = listOf(it.title, it.description), q = query) }
                         .filter { it.second > 0 }
                         .sortedBy { -it.second }
-                        .map { Project.of(it.first, true) }
+                        .map { ProjectList.of(it.first, true) }
                 )
             }
 

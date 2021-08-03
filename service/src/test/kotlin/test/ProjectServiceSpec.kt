@@ -21,6 +21,7 @@ import waffle.guam.db.entity.ProjectState
 import waffle.guam.db.entity.UserState
 import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ImageRepository
+import waffle.guam.db.repository.ProjectDetailViewRepository
 import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.ProjectStackRepository
 import waffle.guam.db.repository.ProjectStackViewRepository
@@ -31,7 +32,8 @@ import waffle.guam.db.repository.ThreadViewRepository
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.exception.JoinException
 import waffle.guam.exception.NotAllowedException
-import waffle.guam.model.Project
+import waffle.guam.model.ProjectDetail
+import waffle.guam.model.ProjectList
 import waffle.guam.service.ChatService
 import waffle.guam.service.ImageService
 import waffle.guam.service.ProjectService
@@ -44,6 +46,7 @@ import java.util.Optional
 @DatabaseTest
 class ProjectServiceSpec @Autowired constructor(
     private val projectRepository: ProjectRepository,
+    private val projectDetailViewRepository: ProjectDetailViewRepository,
     private val projectViewRepository: ProjectViewRepository,
     private val projectStackRepository: ProjectStackRepository,
     private val taskViewRepository: TaskViewRepository,
@@ -60,6 +63,7 @@ class ProjectServiceSpec @Autowired constructor(
     private val projectService = ProjectService(
         projectRepository = projectRepository,
         projectViewRepository = projectViewRepository,
+        projectDetailViewRepository = projectDetailViewRepository,
         projectStackRepository = projectStackRepository,
         taskViewRepository = taskViewRepository,
         taskRepository = taskRepository,
@@ -82,17 +86,16 @@ class ProjectServiceSpec @Autowired constructor(
     fun createProjectOK() {
         val projectId = 1
         val stacks = database.getTechStacks()
-        val stackInfo = stacks.map {
-            "${it.id}, ${it.position}"
-        }
         val user = database.getUser()
 
         val result = projectService.createProject(
             command = DefaultCommand.CreateProject.copy(
-                techStackIds = stackInfo
+                frontStackId = stacks[0].id,
+                backStackId = stacks[1].id,
+                designStackId = null
             ),
             userId = user.id
-        )
+        ) as ProjectDetail
         val dbProjectStacks = projectStackRepository.findAll()
         val dbTasks = taskRepository.findAll()
         database.flushAndClear()
@@ -164,9 +167,9 @@ class ProjectServiceSpec @Autowired constructor(
             projectService.createProject(
                 command = DefaultCommand.CreateProject.copy(
                     title = "Project $i",
-                    techStackIds = stacks.map {
-                        "${it.id}, ${it.position}"
-                    }
+                    frontStackId = stacks[0].id,
+                    backStackId = stacks[1].id,
+                    designStackId = null
                 ),
                 userId = users[i % 3].id
             )
@@ -175,12 +178,12 @@ class ProjectServiceSpec @Autowired constructor(
         val result = projectService.getAllProjects(pageable = PageRequest.of(page, size))
 
         result.content.size shouldBe size
-        result.content.forEach { it.tasks shouldBe null }
-        result.content.forEach { project -> project.techStacks.map { it.name } shouldContainAll stacks.map { it.name } }
-        result.content.forEach { project -> project.techStacks.map { it.aliases } shouldContainAll stacks.map { it.aliases } }
-        result.content.forEach { project -> project.techStacks.map { it.position } shouldContainAll stacks.map { it.position } }
-        result.content[0].title shouldBe "Project ${page * size}"
-        result.content[1].title shouldBe "Project ${page * size + 1}"
+        result.content.forEach { (it as ProjectList).tasks shouldBe null }
+        result.content.forEach { project -> (project as ProjectList).techStacks.map { it.name } shouldContainAll stacks.map { it.name } }
+        result.content.forEach { project -> (project as ProjectList).techStacks.map { it.aliases } shouldContainAll stacks.map { it.aliases } }
+        result.content.forEach { project -> (project as ProjectList).techStacks.map { it.position } shouldContainAll stacks.map { it.position } }
+//        result.content[0].title shouldBe "Project ${page * size}"
+//        result.content[1].title shouldBe "Project ${page * size + 1}"
         result.pageable.offset shouldBe page * size
         result.totalElements shouldBe totalAmount
     }
@@ -219,13 +222,13 @@ class ProjectServiceSpec @Autowired constructor(
         val user = database.getUser()
         val createdProject = projectService.createProject(
             command = DefaultCommand.CreateProject.copy(
-                techStackIds = stacks.map {
-                    "${it.id}, ${it.position}"
-                }
+                frontStackId = stacks[0].id,
+                backStackId = stacks[1].id,
+                designStackId = null
             ),
             userId = user.id
-        )
-        val result = projectService.findProject(createdProject.id)
+        ) as ProjectDetail
+        val result = projectService.findProject(createdProject.id) as ProjectDetail
 
         result.title shouldBe createdProject.title
         result.description shouldBe createdProject.description
@@ -256,16 +259,16 @@ class ProjectServiceSpec @Autowired constructor(
         val createdProject = projectService.createProject(
             command = DefaultCommand.CreateProject,
             userId = user.id
-        )
+        ) as ProjectDetail
         chatService.setNoticeThread(
             command = SetNoticeThread(
                 projectId = createdProject.id,
                 threadId = thread.id,
                 userId = user.id
             )
-        )
+        ) as ProjectDetail
         database.flushAndClear()
-        val result = projectService.findProject(createdProject.id)
+        val result = projectService.findProject(createdProject.id) as ProjectDetail
 
         result.title shouldBe createdProject.title
         result.state shouldBe createdProject.state
@@ -287,7 +290,7 @@ class ProjectServiceSpec @Autowired constructor(
         val createdProject = projectService.createProject(
             command = DefaultCommand.CreateProject,
             userId = user.id
-        )
+        ) as ProjectDetail
         chatService.setNoticeThread(
             command = SetNoticeThread(
                 projectId = createdProject.id,
@@ -296,7 +299,7 @@ class ProjectServiceSpec @Autowired constructor(
             )
         )
         database.flushAndClear()
-        val prevResult = projectService.findProject(createdProject.id)
+        val prevResult = projectService.findProject(createdProject.id) as ProjectDetail
 
         chatService.deleteThread(
             command = DeleteThread(
@@ -305,7 +308,7 @@ class ProjectServiceSpec @Autowired constructor(
             )
         )
         database.flushAndClear()
-        val threadDeletedResult = projectService.findProject(createdProject.id)
+        val threadDeletedResult = projectService.findProject(createdProject.id) as ProjectDetail
 
         prevResult.noticeThread?.id shouldBe thread.id
         prevResult.noticeThread?.content shouldBe thread.content
@@ -364,8 +367,8 @@ class ProjectServiceSpec @Autowired constructor(
         val result = projectService.imminentProjects(PageRequest.of(100, 100))
 
         result.size shouldBe 6
-        result.map { it.title } shouldContainAll listOf("Need Only 1 Frontend", "Need Only 1 Designer")
-        result.forEach { it.tasks shouldBe null }
+        result.map { (it as ProjectList).title } shouldContainAll listOf("Need Only 1 Frontend", "Need Only 1 Designer")
+        result.forEach { (it as ProjectList).tasks shouldBe null }
     }
 
     @DisplayName("리크루팅 마감 임박 프로젝트 목록 조회 : 마감 직전의 프로젝트가 없어도 예외는 발생하지 않는다")
@@ -528,10 +531,9 @@ class ProjectServiceSpec @Autowired constructor(
             command = DefaultCommand.CreateProject.copy(
                 title = "Previous Title",
                 description = "Should be the Same",
-                techStackIds = listOf()
             ),
             userId = user.id
-        ).copy()
+        ) as ProjectDetail
 
         val result = projectService.updateProject(
             projectId = prevProject.id,
@@ -543,12 +545,14 @@ class ProjectServiceSpec @Autowired constructor(
                 frontHeadCnt = prevProject.frontLeftCnt,
                 backHeadCnt = prevProject.backLeftCnt,
                 designHeadCnt = prevProject.designLeftCnt,
-                techStackIds = listOf(),
                 due = prevProject.due,
+                backStackId = null,
+                frontStackId = null,
+                designStackId = null
             ),
             userId = user.id
         ).let {
-            Project.of(projectViewRepository.getById(prevProject.id))
+            ProjectDetail.of(projectViewRepository.getById(prevProject.id))
         }
 
         result.id shouldBe prevProject.id
@@ -565,12 +569,12 @@ class ProjectServiceSpec @Autowired constructor(
         val stacks = database.getTechStacks()
         val prevProject = projectService.createProject(
             command = DefaultCommand.CreateProject.copy(
-                techStackIds = listOf(
-                    "${stacks[0].id}, ${stacks[0].position}"
-                )
+                frontStackId = stacks[0].id,
+                backStackId = stacks[1].id,
+                designStackId = null
             ),
             userId = user.id
-        )
+        ) as ProjectDetail
         database.flushAndClear()
         val result = projectService.updateProject(
             projectId = prevProject.id,
@@ -582,12 +586,14 @@ class ProjectServiceSpec @Autowired constructor(
                 frontHeadCnt = prevProject.frontLeftCnt,
                 backHeadCnt = prevProject.backLeftCnt,
                 designHeadCnt = prevProject.designLeftCnt,
-                techStackIds = listOf(),
+                frontStackId = stacks[0].id,
+                backStackId = stacks[1].id,
+                designStackId = null,
                 due = prevProject.due,
             ),
             userId = user.id
         ).let {
-            Project.of(projectViewRepository.getById(prevProject.id))
+            ProjectDetail.of(projectViewRepository.getById(prevProject.id))
         }
 
         result.id shouldBe prevProject.id
@@ -604,7 +610,7 @@ class ProjectServiceSpec @Autowired constructor(
     @Test
     fun updateProjectTaskNotFoundException() {
         val user = database.getUser()
-        val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = user.id)
+        val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = user.id) as ProjectDetail
 
         shouldThrowExactly<DataNotFoundException> {
             projectService.updateProject(
@@ -618,7 +624,9 @@ class ProjectServiceSpec @Autowired constructor(
                         frontHeadCnt = it.frontHeadCnt,
                         backHeadCnt = it.backHeadCnt,
                         designHeadCnt = it.designHeadCnt,
-                        techStackIds = listOf(),
+                        frontStackId = null,
+                        backStackId = null,
+                        designStackId = null,
                         due = it.due,
                     )
                 },
@@ -632,7 +640,7 @@ class ProjectServiceSpec @Autowired constructor(
     @Test
     fun updateProjectNotLeaderException() {
         val users = database.getUsers()
-        val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id)
+        val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id) as ProjectDetail
         projectService.join(
             id = project.id,
             userId = users[1].id,
@@ -654,7 +662,9 @@ class ProjectServiceSpec @Autowired constructor(
                         frontHeadCnt = it.frontHeadCnt,
                         backHeadCnt = it.backHeadCnt,
                         designHeadCnt = it.designHeadCnt,
-                        techStackIds = listOf(),
+                        frontStackId = null,
+                        backStackId = null,
+                        designStackId = null,
                         due = it.due,
                     )
                 },
@@ -730,7 +740,7 @@ class ProjectServiceSpec @Autowired constructor(
         for (i in 0 until 3) {
             projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id)
         }
-        val fourthProject = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[1].id)
+        val fourthProject = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[1].id) as ProjectDetail
 
         shouldThrowExactly<JoinException> {
             projectService.join(
@@ -748,7 +758,7 @@ class ProjectServiceSpec @Autowired constructor(
     fun joinAlreadyProjectMemberException() {
         val users = database.getUsers()
 
-        val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id)
+        val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id) as ProjectDetail
 
         val firstJoinSuccess = projectService.join(
             id = project.id,
@@ -789,7 +799,7 @@ class ProjectServiceSpec @Autowired constructor(
     fun joinProjectNotRecruitingException() {
         val users = database.getUsers()
 
-        val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id)
+        val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id) as ProjectDetail
         projectViewRepository.save(
             projectViewRepository.getById(project.id).copy(state = ProjectState.RECRUITING)
         )
@@ -810,7 +820,7 @@ class ProjectServiceSpec @Autowired constructor(
     fun joinPositionNotChosenException() {
         val users = database.getUsers()
 
-        val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id)
+        val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id) as ProjectDetail
 
         shouldThrowExactly<JoinException> {
             projectService.join(
@@ -831,7 +841,7 @@ class ProjectServiceSpec @Autowired constructor(
         val project = projectService.createProject(
             command = DefaultCommand.CreateProject.copy(frontHeadCnt = 0),
             userId = users[0].id
-        )
+        ) as ProjectDetail
         shouldThrowExactly<JoinException> {
             projectService.join(
                 id = project.id,
@@ -850,7 +860,7 @@ class ProjectServiceSpec @Autowired constructor(
         val project = projectService.createProject(
             command = DefaultCommand.CreateProject,
             userId = users[0].id
-        )
+        ) as ProjectDetail
         projectService.join(
             id = project.id,
             userId = users[1].id,
@@ -880,7 +890,7 @@ class ProjectServiceSpec @Autowired constructor(
         val project = projectService.createProject(
             command = DefaultCommand.CreateProject,
             userId = users[0].id
-        )
+        ) as ProjectDetail
         projectService.join(
             id = project.id,
             userId = users[1].id,
@@ -910,7 +920,7 @@ class ProjectServiceSpec @Autowired constructor(
         val project = projectService.createProject(
             command = DefaultCommand.CreateProject,
             userId = users[0].id
-        )
+        ) as ProjectDetail
         projectService.join(
             id = project.id,
             userId = users[1].id,
@@ -936,7 +946,7 @@ class ProjectServiceSpec @Autowired constructor(
         val project = projectService.createProject(
             command = DefaultCommand.CreateProject,
             userId = users[0].id
-        )
+        ) as ProjectDetail
         projectService.join(
             id = project.id,
             userId = users[1].id,
@@ -962,7 +972,7 @@ class ProjectServiceSpec @Autowired constructor(
         val project = projectService.createProject(
             command = DefaultCommand.CreateProject,
             userId = users[0].id
-        )
+        ) as ProjectDetail
         projectService.join(
             id = project.id,
             userId = users[1].id,
@@ -990,7 +1000,7 @@ class ProjectServiceSpec @Autowired constructor(
         val project = projectService.createProject(
             command = DefaultCommand.CreateProject,
             userId = users[0].id
-        )
+        ) as ProjectDetail
         shouldThrowExactly<NotAllowedException> {
             projectService.acceptOrNot(
                 id = project.id,
@@ -1009,7 +1019,7 @@ class ProjectServiceSpec @Autowired constructor(
         val project = projectService.createProject(
             command = DefaultCommand.CreateProject,
             userId = users[0].id
-        )
+        )as ProjectDetail
         projectService.join(
             id = project.id,
             userId = users[1].id,
@@ -1044,7 +1054,7 @@ class ProjectServiceSpec @Autowired constructor(
         val project = projectService.createProject(
             command = DefaultCommand.CreateProject,
             userId = users[0].id
-        )
+        )as ProjectDetail
         shouldThrowExactly<DataNotFoundException> {
             projectService.quit(
                 id = project.id,
@@ -1062,7 +1072,7 @@ class ProjectServiceSpec @Autowired constructor(
         val project = projectService.createProject(
             command = DefaultCommand.CreateProject,
             userId = users[0].id
-        )
+        )as ProjectDetail
         projectService.join(
             id = project.id,
             userId = users[1].id,
@@ -1085,7 +1095,7 @@ class ProjectServiceSpec @Autowired constructor(
         val project = projectService.createProject(
             command = DefaultCommand.CreateProject,
             userId = users[0].id
-        )
+        )as ProjectDetail
         shouldThrowExactly<NotAllowedException> {
             projectService.quit(
                 id = project.id,
@@ -1132,7 +1142,9 @@ class ProjectServiceSpec @Autowired constructor(
         for (i in 0 until 3) {
             projectService.createProject(
                 command = DefaultCommand.CreateProject.copy(
-                    techStackIds = stackInfo
+                    frontStackId = null,
+                    backStackId = null,
+                    designStackId = null
                 ),
                 userId = user.id
             )
@@ -1161,7 +1173,7 @@ class ProjectServiceSpec @Autowired constructor(
     @Test
     fun deleteProjectTaskNotFoundException() {
         val user = database.getUser()
-        val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = user.id)
+        val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = user.id) as ProjectDetail
 
         shouldThrowExactly<NotAllowedException> {
             projectService.deleteProject(id = project.id, userId = 99999999999)
@@ -1173,7 +1185,7 @@ class ProjectServiceSpec @Autowired constructor(
     @Test
     fun deleteProjectNotLeaderException() {
         val users = database.getUsers()
-        val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id)
+        val project = projectService.createProject(command = DefaultCommand.CreateProject, userId = users[0].id) as ProjectDetail
         projectService.join(
             id = project.id,
             userId = users[1].id,
@@ -1197,7 +1209,9 @@ class ProjectServiceSpec @Autowired constructor(
             frontHeadCnt = 3,
             backHeadCnt = 3,
             designHeadCnt = 3,
-            techStackIds = emptyList(),
+            frontStackId = null,
+            backStackId = null,
+            designStackId = null,
             due = Due.SIX,
             myPosition = Position.WHATEVER
         )
