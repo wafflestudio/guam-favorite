@@ -17,23 +17,7 @@ interface ProjectInterface {
         thread: ThreadOverView? = null
     ): Project
 
-    fun currHeadCntOf(projectView: ProjectDetailView): IntArray {
-        val res = MutableList(3, fun(_: Int) = 0)
-        projectView.tasks.filter {
-            when (it.userState) {
-                UserState.LEADER, UserState.MEMBER -> true
-                else -> false
-            }
-        }.map {
-            when (it.position) {
-                Position.WHATEVER -> 0
-                Position.DESIGNER -> res[2]++
-                Position.BACKEND -> res[1]++
-                Position.FRONTEND -> res[0]++
-            }
-        }
-        return res.toIntArray()
-    }
+    fun currHeadCntOf(projectView: ProjectModel): IntArray
 }
 
 sealed class Project
@@ -65,7 +49,7 @@ data class ProjectList(
             fetchTasks: Boolean,
             thread: ThreadOverView?
         ): ProjectList =
-            super.currHeadCntOf(entity as ProjectDetailView).let { arr ->
+            currHeadCntOf(entity as ProjectView).let { arr ->
                 ProjectList(
                     id = entity.id,
                     title = entity.title,
@@ -98,6 +82,24 @@ data class ProjectList(
                     }
                 )
             }
+
+        override fun currHeadCntOf(projectView: ProjectModel): IntArray {
+                val res = MutableList(3, fun(_: Int) = 0)
+            (projectView as ProjectView).tasks.filter {
+                    when (it.userState) {
+                        UserState.LEADER, UserState.MEMBER -> true
+                        else -> false
+                    }
+                }.map {
+                    when (it.position) {
+                        Position.WHATEVER -> 0
+                        Position.DESIGNER -> res[2]++
+                        Position.BACKEND -> res[1]++
+                        Position.FRONTEND -> res[0]++
+                    }
+                }
+                return res.toIntArray()
+            }
     }
 }
 
@@ -127,7 +129,7 @@ data class ProjectDetail(
             fetchTasks: Boolean,
             thread: ThreadOverView?
         ): ProjectDetail =
-            super.currHeadCntOf(entity as ProjectDetailView).let { arr ->
+            currHeadCntOf(entity as ProjectDetailView).let { arr ->
                 ProjectDetail(
                     id = entity.id,
                     title = entity.title,
@@ -161,5 +163,23 @@ data class ProjectDetail(
                     noticeThread = thread
                 )
             }
+
+        override fun currHeadCntOf(projectView: ProjectModel): IntArray {
+            val res = MutableList(3, fun(_: Int) = 0)
+            (projectView as ProjectDetailView).tasks.filter {
+                when (it.userState) {
+                    UserState.LEADER, UserState.MEMBER -> true
+                    else -> false
+                }
+            }.map {
+                when (it.position) {
+                    Position.WHATEVER -> 0
+                    Position.DESIGNER -> res[2]++
+                    Position.BACKEND -> res[1]++
+                    Position.FRONTEND -> res[0]++
+                }
+            }
+            return res.toIntArray()
+        }
     }
 }
