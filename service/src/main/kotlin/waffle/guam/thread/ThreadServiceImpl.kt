@@ -1,6 +1,5 @@
 package waffle.guam.thread
 
-import java.time.LocalDateTime
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -13,10 +12,9 @@ import waffle.guam.db.repository.ProjectRepository
 import waffle.guam.db.repository.TaskRepository
 import waffle.guam.db.repository.ThreadRepository
 import waffle.guam.db.repository.ThreadViewRepository
-import waffle.guam.exception.NotAllowedException
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.exception.InvalidRequestException
-import waffle.guam.model.Image
+import waffle.guam.exception.NotAllowedException
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
 import waffle.guam.thread.command.DeleteThreadImage
@@ -32,6 +30,7 @@ import waffle.guam.thread.event.ThreadImageDeleted
 import waffle.guam.thread.model.ThreadDetail
 import waffle.guam.thread.model.ThreadOverView
 import waffle.guam.util.FilterList
+import java.time.LocalDateTime
 
 @Service
 class ThreadServiceImpl(
@@ -41,7 +40,7 @@ class ThreadServiceImpl(
     private val projectRepository: ProjectRepository,
     private val taskRepository: TaskRepository,
     private val imageRepository: ImageRepository,
-) : ThreadService  {
+) : ThreadService {
 
     private val nonMemberUserStates = listOf(UserState.GUEST, UserState.QUIT, UserState.DECLINED)
 
@@ -55,7 +54,7 @@ class ThreadServiceImpl(
         }
 
     override fun getFullThread(threadId: Long): ThreadDetail =
-        threadViewRepository.findById(threadId).orElseThrow(::RuntimeException).let {
+        threadViewRepository.findById(threadId).orElseThrow(::DataNotFoundException).let {
             ThreadDetail.of(
                 it,
                 { images -> FilterList.targetImages(images, ImageType.THREAD) },
@@ -68,8 +67,8 @@ class ThreadServiceImpl(
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
             taskRepository.findByUserIdAndProjectId(command.userId, command.projectId)
                 .orElseThrow(::DataNotFoundException).also {
-                if (it.userState in nonMemberUserStates) throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
-            }
+                    if (it.userState in nonMemberUserStates) throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
+                }
             threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let { thread ->
                 projectRepository.save(project.copy(noticeThreadId = thread.id, modifiedAt = LocalDateTime.now()))
                 return NoticeThreadSet(thread.id, project.id)
@@ -80,10 +79,9 @@ class ThreadServiceImpl(
     @Transactional
     override fun removeNoticeThread(command: RemoveNoticeThread): NoticeThreadRemoved {
         projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException).let { project ->
-            taskRepository.findByUserIdAndProjectId(command.userId, project.id).orElseThrow(::DataNotFoundException)
-                .also {
-                    if (it.userState in nonMemberUserStates) throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
-                }
+            taskRepository.findByUserIdAndProjectId(command.userId, project.id).orElseThrow(::DataNotFoundException).also {
+                if (it.userState in nonMemberUserStates) throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
+            }
             projectRepository.save(project.copy(noticeThreadId = null, modifiedAt = LocalDateTime.now()))
             return NoticeThreadRemoved(project.id)
         }
@@ -117,7 +115,7 @@ class ThreadServiceImpl(
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) throw NotAllowedException()
             if (it.content == command.content) throw InvalidRequestException("수정 전과 동일한 내용입니다.")
-            if (command.content.isNotBlank()){
+            if (command.content.isNotBlank()) {
                 threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = LocalDateTime.now()))
                 return ThreadContentEdited(it.id)
             }

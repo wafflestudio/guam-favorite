@@ -35,8 +35,9 @@ class CommentServiceImpl(
             taskRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId).orElseThrow(::DataNotFoundException).let {
                 if (it.userState == UserState.GUEST)
                     if (threadRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId)
-                            .orElseThrow(::DataNotFoundException).id != command.threadId)
-                                throw NotAllowedException("아직 다른 쓰레드에 댓글을 생성할 권한이 없습니다.")
+                        .orElseThrow(::DataNotFoundException).id != command.threadId
+                    )
+                        throw NotAllowedException("아직 다른 쓰레드에 댓글을 생성할 권한이 없습니다.")
                 if (it.userState == UserState.QUIT || it.userState == UserState.DECLINED)
                     throw NotAllowedException("해당 프로젝트에 댓글을 생성할 권한이 없습니다.")
             }
@@ -80,10 +81,11 @@ class CommentServiceImpl(
                 if (it.id != image.parentId) throw InvalidRequestException()
                 if (it.content.isNullOrBlank()) {
                     if (imageRepository.findByParentIdAndType(it.id, ImageType.COMMENT).size < 2)
-                        commentRepository.delete(it)
+                        this.deleteComment(DeleteComment(commentId = command.commentId, userId = command.userId))
                 }
                 imageRepository.deleteById(image.id)
                 return CommentImageDeleted(it.id, image.id)
+                // TODO(event listener : 빈 쓰레드가 되는 경우 쓰레드 자동 삭제? - deleteComment 호출하는 경우 불필요)
             }
         }
     }

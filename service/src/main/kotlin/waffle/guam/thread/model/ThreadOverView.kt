@@ -1,9 +1,9 @@
 package waffle.guam.thread.model
 
-import java.time.LocalDateTime
 import waffle.guam.db.entity.ImageEntity
 import waffle.guam.db.entity.ThreadView
 import waffle.guam.model.Image
+import java.time.LocalDateTime
 
 data class ThreadOverView(
     val id: Long,

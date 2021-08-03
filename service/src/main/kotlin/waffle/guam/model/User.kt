@@ -3,7 +3,6 @@ package waffle.guam.model
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.TaskProjectView
 import waffle.guam.db.entity.UserEntity
-import waffle.guam.db.entity.UserState
 import java.time.Instant
 
 data class User(
