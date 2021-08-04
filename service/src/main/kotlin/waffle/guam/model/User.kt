@@ -1,6 +1,7 @@
 package waffle.guam.model
 
 import waffle.guam.db.entity.Position
+import waffle.guam.db.entity.ProjectState
 import waffle.guam.db.entity.TaskProjectView
 import waffle.guam.db.entity.UserEntity
 import java.time.Instant
@@ -33,6 +34,7 @@ data class User(
                 blogUrl = e.blogUrl,
                 introduction = e.introduction,
                 projects = e.tasks.filter { it.userState.isValidMember() }
+                    .filter { it.project.state != ProjectState.CLOSED }
                     .sortedByDescending { it.modifiedAt }
                     .map { UserProject.of(it) },
                 createdAt = e.createdAt,
