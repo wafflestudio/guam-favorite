@@ -13,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile
 import waffle.guam.common.UserContext
 import waffle.guam.controller.response.SuccessResponse
 import waffle.guam.model.User
-import waffle.guam.service.TaskService
 import waffle.guam.service.UserService
 import waffle.guam.service.command.UpdateDevice
 
@@ -21,7 +20,6 @@ import waffle.guam.service.command.UpdateDevice
 @RestController
 class UserController(
     private val userService: UserService,
-    private val taskService: TaskService
 ) {
     private val mapper = jacksonObjectMapper()
 
@@ -67,6 +65,6 @@ class UserController(
         userContext: UserContext
     ): SuccessResponse<List<Long>> =
         SuccessResponse(
-            data = taskService.getProjectIds(userContext.id)
+            data = userService.get(userContext.id).projects.map { it.projectId }
         )
 }

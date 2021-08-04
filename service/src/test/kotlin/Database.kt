@@ -193,7 +193,7 @@ object DefaultDataInfo {
     )
 
     val techStacks = listOf(
-        TechStackEntity(name = "kotlin", aliases = "kotlin, 코틀린", thumbnail = "", position = Position.FRONTEND),
-        TechStackEntity(name = "python", aliases = "python, 파이썬", thumbnail = "", position = Position.BACKEND)
+        TechStackEntity(name = "kotlin", aliases = "kotlin, 코틀린", thumbnail = null, position = Position.FRONTEND),
+        TechStackEntity(name = "python", aliases = "python, 파이썬", thumbnail = null, position = Position.BACKEND)
     )
 }

@@ -84,22 +84,22 @@ data class ProjectList(
             }
 
         override fun currHeadCntOf(projectView: ProjectModel): IntArray {
-                val res = MutableList(3, fun(_: Int) = 0)
+            val res = MutableList(3, fun(_: Int) = 0)
             (projectView as ProjectView).tasks.filter {
-                    when (it.userState) {
-                        UserState.LEADER, UserState.MEMBER -> true
-                        else -> false
-                    }
-                }.map {
-                    when (it.position) {
-                        Position.WHATEVER -> 0
-                        Position.DESIGNER -> res[2]++
-                        Position.BACKEND -> res[1]++
-                        Position.FRONTEND -> res[0]++
-                    }
+                when (it.userState) {
+                    UserState.LEADER, UserState.MEMBER -> true
+                    else -> false
                 }
-                return res.toIntArray()
+            }.map {
+                when (it.position) {
+                    Position.WHATEVER -> 0
+                    Position.DESIGNER -> res[2]++
+                    Position.BACKEND -> res[1]++
+                    Position.FRONTEND -> res[0]++
+                }
             }
+            return res.toIntArray()
+        }
     }
 }
 

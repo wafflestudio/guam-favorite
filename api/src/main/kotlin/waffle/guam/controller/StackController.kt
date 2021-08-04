@@ -1,17 +1,17 @@
 package waffle.guam.controller
 
-import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import waffle.guam.model.TechStack
 import waffle.guam.service.StackService
 import waffle.guam.service.command.CreateUpdateStack
 
-@Controller
+@RestController
 class StackController(
     private val stackService: StackService
 ) {
@@ -33,7 +33,7 @@ class StackController(
     @PutMapping("/stack/{stackId}")
     fun updateStack(
         @PathVariable stackId: Long,
-        @RequestBody command: CreateUpdateStack
+        command: CreateUpdateStack
     ): Boolean {
         return stackService.update(stackId, command)
     }

@@ -50,7 +50,7 @@ class DataInitializer(
                 }
             }.awaitAll()
 
-        tokens.map { userService.getByFirebaseUid(it.idToken) }
+        tokens.map { userService.getByFirebaseUid(it.localId) }
             .map { user -> (1..3).map { protoCommand.copy(title = "${user.id}가 만든 ${it}번째 프로젝트") to user.id } }
             .flatten()
             .map { projectService.createProject(it.first, it.second) }
@@ -64,5 +64,6 @@ data class FirebaseTokenRequest(
 )
 
 data class FirebaseTokenResponse(
-    val idToken: String
+    val idToken: String,
+    val localId: String
 )
