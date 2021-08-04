@@ -6,6 +6,7 @@ import javax.persistence.Enumerated
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
+import javax.persistence.JoinColumn
 import javax.persistence.OneToOne
 import javax.persistence.Table
 
@@ -21,6 +22,7 @@ data class TechStackEntity(
     var aliases: String,
 
     @OneToOne
+    @JoinColumn(name = "thumbnail_id")
     var thumbnail: ImageEntity? = null,
 
     @Enumerated(EnumType.STRING)
