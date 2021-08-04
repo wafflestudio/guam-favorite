@@ -113,7 +113,7 @@ class ProjectService(
     }
 
     fun getAllProjects(pageable: Pageable): Page<Project> =
-        projectRepository.findAll(pageable)
+        projectRepository.findByStateIsNotIn(states = listOf(ProjectState.CLOSED), pageable = pageable)
             .map { it.id }
             .let {
                 PageImpl(
