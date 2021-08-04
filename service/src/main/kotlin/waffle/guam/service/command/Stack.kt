@@ -6,18 +6,26 @@ import waffle.guam.db.entity.TechStackEntity
 
 sealed class StackCommand
 
-data class CreateUpdateStack(
-    val id: Long,
+data class CreateStack(
     val name: String,
     val aliases: String,
     val imageFiles: MultipartFile?,
     val position: Position
 ) : StackCommand() {
+    // method toEntity occurs only when createProjects
     fun toEntity(): TechStackEntity =
         TechStackEntity(
-            id = id,
             name = name,
             aliases = aliases,
             position = position
         )
+}
+
+data class UpdateStack(
+    val name: String?,
+    val aliases: String?,
+    val imageFiles: MultipartFile?,
+    val position: Position?
+) : StackCommand() {
+    // method toEntity occurs only when createProjects
 }

@@ -1,6 +1,7 @@
 package waffle.guam.service
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.TechStackEntity
@@ -8,7 +9,8 @@ import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.StackRepository
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.model.TechStack
-import waffle.guam.service.command.CreateUpdateStack
+import waffle.guam.service.command.CreateStack
+import waffle.guam.service.command.UpdateStack
 import javax.annotation.PostConstruct
 import javax.persistence.EntityNotFoundException
 
@@ -37,7 +39,8 @@ class StackService(
         }
     }
 
-    fun create(o: CreateUpdateStack): Boolean {
+    @Transactional
+    fun create(o: CreateStack): Boolean {
         stackRepository.save(
             o.toEntity().also {
                 o.imageFiles?.let { image ->
@@ -53,21 +56,28 @@ class StackService(
         return true
     }
 
-    fun update(stackId: Long, o: CreateUpdateStack): Boolean {
+    @Transactional
+    fun update(stackId: Long, o: UpdateStack): Boolean {
         stackRepository.findById(stackId).orElseThrow(::DataNotFoundException).let {
-            it.position = o.position
-            it.aliases = o.aliases
-            it.name = o.name
+            it.position = o.position ?: it.position
+            it.aliases = o.aliases ?: it.aliases
+            it.name = o.name ?: it.name
             o.imageFiles?.let { image ->
-                imageRepository.deleteByParentIdAndType(it.id, ImageType.PROJECT)
+                imageRepository.deleteByParentIdAndType(
+                    it.id, ImageType.STACK
+                )
                 it.thumbnail = imageService.upload(
-                    image, ImageInfo(it.id, ImageType.PROJECT)
+                    image,
+                    ImageInfo(
+                        it.id, ImageType.STACK
+                    )
                 )
             }
         }
         return true
     }
 
+    @Transactional
     fun getAll(): List<TechStack> {
         val target = stackRepository.findAll()
         return target.map { TechStack.of(it) }
@@ -77,6 +87,7 @@ class StackService(
      # 여러가지 키워드로 검색했을 경우: 검색어마다 OR 처리 -> AND 위주로 보여줌
      # case Insensitive
     */
+    @Transactional
     fun searchByKeyword(query: String): List<TechStack> {
         val map = mutableMapOf<TechStack, Int>()
 
