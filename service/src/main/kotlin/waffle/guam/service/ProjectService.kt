@@ -49,15 +49,15 @@ class ProjectService(
     private val commentRepository: CommentRepository,
     private val imageRepository: ImageRepository,
     private val chatService: ChatService,
-    private val imageService: ImageService
+    private val imageService: ImageService,
+    private val userService: UserService
 ) {
 
     private val searchEngine: SearchEngine = SearchEngine()
 
     @Transactional
     fun createProject(command: CreateProject, userId: Long): Project {
-
-        if (taskRepository.countByUserIdAndUserStateNotIn(userId) >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
+        if (userService.get(userId).projects.size >= 3) throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
 
         val myPosition = command.myPosition ?: throw JoinException("포지션을 설정해주세요.")
 

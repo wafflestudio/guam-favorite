@@ -37,6 +37,7 @@ import waffle.guam.model.ProjectList
 import waffle.guam.service.ChatService
 import waffle.guam.service.ImageService
 import waffle.guam.service.ProjectService
+import waffle.guam.service.UserService
 import waffle.guam.service.command.CreateProject
 import waffle.guam.service.command.DeleteThread
 import waffle.guam.service.command.SetNoticeThread
@@ -57,7 +58,8 @@ class ProjectServiceSpec @Autowired constructor(
     private val database: Database,
     private val imageService: ImageService,
     private val projectStackViewRepository: ProjectStackViewRepository,
-    private val imageRepository: ImageRepository
+    private val imageRepository: ImageRepository,
+    private val userService: UserService
 ) {
 
     private val projectService = ProjectService(
@@ -72,7 +74,8 @@ class ProjectServiceSpec @Autowired constructor(
         commentRepository = commentRepository,
         imageRepository = imageRepository,
         projectStackViewRepository = projectStackViewRepository,
-        imageService = imageService
+        imageService = imageService,
+        userService = userService
     )
 
     @BeforeEach
