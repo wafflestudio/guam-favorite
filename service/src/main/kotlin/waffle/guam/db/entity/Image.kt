@@ -24,5 +24,5 @@ data class ImageEntity(
 }
 
 enum class ImageType {
-    PROFILE, PROJECT, THREAD, COMMENT
+    PROFILE, PROJECT, THREAD, COMMENT, STACK
 }

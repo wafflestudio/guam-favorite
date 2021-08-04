@@ -6,6 +6,8 @@ import javax.persistence.Enumerated
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
+import javax.persistence.JoinColumn
+import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Table(name = "tech_stacks")
@@ -15,12 +17,14 @@ data class TechStackEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
 
-    val name: String,
+    var name: String,
 
-    val aliases: String,
+    var aliases: String,
 
-    val thumbnail: String? = null,
+    @OneToOne
+    @JoinColumn(name = "thumbnail_id")
+    var thumbnail: ImageEntity? = null,
 
     @Enumerated(EnumType.STRING)
-    val position: Position
+    var position: Position
 )

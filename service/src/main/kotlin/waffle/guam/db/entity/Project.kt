@@ -12,6 +12,8 @@ import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
 
+sealed class ProjectModel
+
 @Table(name = "projects")
 @Entity
 data class ProjectEntity(
@@ -42,7 +44,7 @@ data class ProjectEntity(
 
     @Enumerated(EnumType.ORDINAL)
     var due: Due
-)
+) : ProjectModel()
 
 @Table(name = "projects")
 @Entity
@@ -80,7 +82,45 @@ data class ProjectView(
 
     @Enumerated(EnumType.ORDINAL)
     val due: Due
-)
+) : ProjectModel()
+
+@Table(name = "projects")
+@Entity
+data class ProjectDetailView(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long,
+
+    var title: String,
+
+    var description: String,
+
+    @OneToOne(fetch = FetchType.LAZY)
+    var thumbnail: ImageEntity? = null,
+
+    var frontHeadcount: Int,
+
+    var backHeadcount: Int,
+
+    var designerHeadcount: Int,
+
+    var state: ProjectState,
+
+    val noticeThreadId: Long?,
+
+    val createdAt: LocalDateTime,
+
+    var modifiedAt: LocalDateTime,
+
+    @OneToMany(mappedBy = "projectId", fetch = FetchType.EAGER, orphanRemoval = true)
+    var techStacks: Set<ProjectStackView>,
+
+    @OneToMany(mappedBy = "projectId", fetch = FetchType.LAZY, orphanRemoval = true)
+    val tasks: Set<TaskView>,
+
+    @Enumerated(EnumType.ORDINAL)
+    val due: Due
+) : ProjectModel()
 
 enum class Due {
     ONE, THREE, SIX, MORE, UNDEFINED
