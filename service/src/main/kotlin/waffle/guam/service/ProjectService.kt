@@ -117,7 +117,7 @@ class ProjectService(
                         ProjectSpecs.fetchJoinList(it.toList()), pageable.sort
                     ).map { project ->
                         Project.of(project, true)
-                    }.sortedByDescending { project ->  project.modifiedAt },
+                    }.sortedByDescending { project -> project.modifiedAt },
                     pageable,
                     it.totalElements
                 )

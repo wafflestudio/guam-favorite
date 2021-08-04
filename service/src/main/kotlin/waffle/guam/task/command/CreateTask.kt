@@ -7,4 +7,4 @@ data class CreateTask(
     val projectId: Long,
     val position: Position,
     val userState: UserState
-): TaskCommand
+) : TaskCommand

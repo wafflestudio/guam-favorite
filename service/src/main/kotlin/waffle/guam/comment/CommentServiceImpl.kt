@@ -35,8 +35,9 @@ class CommentServiceImpl(
             taskRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId).orElseThrow(::DataNotFoundException).let {
                 if (it.userState == UserState.GUEST)
                     if (threadRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId)
-                            .orElseThrow(::DataNotFoundException).id != command.threadId)
-                                throw NotAllowedException("아직 다른 쓰레드에 댓글을 생성할 권한이 없습니다.")
+                        .orElseThrow(::DataNotFoundException).id != command.threadId
+                    )
+                        throw NotAllowedException("아직 다른 쓰레드에 댓글을 생성할 권한이 없습니다.")
                 if (it.userState == UserState.QUIT || it.userState == UserState.DECLINED)
                     throw NotAllowedException("해당 프로젝트에 댓글을 생성할 권한이 없습니다.")
             }

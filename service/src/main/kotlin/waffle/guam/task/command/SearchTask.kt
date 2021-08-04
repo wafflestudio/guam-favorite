@@ -8,4 +8,4 @@ data class SearchTask(
     val projectId: Long?,
     val userStates: List<UserState>,
     val positions: List<Position>,
-): TaskCommand
+) : TaskCommand
