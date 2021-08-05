@@ -34,6 +34,7 @@ data class ProjectEntity(
 
     var designerHeadcount: Int,
 
+    @Enumerated(EnumType.STRING)
     var state: ProjectState = ProjectState.RECRUITING,
 
     var noticeThreadId: Long? = null,
@@ -42,7 +43,7 @@ data class ProjectEntity(
 
     var modifiedAt: LocalDateTime = createdAt,
 
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     var due: Due
 ) : ProjectModel()
 
@@ -66,6 +67,7 @@ data class ProjectView(
 
     var designerHeadcount: Int,
 
+    @Enumerated(EnumType.STRING)
     var state: ProjectState,
 
     val noticeThreadId: Long?,
@@ -80,7 +82,7 @@ data class ProjectView(
     @OneToMany(mappedBy = "projectId", fetch = FetchType.LAZY, orphanRemoval = true)
     val tasks: Set<TaskOverView>,
 
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     val due: Due
 ) : ProjectModel()
 
@@ -104,6 +106,7 @@ data class ProjectDetailView(
 
     var designerHeadcount: Int,
 
+    @Enumerated(EnumType.STRING)
     var state: ProjectState,
 
     val noticeThreadId: Long?,
@@ -118,7 +121,7 @@ data class ProjectDetailView(
     @OneToMany(mappedBy = "projectId", fetch = FetchType.LAZY, orphanRemoval = true)
     val tasks: Set<TaskView>,
 
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     val due: Due
 ) : ProjectModel()
 

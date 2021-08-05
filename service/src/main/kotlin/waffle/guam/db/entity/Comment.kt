@@ -47,7 +47,7 @@ data class CommentView(
     @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
     val images: List<ImageEntity>,
 
-    val content: String,
+    val content: String?,
 
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
