@@ -116,7 +116,7 @@ data class ProjectDetail(
     val designLeftCnt: Int,
     val state: ProjectState,
     val techStacks: List<TechStack>,
-    val tasks: List<Long>?,
+    val tasks: List<Map<String, Long>>?,
     val createdAt: LocalDateTime,
     val modifiedAt: LocalDateTime,
     val due: Due,
@@ -146,7 +146,13 @@ data class ProjectDetail(
                     state = entity.state,
                     techStacks = entity.techStacks.map { TechStack.of(it.techStack) },
                     tasks = when (fetchTasks) {
-                        true -> entity.tasks.map { it.id }
+                        true -> {
+                            entity.tasks.map {
+                                val map = mutableMapOf<String, Long>()
+                                map["id"] = it.id
+                                map
+                            }
+                        }
                         else -> null
                     },
                     createdAt = entity.createdAt,
