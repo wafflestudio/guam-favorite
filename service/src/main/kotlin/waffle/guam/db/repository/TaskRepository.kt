@@ -10,7 +10,7 @@ import java.util.Optional
 
 interface TaskRepository : JpaRepository<TaskEntity, Long> {
 
-    fun findByUserId(userId: Long): List<TaskEntity>
+    fun findByUserId(userId: Long): Optional<List<TaskEntity>>
 
     fun findByUserIdAndProjectId(userId: Long, projectId: Long): Optional<TaskEntity>
 
