@@ -49,7 +49,7 @@ data class ThreadView(
     @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
     val images: List<ImageEntity>,
 
-    val content: String,
+    val content: String?,
 
     val createdAt: LocalDateTime,
 

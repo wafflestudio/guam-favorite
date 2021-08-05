@@ -70,7 +70,7 @@ data class TaskDetail(
                 position = e.position.name,
                 taskMessages =
                 if (fetchMessage) e.tasks.toList()
-                    .filter{
+                    .filter {
                         it.status != TaskStatus.DELETED
                     }
                     .sortedWith(

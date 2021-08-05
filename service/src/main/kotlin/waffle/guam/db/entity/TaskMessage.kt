@@ -2,6 +2,8 @@ package waffle.guam.db.entity
 
 import java.time.LocalDateTime
 import javax.persistence.Entity
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
@@ -17,6 +19,7 @@ data class TaskMessage(
 
     val msg: String = "New task msg",
 
+    @Enumerated(EnumType.STRING)
     var status: TaskStatus = TaskStatus.ONGOING,
 
     val taskId: Long,
