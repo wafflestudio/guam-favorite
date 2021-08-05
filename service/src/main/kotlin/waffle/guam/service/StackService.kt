@@ -25,17 +25,19 @@ class StackService(
 
     @PostConstruct
     fun init() {
-        val stream = this.javaClass.getResourceAsStream("/stacks.csv")
-        val reader = java.io.InputStreamReader(stream)
-        reader.forEachLine {
-            val idx = it.split(";")
-            stackRepository.save(
-                TechStackEntity(
-                    name = idx[0],
-                    aliases = (idx[1].drop(1)).dropLast(1),
-                    position = Position.valueOf(idx[2])
+        if (stackRepository.findAll().isEmpty()) {
+            val stream = this.javaClass.getResourceAsStream("/stacks.csv")
+            val reader = java.io.InputStreamReader(stream)
+            reader.forEachLine {
+                val idx = it.split(";")
+                stackRepository.save(
+                    TechStackEntity(
+                        name = idx[0],
+                        aliases = (idx[1].drop(1)).dropLast(1),
+                        position = Position.valueOf(idx[2])
+                    )
                 )
-            )
+            }
         }
     }
 
