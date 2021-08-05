@@ -70,6 +70,9 @@ data class TaskDetail(
                 position = e.position.name,
                 taskMessages =
                 if (fetchMessage) e.tasks.toList()
+                    .filter{
+                        it.status != TaskStatus.DELETED
+                    }
                     .sortedWith(
                         compareByDescending<TaskMessage> { it.status }
                             .thenByDescending { it.modifiedAt }
@@ -80,6 +83,25 @@ data class TaskDetail(
                 user = User.of(e.user),
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt,
+                userState = e.userState
+            )
+    }
+}
+
+data class TaskOverview(
+    val id: Long,
+    val user: Map<String, Any>,
+    val userState: UserState
+) {
+    companion object {
+        fun of(e: TaskView) =
+            TaskOverview(
+                id = e.id,
+                user = e.user.let {
+                    val map = mutableMapOf<String, Any>()
+                    map["id"] = it.id
+                    map
+                },
                 userState = e.userState
             )
     }
