@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 data class Task(
     val id: Long,
     val position: String,
-    val taskMsg: String?,
+    val taskMessages: String?,
     val projectId: Long,
     val user: User,
     val createdAt: LocalDateTime,
@@ -22,7 +22,7 @@ data class Task(
             Task(
                 id = e.id,
                 position = e.position.name,
-                taskMsg = if (fetchMessage) getLatestMsg(e.tasks) else null,
+                taskMessages = if (fetchMessage) getLatestMsg(e.tasks) else null,
                 projectId = e.projectId,
                 user = User.of(e.user),
                 createdAt = e.createdAt,
@@ -35,7 +35,7 @@ data class Task(
                 id = e.id,
                 position = e.position.name,
                 projectId = e.projectId,
-                taskMsg = null,
+                taskMessages = null,
                 user = User.of(e.user),
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt,
@@ -56,7 +56,7 @@ data class Task(
 data class TaskDetail(
     val id: Long,
     val position: String,
-    val taskMsg: Set<TaskMessage>?,
+    val taskMessages: Set<TaskMessage>?,
     val projectId: Long,
     val user: User,
     val createdAt: LocalDateTime,
@@ -68,7 +68,7 @@ data class TaskDetail(
             TaskDetail(
                 id = e.id,
                 position = e.position.name,
-                taskMsg =
+                taskMessages =
                 if (fetchMessage) e.tasks.toList()
                     .sortedWith(
                         compareByDescending<TaskMessage> { it.status }
