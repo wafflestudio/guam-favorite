@@ -1,17 +1,5 @@
 package waffle.guam.stack
 
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
-import waffle.guam.model.Project
-import waffle.guam.project.command.CreateProject
-import waffle.guam.project.command.JoinProject
-import waffle.guam.project.command.SearchProject
-import waffle.guam.project.command.UpdateProject
-import waffle.guam.project.event.ProjectCreated
-import waffle.guam.project.event.ProjectDeleted
-import waffle.guam.project.event.ProjectJoinRequested
-import waffle.guam.project.event.ProjectUpdated
-import waffle.guam.project.model.ProjectOverView
 import waffle.guam.stack.command.CreateStack
 import waffle.guam.stack.command.UpdateStack
 import waffle.guam.stack.event.StackCreated
@@ -38,5 +26,4 @@ interface StackService {
 
     // DELETE
     fun deleteStack(stackId: Long): StackDeleted
-
 }

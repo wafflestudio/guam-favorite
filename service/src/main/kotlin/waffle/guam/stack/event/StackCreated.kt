@@ -6,5 +6,4 @@ class StackCreated(
     val stackId: Long,
     val stackName: String,
     override val timestamp: Instant = Instant.now()
-) : StackEvent(timestamp) {
-}
+) : StackEvent(timestamp)

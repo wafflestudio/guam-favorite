@@ -1,5 +1,5 @@
 package waffle.guam.thread.event
 
-data class ThreadContentEdited (
+data class ThreadContentEdited(
     val threadId: Long,
 ) : ThreadEvent()

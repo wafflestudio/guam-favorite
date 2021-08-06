@@ -1,8 +1,8 @@
 package waffle.guam.stack.model
 
-import waffle.guam.model.Image
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.TechStackEntity
+import waffle.guam.model.Image
 
 data class TechStack(
     val id: Long,
