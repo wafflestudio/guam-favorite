@@ -21,6 +21,8 @@ data class ImageEntity(
     val parentId: Long
 ) {
     fun getPath(): String = "${type.name}/$id"
+
+    fun getStackPath(name: String) = "${type.name}/$name.png"
 }
 
 enum class ImageType {

@@ -7,12 +7,12 @@ Backbonejs;"Backbone, js, 백본";FRONTEND
 Semantic-UI;"Semantic, Ui, 시맨틱, 씨맨틱, 시멘틱, 씨멘틱";FRONTEND
 Foundation;"Foundation, 파운데이션";FRONTEND
 Svelte;"Svelete, 스벨트, 스밸트";FRONTEND
-Reactive Native;"Reactive, Native, RN, 리액티브, 네이티브, 알엔";FRONTEND
+React-Native;"React, Native, RN, 리액트, 네이티브, 알엔";FRONTEND
 Flutter;"Flutter, Dart, 플러터";FRONTEND
 Ionic;"Ionic, 아이오닉";FRONTEND
 Xamarin;"Xamarin, 자마린";FRONTEND
 Android;"Android, 안드로이드";FRONTEND
-IOS;"Ios, 아이오에스";FRONTEND
+Swift;"Swift, 스위프트, Ios, 아이오에스";FRONTEND
 Laravel;"Laravel, 라라벨, 라라밸";BACKEND
 Express;"Express, 익스프레스";BACKEND
 Spring;"Spring, 스프링, 스프링부트";BACKEND

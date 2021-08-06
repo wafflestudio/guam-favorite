@@ -2,12 +2,12 @@ package waffle.guam.service
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import waffle.guam.db.entity.ImageEntity
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.TechStackEntity
 import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.StackRepository
-import waffle.guam.exception.DataNotFoundException
 import waffle.guam.model.TechStack
 import waffle.guam.service.command.CreateStack
 import waffle.guam.service.command.UpdateStack
@@ -25,7 +25,7 @@ class StackService(
 
     @PostConstruct
     fun init() {
-        if (stackRepository.findAll().isEmpty()) {
+        if(stackRepository.findAll().isEmpty()){
             val stream = this.javaClass.getResourceAsStream("/stacks.csv")
             val reader = java.io.InputStreamReader(stream)
             reader.forEachLine {
@@ -35,7 +35,11 @@ class StackService(
                         name = idx[0],
                         aliases = (idx[1].drop(1)).dropLast(1),
                         position = Position.valueOf(idx[2])
-                    )
+                    ).also { entity ->
+                        entity.thumbnail = imageRepository.save(
+                            ImageEntity(type = ImageType.STACK, parentId = entity.id)
+                        )
+                    }
                 )
             }
         }
@@ -58,24 +62,25 @@ class StackService(
         return true
     }
 
+    // 클라에서 쓸 일 없다고 해서 잠시 막아놨습니다. 혹시라도 api 잘못 날려서 S3 건들까봐..
     @Transactional
     fun update(stackId: Long, o: UpdateStack): Boolean {
-        stackRepository.findById(stackId).orElseThrow(::DataNotFoundException).let {
-            it.position = o.position ?: it.position
-            it.aliases = o.aliases ?: it.aliases
-            it.name = o.name ?: it.name
-            o.imageFiles?.let { image ->
-                imageRepository.deleteByParentIdAndType(
-                    it.id, ImageType.STACK
-                )
-                it.thumbnail = imageService.upload(
-                    image,
-                    ImageInfo(
-                        it.id, ImageType.STACK
-                    )
-                )
-            }
-        }
+//        stackRepository.findById(stackId).orElseThrow(::DataNotFoundException).let {
+//            it.position = o.position ?: it.position
+//            it.aliases = o.aliases ?: it.aliases
+//            it.name = o.name ?: it.name
+//            o.imageFiles?.let { image ->
+//                imageRepository.deleteByParentIdAndType(
+//                    it.id, ImageType.STACK
+//                )
+//                it.thumbnail = imageService.upload(
+//                    image,
+//                    ImageInfo(
+//                        it.id, ImageType.STACK
+//                    )
+//                )
+//            }
+//        }
         return true
     }
 

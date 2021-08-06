@@ -15,7 +15,8 @@ class GuamApplication(
 ) {
     @PostConstruct
     private fun init(): Unit = runBlocking {
-        dataInitializer.init()
+        // 알파를 위해 이제는 init 막아둠
+        // dataInitializer.init()
     }
 }
 
