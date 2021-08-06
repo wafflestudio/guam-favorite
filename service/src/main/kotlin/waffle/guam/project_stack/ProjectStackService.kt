@@ -13,8 +13,8 @@ interface ProjectStackService {
      */
 
     // READ
-     fun getProjectStacks(projectId: Long): ProjectStack
-     fun getAllProjectStacks(projectIds: Long): List<ProjectStack>
+    fun getProjectStacks(projectId: Long): ProjectStack
+    fun getAllProjectStacks(projectIds: Long): List<ProjectStack>
 
     // CREATE
     fun createProjectStacks(projectId: Long, command: StackIdList): ProjectStacksCreated

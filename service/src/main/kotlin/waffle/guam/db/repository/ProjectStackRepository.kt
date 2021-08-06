@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectStackEntity
 import waffle.guam.db.entity.ProjectStackView
-import java.util.*
+import java.util.Optional
 
 interface ProjectStackRepository : JpaRepository<ProjectStackEntity, Long> {
 

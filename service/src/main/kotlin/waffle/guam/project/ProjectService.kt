@@ -2,8 +2,6 @@ package waffle.guam.project
 
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import waffle.guam.db.entity.*
-import waffle.guam.model.*
 import waffle.guam.project.command.CreateProject
 import waffle.guam.project.command.JoinProject
 import waffle.guam.project.command.SearchProject
@@ -12,6 +10,7 @@ import waffle.guam.project.event.ProjectCreated
 import waffle.guam.project.event.ProjectDeleted
 import waffle.guam.project.event.ProjectJoinRequested
 import waffle.guam.project.event.ProjectUpdated
+import waffle.guam.project.model.Project
 import waffle.guam.project.model.ProjectOverView
 
 interface ProjectService {

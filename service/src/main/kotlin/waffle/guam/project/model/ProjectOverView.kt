@@ -1,6 +1,5 @@
 package waffle.guam.project.model
 
-
 import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectModel
