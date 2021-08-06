@@ -61,14 +61,12 @@ class ProjectService(
 
         val myPosition = command.myPosition ?: throw JoinException("포지션을 설정해주세요.")
 
-        return projectRepository.save(
-            command.toEntity().also {
+        return projectRepository.save(command.toEntity()).also {
                 command.imageFiles?.let { thumbnail ->
                     it.thumbnail =
                         imageService.upload(thumbnail, imageInfo = ImageInfo(it.id, ImageType.PROJECT))
                 }
-            }
-        ).also { project ->
+            }.also { project ->
             val l = mutableListOf<ProjectStackEntity>()
             command.backStackId?.let { it1 ->
                 l.add(

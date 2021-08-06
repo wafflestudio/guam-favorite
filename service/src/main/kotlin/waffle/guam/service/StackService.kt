@@ -47,8 +47,7 @@ class StackService(
 
     @Transactional
     fun create(o: CreateStack): Boolean {
-        stackRepository.save(
-            o.toEntity().also {
+        stackRepository.save(o.toEntity()).also {
                 o.imageFiles?.let { image ->
                     it.thumbnail = imageService.upload(
                         image,
@@ -57,8 +56,7 @@ class StackService(
                         )
                     )
                 }
-            }
-        )
+        }
         return true
     }
 
