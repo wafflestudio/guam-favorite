@@ -21,7 +21,9 @@ class MessageServiceImpl(
                 title = title,
                 body = body
             )
-        )
+        ).also {
+            println("FCM success count: ${it.successCount}, failure count: ${it.failureCount}")
+        }
     }
 
     private fun multicastMessage(targetTokens: List<String>, title: String, body: String): MulticastMessage {

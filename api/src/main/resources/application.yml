@@ -1,16 +1,7 @@
 spring.config.import:
   - classpath:application-aws.yml
+  - classpath:application-db.yml
 
 spring:
-  datasource:
-    url: ${DB_URL}?serverTimezone=UTC&characterEncoding=UTF-8
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-  jpa:
-    properties:
-      hibernate:
-        show_sql: true
-  servlet:
-    multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
+  profiles:
+    active: test
