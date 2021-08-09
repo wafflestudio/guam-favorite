@@ -1,6 +1,5 @@
 package waffle.guam.config
 
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import org.springframework.core.MethodParameter
 import org.springframework.http.HttpHeaders
@@ -12,7 +11,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.method.support.ModelAndViewContainer
 import waffle.guam.common.InvalidFirebaseTokenException
 import waffle.guam.common.UserContext
-import waffle.guam.service.UserService
+import waffle.guam.user.UserService
 import javax.servlet.http.HttpServletRequest
 
 @Component
@@ -51,11 +50,10 @@ class SessionServiceImpl(
     private val userService: UserService
 ) : SessionService {
 
-    override fun takeUserId(token: String): UserContext =
-        userService.getByFirebaseUid(firebaseUid = getFirebaseUid(token)).let {
-            UserContext(it.id)
-        }
-
-    private fun getFirebaseUid(token: String): String =
-        FirebaseAuth.getInstance().verifyIdToken(token).uid
+    override fun takeUserId(token: String): UserContext {
+        TODO()
+    }
+    private fun getFirebaseUid(token: String): String {
+        TODO()
+    }
 }
