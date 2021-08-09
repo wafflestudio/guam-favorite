@@ -1,7 +1,7 @@
 package waffle.guam.task.model
 
 import waffle.guam.db.entity.UserState
-import waffle.guam.taskMessage.model.TaskMessage
+import waffle.guam.taskmessage.model.TaskMessage
 import waffle.guam.user.model.User
 import java.time.LocalDateTime
 

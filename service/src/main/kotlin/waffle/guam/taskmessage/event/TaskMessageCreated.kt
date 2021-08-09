@@ -1,4 +1,4 @@
-package waffle.guam.taskMessage.event
+package waffle.guam.taskmessage.event
 
 data class TaskMessageCreated(
     val taskId: Long,
