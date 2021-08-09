@@ -55,7 +55,7 @@ class ChatService(
         }
 
     fun getFullThread(threadId: Long): ThreadDetail {
-        return threadViewRepository.findById(threadId).orElseThrow(::RuntimeException).let {
+        return threadViewRepository.findById(threadId).orElseThrow(::DataNotFoundException).let {
             ThreadDetail.of(
                 it,
                 { images ->
