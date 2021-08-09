@@ -1,6 +1,5 @@
 package waffle.guam.user.model
 
-import waffle.guam.model.UserProject
 import java.time.Instant
 
 data class User(
