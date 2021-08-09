@@ -13,29 +13,31 @@ import waffle.guam.comment.event.CommentImageDeleted
 import waffle.guam.db.entity.UserState
 import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ImageRepository
-import waffle.guam.db.repository.TaskRepository
 import waffle.guam.db.repository.ThreadRepository
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.exception.InvalidRequestException
 import waffle.guam.exception.NotAllowedException
+import waffle.guam.task.TaskService
+import waffle.guam.task.command.SearchTask
 
 @Primary
 @Service
 class CommentServicePrimaryImpl(
     private val threadRepository: ThreadRepository,
     private val commentRepository: CommentRepository,
-    private val taskRepository: TaskRepository,
+    private val taskService: TaskService,
     private val imageRepository: ImageRepository,
     private val commentServiceImpl: CommentServiceImpl
 ) : CommentService {
     override fun createComment(command: CreateComment): CommentCreated {
         val parentThread = threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException)
-        val creator = taskRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId).orElseThrow(::DataNotFoundException)
-        if (creator.userState == UserState.GUEST) {
+        val task = taskService.getTasks(SearchTask(listOf(command.userId), listOf(parentThread.projectId))).firstOrNull()
+            ?: throw DataNotFoundException()
+        if (task.userState == UserState.GUEST) {
             val joinRequestThread = threadRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId).orElseThrow(::DataNotFoundException)
             if (joinRequestThread.id != command.threadId) throw NotAllowedException("아직 다른 쓰레드에 댓글을 생성할 권한이 없습니다.")
         }
-        if (creator.userState in listOf(UserState.QUIT, UserState.DECLINED)) throw NotAllowedException("해당 프로젝트에 댓글을 생성할 권한이 없습니다.")
+        if (task.userState in listOf(UserState.QUIT, UserState.DECLINED)) throw NotAllowedException("해당 프로젝트에 댓글을 생성할 권한이 없습니다.")
         return commentServiceImpl.createComment(command)
     }
 

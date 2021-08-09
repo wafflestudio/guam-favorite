@@ -11,5 +11,8 @@ import waffle.guam.task.model.Task
 interface TaskService {
     fun createTask(userId: Long, command: CreateTask): TaskCreated
     fun updateTaskState(command: UpdateTaskUserState): TaskUserStateUpdated
-    fun getTasks(command: SearchTask, taskExtraFieldParams: TaskExtraFieldParams): List<Task>
+    fun getTasks(
+        command: SearchTask,
+        taskExtraFieldParams: TaskExtraFieldParams = TaskExtraFieldParams()
+    ): List<Task>
 }
