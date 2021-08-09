@@ -1,6 +1,6 @@
 package waffle.guam.task.event
 
-import waffle.guam.db.entity.UserState
+import waffle.guam.task.db.UserState
 import java.time.Instant
 
 data class TaskUserStateUpdated(

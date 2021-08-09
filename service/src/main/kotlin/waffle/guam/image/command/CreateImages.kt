@@ -1,7 +1,7 @@
 package waffle.guam.image.command
 
 import org.springframework.web.multipart.MultipartFile
-import waffle.guam.db.entity.ImageType
+import waffle.guam.image.db.ImageType
 
 data class CreateImages(
     val files: List<MultipartFile>,

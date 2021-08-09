@@ -1,5 +1,6 @@
 package waffle.guam.user.model
 
+import waffle.guam.user.db.UserEntity
 import java.time.Instant
 
 data class User(
@@ -14,4 +15,20 @@ data class User(
     val projects: List<UserProject>? = null,
     val createdAt: Instant,
     val updatedAt: Instant,
-)
+) {
+    companion object {
+        fun UserEntity.toDomain() = User(
+            id = id,
+            status = status.name,
+            nickname = nickname,
+            skills = skills?.split(",") ?: emptyList(),
+            githubUrl = githubUrl,
+            blogUrl = blogUrl,
+            introduction = introduction,
+            imageUrl = image?.getPath(),
+            projects = null,
+            createdAt = createdAt,
+            updatedAt = updatedAt
+        )
+    }
+}
