@@ -14,15 +14,15 @@ import waffle.guam.exception.NotAllowedException
 class ErrorHandler {
     @ExceptionHandler(value = [DataNotFoundException::class])
     fun notfound(e: RuntimeException) =
-        ResponseEntity(ErrorResponse(e.message ?: "데이터를 찾지 못하였습니다"), HttpStatus.NOT_FOUND)
+        ResponseEntity(ErrorResponse(e.message ?: ""), HttpStatus.NOT_FOUND)
 
     @ExceptionHandler(value = [InvalidFirebaseTokenException::class, InvalidRequestException::class])
     fun badRequest(e: RuntimeException) =
-        ResponseEntity(ErrorResponse(e.message ?: "잘못된 요청입니다"), HttpStatus.BAD_REQUEST)
+        ResponseEntity(ErrorResponse(e.message ?: ""), HttpStatus.BAD_REQUEST)
 
     @ExceptionHandler(value = [JoinException::class, NotAllowedException::class])
     fun notAllowed(e: RuntimeException) =
-        ResponseEntity(ErrorResponse(e.message ?: "권한이 없습니다"), HttpStatus.FORBIDDEN)
+        ResponseEntity(ErrorResponse(e.message ?: ""), HttpStatus.FORBIDDEN)
 }
 
 data class ErrorResponse(
