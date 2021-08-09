@@ -1,4 +1,4 @@
-package waffle.guam.taskMessage.model
+package waffle.guam.taskmessage.model
 
 import waffle.guam.db.entity.TaskStatus
 import java.time.LocalDateTime

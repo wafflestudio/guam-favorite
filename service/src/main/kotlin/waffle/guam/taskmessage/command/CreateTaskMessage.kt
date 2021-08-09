@@ -1,4 +1,4 @@
-package waffle.guam.taskMessage.command
+package waffle.guam.taskmessage.command
 
 import waffle.guam.db.entity.TaskMessage
 import waffle.guam.db.entity.TaskStatus

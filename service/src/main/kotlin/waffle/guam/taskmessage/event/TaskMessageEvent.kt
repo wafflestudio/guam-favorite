@@ -1,4 +1,4 @@
-package waffle.guam.taskMessage.event
+package waffle.guam.taskmessage.event
 
 import waffle.guam.event.GuamEvent
 
