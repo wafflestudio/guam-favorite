@@ -3,18 +3,12 @@ package waffle.guam.task
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.context.transaction.TestTransaction
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.annotation.DatabaseTest
-import waffle.guam.user.UserEntity
-import waffle.guam.user.UserRepository
-import javax.persistence.EntityManager
 
 @DatabaseTest(["task/image.sql", "task/user.sql", "task/task.sql", "task/task_message.sql"])
 class TaskRepositoryTest @Autowired constructor(
-    private val taskRepository: TaskRepository,
-    private val userRepository: UserRepository,
-    private val entityManager: EntityManager
+    private val taskRepository: TaskRepository
 ) {
     @Transactional
     @Test
@@ -85,30 +79,9 @@ class TaskRepositoryTest @Autowired constructor(
 
     @Transactional
     @Test
-    fun saveTask() {
-        taskRepository.save(
-            TaskEntity(
-                id = 0,
-                projectId = 0,
-                position = "",
-                taskMessages = setOf(),
-                user = UserEntity(
-                    id = 1L, firebaseUid = "", status = "ACTIVE"
-                ),
-                userState = ""
-            )
-        )
+    fun updateTask() {
+        val result = taskRepository.updateStates(listOf(1L, 2L, 3L, 4L), "GUEST")
 
-        taskRepository.findAll().forEach {
-            println(it)
-        }
-
-        TestTransaction.flagForCommit()
-        TestTransaction.end()
-        TestTransaction.start()
-
-        taskRepository.findAll().forEach {
-            println(it)
-        }
+        result shouldBe 3
     }
 }
