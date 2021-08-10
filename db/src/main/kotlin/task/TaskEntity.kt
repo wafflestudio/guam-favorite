@@ -17,14 +17,14 @@ import javax.persistence.Table
 data class TaskEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long,
+    val id: Long = 0L,
 
     val projectId: Long,
 
     val position: String,
 
     @OneToMany(mappedBy = "taskId")
-    val taskMessages: Set<TaskMessageEntity>,
+    val taskMessages: Set<TaskMessageEntity> = emptySet(),
 
     @OneToOne
     @JoinColumn(name = "user_id")
