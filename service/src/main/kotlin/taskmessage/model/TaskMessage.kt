@@ -1,12 +1,19 @@
 package waffle.guam.taskmessage.model
 
-import java.time.LocalDateTime
+import waffle.guam.taskmessage.TaskMessageEntity
+import java.time.Instant
 
 data class TaskMessage(
     val id: Long,
     val msg: String,
     var status: TaskStatus,
     val taskId: Long,
-    val createdAt: LocalDateTime,
-    val modifiedAt: LocalDateTime
-)
+    val createdAt: Instant,
+    val modifiedAt: Instant
+) {
+    companion object {
+        fun TaskMessageEntity.toDomain() {
+            TODO()
+        }
+    }
+}

@@ -1,8 +1,10 @@
 package waffle.guam.task.model
 
+import waffle.guam.task.TaskEntity
+import waffle.guam.task.command.TaskExtraFieldParams
 import waffle.guam.taskmessage.model.TaskMessage
 import waffle.guam.user.model.User
-import java.time.LocalDateTime
+import java.time.Instant
 
 data class Task(
     val id: Long,
@@ -11,6 +13,12 @@ data class Task(
     val user: User,
     val userState: UserState,
     val taskMsgs: List<TaskMessage>? = null,
-    val createdAt: LocalDateTime,
-    val modifiedAt: LocalDateTime,
-)
+    val createdAt: Instant,
+    val modifiedAt: Instant,
+) {
+    companion object {
+        fun TaskEntity.toDomain(extraFieldParams: TaskExtraFieldParams): Task {
+            TODO()
+        }
+    }
+}
