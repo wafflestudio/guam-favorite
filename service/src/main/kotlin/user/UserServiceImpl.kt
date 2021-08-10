@@ -7,11 +7,11 @@ import waffle.guam.user.event.UserUpdated
 import waffle.guam.user.model.User
 
 class UserServiceImpl : UserService {
-    override fun getUser(firebaseUid: String, userExtraFieldOptions: UserExtraFieldParams): User {
+    override fun getUser(firebaseUid: String, extraFieldOptions: UserExtraFieldParams): User {
         TODO("Not yet implemented")
     }
 
-    override fun getUser(userId: Long, userExtraFieldOptions: UserExtraFieldParams): User {
+    override fun getUser(userId: Long, extraFieldOptions: UserExtraFieldParams): User {
         TODO("Not yet implemented")
     }
 
