@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":test"))
     api("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     runtimeOnly("com.h2database:h2")
