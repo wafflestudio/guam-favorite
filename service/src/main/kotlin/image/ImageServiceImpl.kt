@@ -3,6 +3,7 @@ package waffle.guam.image
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import waffle.guam.image.command.CreateImages
 import waffle.guam.image.command.DeleteImages
@@ -23,6 +24,7 @@ class ImageServiceImpl(
         private val imageLocation = Paths.get("image")
     }
 
+    @Transactional
     override fun createImages(command: CreateImages): ImagesCreated = command.run {
         val images = imageRepository.saveAll(files.indices.map { ImageEntity(type = type.name, parentId = parentId) })
 
@@ -37,6 +39,7 @@ class ImageServiceImpl(
         )
     }
 
+    @Transactional
     override fun deleteImages(command: DeleteImages): ImagesDeleted =
         when (command) {
             is DeleteImages.ById -> {
@@ -46,7 +49,7 @@ class ImageServiceImpl(
                 imageRepository.findByParentIdAndType(command.parentId, command.imageType.name)
             }
         }.let {
-            imageRepository.deleteAll(it)
+            imageRepository.deleteAllInBatch(it)
             ImagesDeleted(imageIds = it.map { it.id })
         }
 
