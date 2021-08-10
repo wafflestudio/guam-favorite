@@ -7,5 +7,5 @@ data class ImagesCreated(
     val imageIds: List<Long>,
     val imageType: ImageType,
     val parentId: Long,
-    override val timestamp: Instant
+    override val timestamp: Instant = Instant.now()
 ) : ImageEvent(timestamp)
