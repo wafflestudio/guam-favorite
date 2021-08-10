@@ -1,5 +1,14 @@
 package waffle.guam.image.command
 
-data class DeleteImages(
-    val imageIds: List<Long>
-) : ImageCommand
+import waffle.guam.image.model.ImageType
+
+sealed class DeleteImages : ImageCommand {
+    data class ById(
+        val imageIds: List<Long>,
+    ) : DeleteImages()
+
+    data class ByParentId(
+        val parentId: Long,
+        val imageType: ImageType,
+    ) : DeleteImages()
+}
