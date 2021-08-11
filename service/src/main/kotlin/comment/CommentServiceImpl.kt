@@ -1,9 +1,7 @@
-
 package waffle.guam.comment
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import waffle.guam.InvalidRequestException
 import waffle.guam.comment.command.CreateComment
 import waffle.guam.comment.command.DeleteComment
 import waffle.guam.comment.command.DeleteCommentImage
@@ -24,27 +22,15 @@ class CommentServiceImpl(
 
     @Transactional
     override fun createComment(command: CreateComment): CommentCreated {
-        val createdComment = if (command.content.isNullOrBlank()) {
-            commentRepository.save(command.copy(content = null).toEntity())
-        } else {
-            commentRepository.save(command.copy(content = command.content.trim()).toEntity())
-        }
+        val createdComment = commentRepository.save(command.copy(content = command.content?.trim()).toEntity())
         return CommentCreated(createdComment.id, command.imageFiles)
     }
 
     @Transactional
     override fun editCommentContent(command: EditCommentContent): CommentContentEdited {
         val currentComment = commentRepository.findById(command.commentId).get()
-        if (command.content.isNotBlank()) {
-            commentRepository.save(currentComment.copy(content = command.content.trim(), modifiedAt = Instant.now()))
-            return CommentContentEdited(currentComment.id)
-        }
-        // TODO(부모에 달린 이미지들 조회하는 ImageService 추가? VS content=null은 빈문자열로 전부 대체)
-        //    if (imageRepository.findByParentIdAndType(command.commentId, ImageType.COMMENT).isNotEmpty()) {
-        //        commentRepository.save(currentComment.copy(content = null, modifiedAt = Instant.now()))
-        //        return CommentContentEdited(currentComment.id)
-        //    }
-        throw InvalidRequestException("해당 댓글이 삭제됩니다")
+        commentRepository.save(currentComment.copy(content = command.content.trim(), modifiedAt = Instant.now()))
+        return CommentContentEdited(currentComment.id)
     }
 
     @Transactional
