@@ -26,7 +26,7 @@ data class CommentEntity(
     @Column(name = "user_id")
     val userId: Long,
 
-    val content: String?,
+    val content: String,
 
     val createdAt: Instant = Instant.now(),
 
@@ -49,7 +49,7 @@ data class CommentView(
     @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
     val images: List<ImageEntity>,
 
-    val content: String?,
+    val content: String,
 
     val createdAt: Instant = Instant.now(),
 
