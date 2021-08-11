@@ -1,39 +1,31 @@
-package waffle.guam.thread.model
+package waffle.guam.comment.model
 
-import waffle.guam.comment.model.Comment
-import waffle.guam.image.ImageEntity
+import waffle.guam.comment.CommentView
 import waffle.guam.image.model.Image
-import waffle.guam.thread.ThreadView
 import waffle.guam.user.model.User.Companion.toDomain
 import java.time.Instant
 
-data class ThreadDetail(
+data class Comment(
     val id: Long,
     val content: String?,
     val isEdited: Boolean,
     val creatorId: Long,
     val creatorNickname: String,
     val creatorImageUrl: String?,
-    val threadImages: List<Image>,
-    val comments: List<Comment>,
+    val commentImages: List<Image>,
     val createdAt: Instant,
     val modifiedAt: Instant
 ) {
     companion object {
-        fun of(
-            e: ThreadView,
-            filterThreadImages: (List<ImageEntity>) -> List<Image>,
-            filterCommentImages: (List<ImageEntity>) -> List<Image>
-        ): ThreadDetail =
-            ThreadDetail(
+        fun of(e: CommentView, filteredImages: List<Image>): Comment =
+            Comment(
                 id = e.id,
                 content = e.content,
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
                 creatorImageUrl = e.user.toDomain().imageUrl, // e.user.image?.getPath(),
-                threadImages = filterThreadImages.invoke(e.images),
-                comments = e.comments.map { Comment.of(it, filterCommentImages.invoke(it.images),) },
+                commentImages = filteredImages,
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )
