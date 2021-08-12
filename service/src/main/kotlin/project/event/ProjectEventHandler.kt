@@ -86,7 +86,7 @@ class ProjectEventHandler(
     }
 
     @EventListener
-    fun prjDeleted(event: ProjectCompleted) {
+    fun prjCompleted(event: ProjectCompleted) {
 
         taskService.getTasks(
             command = SearchTask(
