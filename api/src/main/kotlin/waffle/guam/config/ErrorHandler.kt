@@ -4,7 +4,11 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
-import waffle.guam.*
+import waffle.guam.ConflictException
+import waffle.guam.DataNotFoundException
+import waffle.guam.InvalidRequestException
+import waffle.guam.JoinException
+import waffle.guam.NotAllowedException
 import waffle.guam.common.InvalidFirebaseTokenException
 
 @ControllerAdvice
