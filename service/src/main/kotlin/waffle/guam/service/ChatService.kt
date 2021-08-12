@@ -107,11 +107,7 @@ class ChatService(
                         throw NotAllowedException("해당 프로젝트에 쓰레드를 생성할 권한이 없습니다.")
                     }
             }
-        val threadId = if (command.content.isNullOrBlank()) {
-            threadRepository.save(command.copy(content = null).toEntity()).id
-        } else {
-            threadRepository.save(command.copy(content = command.content.trim()).toEntity()).id
-        }
+        val threadId = threadRepository.save(command.copy(content = command.content?.trim()).toEntity()).id
         if (!command.imageFiles.isNullOrEmpty())
             for (imageFile in command.imageFiles)
                 imageService.upload(imageFile, ImageInfo(threadId, ImageType.THREAD))
@@ -127,7 +123,7 @@ class ChatService(
                 if (imageRepository.findByParentIdAndType(it.id, ImageType.THREAD).isEmpty()) {
                     this.deleteThread(DeleteThread(threadId = it.id, userId = command.userId))
                 } else {
-                    threadRepository.save(it.copy(content = null, modifiedAt = LocalDateTime.now()))
+                    threadRepository.save(it.copy(content = "", modifiedAt = LocalDateTime.now()))
                 }
             } else {
                 threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = LocalDateTime.now()))
@@ -142,7 +138,7 @@ class ChatService(
             threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).also {
                 if (it.userId != command.userId) throw NotAllowedException()
                 if (it.id != image.parentId) throw InvalidRequestException()
-                if (it.content.isNullOrBlank()) {
+                if (it.content.isBlank()) {
                     if (imageRepository.findByParentIdAndType(it.id, ImageType.THREAD).size < 2)
                         this.deleteThread(DeleteThread(threadId = it.id, userId = command.userId))
                 }
@@ -163,7 +159,7 @@ class ChatService(
             if (commentRepository.findByThreadId(command.threadId).isEmpty()) {
                 threadRepository.delete(it)
             } else {
-                threadRepository.save(it.copy(content = null))
+                threadRepository.save(it.copy(content = ""))
             }
             imageRepository.deleteByParentIdAndType(it.id, ImageType.THREAD)
         }
@@ -186,11 +182,7 @@ class ChatService(
                         }
                 }
         }
-        val commentId = if (command.content.isNullOrBlank()) {
-            commentRepository.save(command.copy(content = null).toEntity()).id
-        } else {
-            commentRepository.save(command.copy(content = command.content.trim()).toEntity()).id
-        }
+        val commentId = commentRepository.save(command.copy(content = command.content?.trim()).toEntity()).id
         if (!command.imageFiles.isNullOrEmpty())
             for (imageFile in command.imageFiles)
                 imageService.upload(imageFile, ImageInfo(commentId, ImageType.COMMENT))
@@ -207,7 +199,7 @@ class ChatService(
                 if (imageRepository.findByParentIdAndType(it.id, ImageType.COMMENT).isEmpty()) {
                     this.deleteComment((DeleteComment(commentId = it.id, userId = command.userId)))
                 } else {
-                    commentRepository.save(it.copy(content = null, modifiedAt = LocalDateTime.now()))
+                    commentRepository.save(it.copy(content = "", modifiedAt = LocalDateTime.now()))
                 }
             } else {
                 commentRepository.save(it.copy(content = command.content.trim(), modifiedAt = LocalDateTime.now()))
@@ -223,7 +215,7 @@ class ChatService(
                 if (it.userId != command.userId) throw NotAllowedException()
                 if (it.id != image.parentId) throw InvalidRequestException()
 
-                if (it.content.isNullOrBlank()) {
+                if (it.content.isBlank()) {
                     if (imageRepository.findByParentIdAndType(it.id, ImageType.COMMENT).size < 2)
                         commentRepository.delete(it)
                 }
@@ -241,7 +233,7 @@ class ChatService(
             commentRepository.delete(it)
 
             if (commentRepository.findByThreadId(it.threadId).isEmpty())
-                if (threadRepository.findById(it.threadId).get().content.isNullOrBlank())
+                if (threadRepository.findById(it.threadId).get().content.isBlank())
                     if (imageRepository.findByParentIdAndType(it.threadId, ImageType.THREAD).isEmpty())
                         threadRepository.deleteById(it.threadId)
         }
