@@ -7,8 +7,10 @@ data class Image(
     val path: String
 ) {
     companion object {
-        fun ImageEntity.toDomain() {
-            TODO()
-        }
+        fun ImageEntity.toDomain(): Image =
+            Image(
+                id = id,
+                path = "$type/$id"
+            )
     }
 }
