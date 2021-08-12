@@ -24,7 +24,7 @@ data class ThreadEntity(
     @Column(name = "user_id")
     val userId: Long,
 
-    val content: String?,
+    val content: String,
 
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
@@ -49,7 +49,7 @@ data class ThreadView(
     @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
     val images: List<ImageEntity>,
 
-    val content: String?,
+    val content: String,
 
     val createdAt: LocalDateTime,
 

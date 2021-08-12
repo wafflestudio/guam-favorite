@@ -27,7 +27,7 @@ data class CreateThread(
     init {
         TypeCheck.validChatInput(content, imageFiles)
     }
-    fun toEntity() = ThreadEntity(projectId = projectId, userId = userId, content = content)
+    fun toEntity() = ThreadEntity(projectId = projectId, userId = userId, content = content ?: "")
 }
 
 data class EditThreadContent(

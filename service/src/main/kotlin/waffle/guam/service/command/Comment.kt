@@ -16,7 +16,7 @@ data class CreateComment(
     init {
         TypeCheck.validChatInput(content, imageFiles)
     }
-    fun toEntity() = CommentEntity(threadId = threadId, userId = userId, content = content)
+    fun toEntity() = CommentEntity(threadId = threadId, userId = userId, content = content ?: "")
 }
 
 data class EditCommentContent(

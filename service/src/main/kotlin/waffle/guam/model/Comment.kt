@@ -18,7 +18,7 @@ data class Comment(
         fun of(e: CommentView, filteredImages: List<Image>): Comment =
             Comment(
                 id = e.id,
-                content = e.content,
+                content = e.content.ifBlank { null },
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
