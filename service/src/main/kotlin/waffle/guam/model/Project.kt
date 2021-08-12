@@ -66,7 +66,7 @@ data class ProjectList(
                     state = entity.state,
                     techStacks = entity.techStacks
                         .map { TechStack.of(it.techStack) }
-                        .sortedBy { it.position },
+                        .sortedByDescending { it.position },
                     tasks = when (fetchTasks) {
                         true -> entity.tasks.map { Task.of(it) }
                         else -> null
@@ -148,7 +148,7 @@ data class ProjectDetail(
                     state = entity.state,
                     techStacks = entity.techStacks
                         .map { TechStack.of(it.techStack) }
-                        .sortedBy { it.position },
+                        .sortedByDescending { it.position },
                     tasks = when (fetchTasks) {
                         true -> entity.tasks.map {
                             TaskOverview.of(it)
