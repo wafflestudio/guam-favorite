@@ -8,7 +8,7 @@ import waffle.guam.db.entity.UserEntity
 import waffle.guam.db.repository.UserRepository
 import waffle.guam.exception.DataNotFoundException
 import waffle.guam.model.User
-import waffle.guam.service.command.UpdateDevice
+import waffle.guam.service.command.UpdateFcmToken
 import waffle.guam.service.command.UpdateUser
 import java.time.Instant
 
@@ -44,9 +44,9 @@ class UserService(
         }
 
     @Transactional
-    fun updateDeviceId(command: UpdateDevice, userId: Long) =
+    fun updateDeviceId(command: UpdateFcmToken, userId: Long) =
         userRepository.findById(userId).orElseThrow(::DataNotFoundException).also { userEntity ->
-            userEntity.deviceId = command.deviceId
+            userEntity.deviceId = command.fcmToken
         }.let {
             User.of(it)
         }

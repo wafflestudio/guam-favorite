@@ -9,6 +9,6 @@ data class UpdateUser(
     val willUploadImage: Boolean
 )
 
-data class UpdateDevice(
-    val deviceId: String
+data class UpdateFcmToken(
+    val fcmToken: String
 )
