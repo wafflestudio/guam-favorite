@@ -90,7 +90,8 @@ class ProjectEventHandler(
 
         taskService.getTasks(
             command = SearchTask(
-                projectIds = listOf(event.projectId)
+                projectIds = listOf(event.projectId),
+                userStates = listOf(UserState.LEADER, UserState.MEMBER)
             )
         ).let {
             taskList ->
