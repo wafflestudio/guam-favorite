@@ -36,13 +36,11 @@ class PrjStackServiceImpl(
 
         // list 안에 존재하는 포지션의 스택만 덮어씀.
         val list = command.toPrjStackList(projectId)
-        list.map {
+        val entities = list.map {
             projectStackRepository
                 .findByProjectIdAndPosition(projectId, it.position).orElseThrow(::DataNotFoundException)
-                .let { target ->
-                    projectStackRepository.delete(target)
-                }
         }
+        projectStackRepository.deleteAllInBatch(entities)
 
         projectStackRepository.saveAll(list)
         return ProjectStacksUpdated(projectId, list.map { it.id })
