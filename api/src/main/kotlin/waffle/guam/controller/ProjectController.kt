@@ -98,7 +98,7 @@ class ProjectController(
             )
         }
 
-    @PutMapping("/project/{id}")
+    @PostMapping("/project/{id}/edit")
     fun updateProject(
         @PathVariable id: Long,
         updateProject: UpdateProject,

@@ -64,7 +64,9 @@ data class ProjectList(
                     backLeftCnt = entity.backHeadcount - arr[1],
                     designLeftCnt = entity.designerHeadcount - arr[2],
                     state = entity.state,
-                    techStacks = entity.techStacks.map { TechStack.of(it.techStack) },
+                    techStacks = entity.techStacks
+                        .map { TechStack.of(it.techStack) }
+                        .sortedByDescending { it.position },
                     tasks = when (fetchTasks) {
                         true -> entity.tasks.map { Task.of(it) }
                         else -> null
@@ -144,7 +146,9 @@ data class ProjectDetail(
                     backLeftCnt = entity.backHeadcount - arr[1],
                     designLeftCnt = entity.designerHeadcount - arr[2],
                     state = entity.state,
-                    techStacks = entity.techStacks.map { TechStack.of(it.techStack) },
+                    techStacks = entity.techStacks
+                        .map { TechStack.of(it.techStack) }
+                        .sortedByDescending { it.position },
                     tasks = when (fetchTasks) {
                         true -> entity.tasks.map {
                             TaskOverview.of(it)
