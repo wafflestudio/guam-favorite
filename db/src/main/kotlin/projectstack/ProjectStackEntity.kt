@@ -21,22 +21,8 @@ data class ProjectStackEntity(
 
     val projectId: Long,
 
-    @Column(name = "tech_stack_id")
-    val techStackId: Long
-)
-
-@Table(name = "project_stacks")
-@Entity
-data class ProjectStackView(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0L,
-
-    val position: String,
-
-    val projectId: Long,
-
     @ManyToOne
     @JoinColumn(name = "tech_stack_id")
-    val techStack: StackEntity
+    val techStack: StackEntity? = null
 )
+
