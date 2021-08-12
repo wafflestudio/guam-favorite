@@ -14,7 +14,7 @@ import waffle.guam.common.UserContext
 import waffle.guam.controller.response.SuccessResponse
 import waffle.guam.model.User
 import waffle.guam.service.UserService
-import waffle.guam.service.command.UpdateDevice
+import waffle.guam.service.command.UpdateFcmToken
 
 @RequestMapping("user")
 @RestController
@@ -51,9 +51,9 @@ class UserController(
             )
         )
 
-    @PostMapping("/device")
+    @PostMapping("/fcm")
     fun updateUser(
-        @RequestBody command: UpdateDevice,
+        @RequestBody command: UpdateFcmToken,
         userContext: UserContext
     ): SuccessResponse<User> =
         SuccessResponse(
