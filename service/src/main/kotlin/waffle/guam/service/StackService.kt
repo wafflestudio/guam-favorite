@@ -25,7 +25,7 @@ class StackService(
 
     @PostConstruct
     fun init() {
-        if(stackRepository.findAll().isEmpty()){
+        if (stackRepository.findAll().isEmpty()) {
             val stream = this.javaClass.getResourceAsStream("/stacks.csv")
             val reader = java.io.InputStreamReader(stream)
             reader.forEachLine {
@@ -48,14 +48,14 @@ class StackService(
     @Transactional
     fun create(o: CreateStack): Boolean {
         stackRepository.save(o.toEntity()).also {
-                o.imageFiles?.let { image ->
-                    it.thumbnail = imageService.upload(
-                        image,
-                        imageInfo = ImageInfo(
-                            it.id, ImageType.STACK
-                        )
+            o.imageFiles?.let { image ->
+                it.thumbnail = imageService.upload(
+                    image,
+                    imageInfo = ImageInfo(
+                        it.id, ImageType.STACK
                     )
-                }
+                )
+            }
         }
         return true
     }
