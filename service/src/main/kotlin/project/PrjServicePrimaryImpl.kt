@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import waffle.guam.ConflictException
 import waffle.guam.InvalidRequestException
 import waffle.guam.JoinException
@@ -53,6 +54,7 @@ class PrjServicePrimaryImpl(
         return prjService.getSearchResults(pageable, command)
     }
 
+    @Transactional
     override fun createProject(command: CreateProject, userId: Long): ProjectCreated {
 
         val checkUserTasks =
@@ -76,6 +78,7 @@ class PrjServicePrimaryImpl(
         return prjService.createProject(command, userId)
     }
 
+    @Transactional
     override fun updateProject(command: UpdateProject, projectId: Long, userId: Long): ProjectUpdated {
 
         val checkPrjTasks =
@@ -102,6 +105,7 @@ class PrjServicePrimaryImpl(
         return prjService.updateProject(command, projectId, userId)
     }
 
+    @Transactional
     override fun deleteProject(projectId: Long, userId: Long): ProjectDeleted {
 
         val checkPrjTasks =
@@ -117,6 +121,7 @@ class PrjServicePrimaryImpl(
         return prjService.deleteProject(projectId, userId)
     }
 
+    @Transactional
     override fun completeProject(projectId: Long, userId: Long): ProjectCompleted {
 
         val checkPrjTasks =
@@ -132,6 +137,7 @@ class PrjServicePrimaryImpl(
         return prjService.completeProject(projectId, userId)
     }
 
+    @Transactional
     override fun joinRequestValidation(command: JoinProject, projectId: Long, userId: Long): ProjectJoinRequested {
 
         val prj = prjService.getProject(projectId)

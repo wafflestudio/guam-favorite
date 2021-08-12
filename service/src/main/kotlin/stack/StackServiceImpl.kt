@@ -1,6 +1,7 @@
 package waffle.guam.stack
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import waffle.guam.DataNotFoundException
 import waffle.guam.image.ImageEntity
 import waffle.guam.image.ImageRepository
@@ -24,10 +25,11 @@ class StackServiceImpl(
         }
 
     override fun getAllStacks(stackIds: List<Long>): List<TechStack> =
-        stackRepository.findAllById(stackIds).map {
+        stackRepository.findAllByIds(stackIds).map {
             TechStack.of(it)
         }
 
+    @Transactional
     override fun createStack(command: CreateStack, stackId: Long): StackCreated {
 
         val newStack = stackRepository.save(command.toEntity())
@@ -39,6 +41,7 @@ class StackServiceImpl(
         )
     }
 
+    @Transactional
     override fun updateProject(command: UpdateStack, stackId: Long): StackUpdated {
 
         val stack = stackRepository.findById(stackId).orElseThrow(::DataNotFoundException)
@@ -53,6 +56,7 @@ class StackServiceImpl(
         )
     }
 
+    @Transactional
     override fun deleteStack(stackId: Long): StackDeleted {
 
         stackRepository.deleteById(stackId)

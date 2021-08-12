@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import waffle.guam.DataNotFoundException
 import waffle.guam.project.command.CreateProject
 import waffle.guam.project.command.JoinProject
@@ -107,6 +108,7 @@ class ProjectServiceImpl(
             )
         }
 
+    @Transactional
     override fun createProject(command: CreateProject, userId: Long): ProjectCreated {
 
         val newProject = command.toEntity()
@@ -123,6 +125,7 @@ class ProjectServiceImpl(
         }
     }
 
+    @Transactional
     override fun updateProject(command: UpdateProject, projectId: Long, userId: Long): ProjectUpdated {
 
         val prj = projectRepository.findById(projectId).orElseThrow(::DataNotFoundException)
@@ -143,6 +146,7 @@ class ProjectServiceImpl(
         )
     }
 
+    @Transactional
     override fun deleteProject(projectId: Long, userId: Long): ProjectDeleted {
 
         val prj = projectRepository.findById(projectId).orElseThrow(::DataNotFoundException)
@@ -157,6 +161,7 @@ class ProjectServiceImpl(
         )
     }
 
+    @Transactional
     override fun completeProject(projectId: Long, userId: Long): ProjectCompleted {
 
         val prj = projectRepository.findById(projectId).orElseThrow(::DataNotFoundException)
@@ -171,6 +176,7 @@ class ProjectServiceImpl(
         )
     }
 
+    @Transactional
     override fun joinRequestValidation(command: JoinProject, projectId: Long, userId: Long): ProjectJoinRequested {
 
         // 괜히 호출을 두번 하는 느낌이 있다.
