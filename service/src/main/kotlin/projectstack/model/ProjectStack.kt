@@ -1,21 +1,22 @@
 package waffle.guam.projectstack.model
 
-import waffle.guam.projectstack.ProjectStackEntity
+import waffle.guam.projectstack.ProjectStackView
+import waffle.guam.stack.model.TechStack
 import waffle.guam.task.model.Position
 
 data class ProjectStack(
     val id: Long,
     val projectId: Long,
-    val stackId: Long,
-    val position: Position
+    val position: Position,
+    val stack: TechStack
 ) {
     companion object {
-        fun of(entity: ProjectStackEntity): ProjectStack
-        ProjectStack(
-            id = entity.id,
-            projectId = entity.projectId,
-            stackId = entity.techStackId,
-            position = Position.valueOf(entity.position)
-        )
+        fun of(entity: ProjectStackView): ProjectStack =
+            ProjectStack(
+                id = entity.id,
+                projectId = entity.projectId,
+                position = Position.valueOf(entity.position),
+                stack = TechStack.of(entity.techStack)
+            )
     }
 }

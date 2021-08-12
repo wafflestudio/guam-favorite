@@ -9,16 +9,17 @@ import waffle.guam.projectstack.model.ProjectStack
 
 @Service
 class PrjStackServiceImpl(
-    private val projectStackRepository: ProjectStackRepository
+    private val projectStackRepository: ProjectStackRepository,
+    private val projectStackViewRepository: ProjectStackViewRepository
 ) : ProjectStackService {
 
-    override fun getProjectStacks(projectId: Long): List<ProjectStack>
+    override fun getProjectStacks(projectId: Long): List<ProjectStack> =
 
-    projectStackRepository.findByProjectId(projectId).map { ProjectStack.of(it) }
+        projectStackViewRepository.findByProjectId(projectId).map { ProjectStack.of(it) }
 
-    override fun getAllProjectStacks(projectIds: List<Long>): List<ProjectStack>
+    override fun getAllProjectStacks(projectIds: List<Long>): List<ProjectStack> =
 
-    projectStackRepository.findAllByProjectIds(projectIds).map { ProjectStack.of(it) }
+        projectStackViewRepository.findAllByProjectIds(projectIds).map { ProjectStack.of(it) }
 
     override fun createProjectStacks(projectId: Long, command: StackIdList): ProjectStacksCreated {
 
