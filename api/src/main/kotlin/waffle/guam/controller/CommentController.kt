@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import waffle.guam.NotAllowedException
 import waffle.guam.comment.CommentService
 import waffle.guam.comment.command.CreateComment
 import waffle.guam.comment.command.DeleteComment
@@ -19,12 +20,17 @@ import waffle.guam.common.UserContext
 import waffle.guam.controller.request.ContentInput
 import waffle.guam.controller.request.CreateFullInfoInput
 import waffle.guam.controller.response.SuccessResponse
+import waffle.guam.image.ImageService
+import waffle.guam.image.command.DeleteImages
+import waffle.guam.image.event.ImagesDeleted
 
 @RestController
 @RequestMapping("comment")
 class CommentController(
-    private val commentService: CommentService
+    private val commentService: CommentService,
+    private val imageService: ImageService
 ) {
+
     @PostMapping("/create/{threadId}")
     fun createComment(
         @PathVariable threadId: Long,
@@ -54,17 +60,18 @@ class CommentController(
             )
         )
 
-//    @DeleteMapping("/{commentId}/image/{imageId}")
-//    fun deleteCommentImage(
-//        @PathVariable commentId: Long,
-//        @PathVariable imageId: Long,
-//        userContext: UserContext
-//    ): SuccessResponse<CommentImageDeleted> =
-//        SuccessResponse(
-//            commentService.deleteCommentImage(
-//                command = DeleteCommentImage(imageId = imageId, commentId = commentId, userId = userContext.id)
-//            )
-//        )
+    @DeleteMapping("/{commentId}/image/{imageId}")
+    fun deleteCommentImage(
+        @PathVariable commentId: Long,
+        @PathVariable imageId: Long,
+        userContext: UserContext
+    ): SuccessResponse<ImagesDeleted> =
+        commentService.getComment(commentId).let {
+            if (it.creatorId != userContext.id) throw NotAllowedException()
+            return SuccessResponse(
+                imageService.deleteImages(DeleteImages.ById(listOf(imageId)))
+            )
+        }
 
     @DeleteMapping("/{commentId}")
     fun deleteComment(

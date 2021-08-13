@@ -10,6 +10,8 @@ import waffle.guam.comment.command.EditCommentContent
 import waffle.guam.comment.event.CommentContentEdited
 import waffle.guam.comment.event.CommentCreated
 import waffle.guam.comment.event.CommentDeleted
+import waffle.guam.comment.model.Comment
+import waffle.guam.image.model.Image
 import waffle.guam.task.TaskService
 import waffle.guam.task.command.SearchTask
 import waffle.guam.task.model.UserState
@@ -24,6 +26,12 @@ class CommentServiceImpl(
     private val taskService: TaskService,
     private val userRepository: UserRepository
 ) : CommentService {
+
+    override fun getComment(commentId: Long): Comment =
+        commentRepository.findById(commentId).orElseThrow(::DataNotFoundException).let {
+            Comment.of(it, listOf(Image(id = 1, path = "should be fixed")))
+            // FIXME(merge 후 Comment 모델 내부에서 filter되도록 수정 - Image.toDomain 사용 불가 - 반환형이 Image가 아님)
+        }
 
     override fun createComment(command: CreateComment): CommentCreated {
         validateCommentCreator(command)
@@ -47,13 +55,6 @@ class CommentServiceImpl(
             commentRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
             return CommentContentEdited(it.id)
         }
-
-//    override fun deleteCommentImage(command: DeleteCommentImage): CommentImageDeleted {
-//        val parentComment = commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException)
-//        if (parentComment.userId != command.userId) throw NotAllowedException()
-//        imageService.deleteImages(DeleteImages.ById(listOf(command.imageId)))
-//        return CommentImageDeleted(command.commentId, command.imageId)
-//    }
 
     override fun deleteComment(command: DeleteComment): CommentDeleted =
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {

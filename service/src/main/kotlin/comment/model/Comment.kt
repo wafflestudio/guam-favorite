@@ -16,6 +16,7 @@ data class Comment(
     val createdAt: Instant,
     val modifiedAt: Instant
 ) {
+
     companion object {
         fun of(e: CommentEntity, filteredImages: List<Image>): Comment =
             Comment(
