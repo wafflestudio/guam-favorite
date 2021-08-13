@@ -2,6 +2,7 @@ package waffle.guam.comment.command
 
 import org.springframework.web.multipart.MultipartFile
 import waffle.guam.comment.CommentEntity
+import waffle.guam.user.UserEntity
 import waffle.guam.util.TypeCheck
 
 data class CreateComment(
@@ -13,5 +14,5 @@ data class CreateComment(
     init {
         TypeCheck.validChatInput(content, imageFiles)
     }
-    fun toEntity() = CommentEntity(threadId = threadId, userId = userId, content = content ?: "")
+    fun toEntity(user: UserEntity) = CommentEntity(threadId = threadId, user = user, content = content ?: "")
 }

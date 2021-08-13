@@ -18,7 +18,7 @@ import javax.persistence.Table
 data class CommentEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long,
+    val id: Long = 0L,
 
     val threadId: Long,
 
@@ -27,7 +27,7 @@ data class CommentEntity(
     val user: UserEntity,
 
     @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
-    val images: List<ImageEntity>,
+    val images: List<ImageEntity> = listOf(),
 
     val content: String,
 
