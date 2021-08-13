@@ -23,7 +23,6 @@ data class ThreadDetail(
         fun of(
             e: ThreadView,
             filterThreadImages: (List<ImageEntity>) -> List<Image>,
-            filterCommentImages: (List<ImageEntity>) -> List<Image>
         ): ThreadDetail =
             ThreadDetail(
                 id = e.id,
@@ -33,7 +32,7 @@ data class ThreadDetail(
                 creatorNickname = e.user.nickname,
                 creatorImageUrl = e.user.toDomain().imageUrl, // e.user.image?.getPath(),
                 threadImages = filterThreadImages.invoke(e.images),
-                comments = e.comments.map { Comment.of(it, filterCommentImages.invoke(it.images),) },
+                comments = e.comments.map { Comment.of(it) },
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )
