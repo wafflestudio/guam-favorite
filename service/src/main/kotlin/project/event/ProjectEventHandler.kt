@@ -74,8 +74,7 @@ class ProjectEventHandler(
             command = SearchTask(
                 projectIds = listOf(event.projectId)
             )
-        ).let {
-            taskList ->
+        ).let { taskList ->
             taskService.updateTaskState(
                 command = UpdateTaskUserState(
                     taskIds = taskList.map { it.id },
@@ -93,8 +92,7 @@ class ProjectEventHandler(
                 projectIds = listOf(event.projectId),
                 userStates = listOf(UserState.LEADER, UserState.MEMBER)
             )
-        ).let {
-            taskList ->
+        ).let { taskList ->
             taskService.updateTaskState(
                 command = UpdateTaskUserState(
                     taskIds = taskList.map { it.id },

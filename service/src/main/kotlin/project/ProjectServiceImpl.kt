@@ -20,6 +20,7 @@ import waffle.guam.project.model.ProjectState
 import waffle.guam.projectstack.ProjectStackService
 import waffle.guam.projectstack.command.StackIdList
 import waffle.guam.projectstack.util.SearchEngine
+import waffle.guam.stack.model.TechStack
 import waffle.guam.task.TaskService
 import waffle.guam.task.command.SearchTask
 import java.time.Instant
@@ -38,21 +39,12 @@ class ProjectServiceImpl(
 
     override fun getProject(projectId: Long): Project =
 
-        projectRepository.findById(projectId).orElseThrow(::DataNotFoundException).let {
+        projectRepository.findById(projectId).orElseThrow(::DataNotFoundException).let { e ->
             Project.of(
-                it,
-                techStacks =
-                projectStackService.getProjectStacks(projectId).map {
-                    prjStack ->
-                    prjStack.stack
-                },
-                tasks =
-                taskService.getTasks(
-                    command = SearchTask(
-                        projectIds = listOf(projectId)
-                    )
+                entity = e,
+                techStacks = projectStackService.getProjectStacks(projectId).map { it.stack },
+                tasks = taskService.getTasks(SearchTask(listOf(projectId)))
                 )
-            )
         }
 
     override fun getAllProjects(pageable: Pageable): Page<Project> =
@@ -193,29 +185,22 @@ class ProjectServiceImpl(
      */
     fun buildProjectOf(page: Page<ProjectEntity>): Page<Project> {
 
-        val ids =
-            page.map { prj ->
-                prj.id
-            }.toList()
+        val ids = page.map { it.id }.toList()
 
         val prjStacks =
             projectStackService.getAllProjectStacks(ids)
+                .groupBy { it.projectId }
+                .mapValues { it.value.map { prjStack -> prjStack.stack } }
 
         val tasks =
-            taskService.getTasks(
-                command =
-                SearchTask(projectIds = ids)
-            )
+            taskService.getTasks(SearchTask(ids))
+                .groupBy { it.projectId }
 
         return page.map {
             Project.of(
-                it,
-                techStacks =
-                prjStacks
-                    .filter { prjStack -> prjStack.projectId == it.id }
-                    .map { prjStack -> prjStack.stack },
-                tasks =
-                tasks.filter { task -> task.projectId == it.id }
+                entity = it,
+                techStacks = prjStacks[it.id] ?: emptyList(),
+                tasks = tasks[it.id] ?: emptyList()
             )
         }
     }
