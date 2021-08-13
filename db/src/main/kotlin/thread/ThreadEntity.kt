@@ -1,6 +1,6 @@
 package waffle.guam.thread
 
-import waffle.guam.comment.CommentView
+import waffle.guam.comment.CommentEntity
 import waffle.guam.image.ImageEntity
 import waffle.guam.user.UserEntity
 import java.time.Instant
@@ -47,7 +47,7 @@ data class ThreadView(
     val user: UserEntity,
 
     @OneToMany(mappedBy = "threadId", fetch = FetchType.LAZY)
-    val comments: List<CommentView>,
+    val comments: List<CommentEntity>,
 
     @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
     val images: List<ImageEntity>,
