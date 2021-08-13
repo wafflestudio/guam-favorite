@@ -1,6 +1,6 @@
 package waffle.guam.comment.model
 
-import waffle.guam.comment.CommentView
+import waffle.guam.comment.CommentEntity
 import waffle.guam.image.model.Image
 import waffle.guam.user.model.User.Companion.toDomain
 import java.time.Instant
@@ -17,7 +17,7 @@ data class Comment(
     val modifiedAt: Instant
 ) {
     companion object {
-        fun of(e: CommentView, filteredImages: List<Image>): Comment =
+        fun of(e: CommentEntity, filteredImages: List<Image>): Comment =
             Comment(
                 id = e.id,
                 content = e.content,
