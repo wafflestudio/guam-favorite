@@ -3,6 +3,7 @@ package waffle.guam.service
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.MulticastMessage
 import com.google.firebase.messaging.Notification
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import waffle.guam.db.repository.UserRepository
 
@@ -14,15 +15,26 @@ interface MessageService {
 class MessageServiceImpl(
     private val userRepository: UserRepository,
 ) : MessageService {
+    private val logger = LoggerFactory.getLogger(this.javaClass.name)
+
     override fun sendMessage(ids: List<Long>, title: String, body: String) {
-        FirebaseMessaging.getInstance().sendMulticast(
-            multicastMessage(
-                targetTokens = userRepository.findAllById(ids).mapNotNull { it.deviceId },
-                title = title,
-                body = body
+        val targetTokens = userRepository.findAllById(ids).mapNotNull { it.deviceId }.also {
+            if (it.isEmpty()) {
+                logger.info("No registered tokens from users[$ids].")
+                return@sendMessage
+            }
+        }
+
+        kotlin.runCatching {
+            FirebaseMessaging.getInstance().sendMulticast(
+                multicastMessage(
+                    targetTokens = targetTokens,
+                    title = title,
+                    body = body
+                )
             )
-        ).also {
-            println("FCM success count: ${it.successCount}, failure count: ${it.failureCount}")
+        }.getOrElse {
+            logger.info("FCM failed", it)
         }
     }
 
