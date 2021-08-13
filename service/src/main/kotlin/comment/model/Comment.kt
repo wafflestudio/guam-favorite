@@ -3,8 +3,8 @@ package waffle.guam.comment.model
 import waffle.guam.comment.CommentEntity
 import waffle.guam.image.model.Image
 import waffle.guam.image.model.ImageType
+import waffle.guam.image.model.ImageType.Companion.filter
 import waffle.guam.user.model.User.Companion.toDomain
-import waffle.guam.util.FilterList
 import java.time.Instant
 
 data class Comment(
@@ -27,8 +27,8 @@ data class Comment(
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
-                creatorImageUrl = e.user.toDomain().imageUrl, // e.user.image?.getPath(),
-                commentImages = FilterList.targetImages(e.images, ImageType.COMMENT),
+                creatorImageUrl = e.user.toDomain().imageUrl,
+                commentImages = ImageType.COMMENT.filter(e.images),
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )
