@@ -33,7 +33,7 @@ class CommentServiceImpl(
 
     override fun editCommentContent(command: EditCommentContent): CommentContentEdited =
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
-            if (it.userId != command.userId) {
+            if (it.user.id != command.userId) {
                 throw NotAllowedException()
             }
             if (it.content == command.content) {
@@ -53,7 +53,7 @@ class CommentServiceImpl(
 
     override fun deleteComment(command: DeleteComment): CommentDeleted =
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
-            if (it.userId != command.userId) {
+            if (it.user.id != command.userId) {
                 throw NotAllowedException("타인이 작성한 댓글을 삭제할 수는 없습니다.")
             }
 
