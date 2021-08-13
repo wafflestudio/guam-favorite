@@ -1,8 +1,8 @@
 package waffle.guam.comment.model
 
 import waffle.guam.comment.CommentEntity
-import waffle.guam.image.ImageType
 import waffle.guam.image.model.Image
+import waffle.guam.image.model.ImageType
 import waffle.guam.user.model.User.Companion.toDomain
 import waffle.guam.util.FilterList
 import java.time.Instant
