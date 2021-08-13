@@ -11,12 +11,10 @@ import org.springframework.web.bind.annotation.RestController
 import waffle.guam.comment.CommentService
 import waffle.guam.comment.command.CreateComment
 import waffle.guam.comment.command.DeleteComment
-import waffle.guam.comment.command.DeleteCommentImage
 import waffle.guam.comment.command.EditCommentContent
 import waffle.guam.comment.event.CommentContentEdited
 import waffle.guam.comment.event.CommentCreated
 import waffle.guam.comment.event.CommentDeleted
-import waffle.guam.comment.event.CommentImageDeleted
 import waffle.guam.common.UserContext
 import waffle.guam.controller.request.ContentInput
 import waffle.guam.controller.request.CreateFullInfoInput
@@ -56,17 +54,17 @@ class CommentController(
             )
         )
 
-    @DeleteMapping("/{commentId}/image/{imageId}")
-    fun deleteCommentImage(
-        @PathVariable commentId: Long,
-        @PathVariable imageId: Long,
-        userContext: UserContext
-    ): SuccessResponse<CommentImageDeleted> =
-        SuccessResponse(
-            commentService.deleteCommentImage(
-                command = DeleteCommentImage(imageId = imageId, commentId = commentId, userId = userContext.id)
-            )
-        )
+//    @DeleteMapping("/{commentId}/image/{imageId}")
+//    fun deleteCommentImage(
+//        @PathVariable commentId: Long,
+//        @PathVariable imageId: Long,
+//        userContext: UserContext
+//    ): SuccessResponse<CommentImageDeleted> =
+//        SuccessResponse(
+//            commentService.deleteCommentImage(
+//                command = DeleteCommentImage(imageId = imageId, commentId = commentId, userId = userContext.id)
+//            )
+//        )
 
     @DeleteMapping("/{commentId}")
     fun deleteComment(
