@@ -8,7 +8,7 @@ import waffle.guam.annotation.DatabaseTest
 @DatabaseTest(["projects/image.sql", "projects/project.sql", "projects/stack.sql", "projects/projectStack.sql", "task/image.sql", "task/user.sql", "task/task.sql", "task/task_message.sql"])
 class StackRepositoryTest @Autowired constructor(
     private val stackRepository: StackRepository
-){
+) {
 
     @Transactional
     @Test

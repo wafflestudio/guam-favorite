@@ -1,6 +1,6 @@
 package waffle.guam.projectstack.model
 
-import waffle.guam.projectstack.ProjectStackView
+import waffle.guam.projectstack.ProjectStackEntity
 import waffle.guam.stack.model.TechStack
 import waffle.guam.task.model.Position
 
@@ -11,7 +11,7 @@ data class ProjectStack(
     val stack: TechStack
 ) {
     companion object {
-        fun of(entity: ProjectStackView): ProjectStack =
+        fun of(entity: ProjectStackEntity): ProjectStack =
             ProjectStack(
                 id = entity.id,
                 projectId = entity.projectId,

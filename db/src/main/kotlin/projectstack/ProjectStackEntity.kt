@@ -1,7 +1,6 @@
 package waffle.guam.projectstack
 
 import waffle.guam.stack.StackEntity
-import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
@@ -23,6 +22,5 @@ data class ProjectStackEntity(
 
     @ManyToOne
     @JoinColumn(name = "tech_stack_id")
-    val techStack: StackEntity? = null
+    val techStack: StackEntity
 )
-
