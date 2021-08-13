@@ -11,7 +11,6 @@ import waffle.guam.comment.event.CommentContentEdited
 import waffle.guam.comment.event.CommentCreated
 import waffle.guam.comment.event.CommentDeleted
 import waffle.guam.comment.model.Comment
-import waffle.guam.image.model.Image
 import waffle.guam.task.TaskService
 import waffle.guam.task.command.SearchTask
 import waffle.guam.task.model.UserState
@@ -29,8 +28,7 @@ class CommentServiceImpl(
 
     override fun getComment(commentId: Long): Comment =
         commentRepository.findById(commentId).orElseThrow(::DataNotFoundException).let {
-            Comment.of(it, listOf(Image(id = 1, path = "should be fixed")))
-            // FIXME(merge 후 Comment 모델 내부에서 filter되도록 수정 - Image.toDomain 사용 불가 - 반환형이 Image가 아님)
+            Comment.of(it)
         }
 
     override fun createComment(command: CreateComment): CommentCreated {
