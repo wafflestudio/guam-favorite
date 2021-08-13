@@ -14,6 +14,7 @@ import waffle.guam.task.TaskService
 import waffle.guam.task.command.SearchTask
 import waffle.guam.task.model.UserState
 import waffle.guam.thread.ThreadRepository
+import waffle.guam.user.UserRepository
 import java.time.Instant
 
 @Service
@@ -21,12 +22,15 @@ class CommentServiceImpl(
     private val commentRepository: CommentRepository,
     private val threadRepository: ThreadRepository,
     private val taskService: TaskService,
+    private val userRepository: UserRepository
 ) : CommentService {
 
     override fun createComment(command: CreateComment): CommentCreated {
         validateCommentCreator(command)
 
-        commentRepository.save(command.copy(content = command.content?.trim()).toEntity()).let {
+        val user = userRepository.findById(command.userId).orElseThrow(::DataNotFoundException)
+
+        commentRepository.save(command.copy(content = command.content?.trim()).toEntity(user)).let {
             return CommentCreated(it.id, command.imageFiles)
         }
     }
