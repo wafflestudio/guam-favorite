@@ -13,8 +13,8 @@ class ProjectEventListener(
     fun handleJoinRequestEvent(event: JoinRequestEvent) {
         messageService.sendMessage(
             ids = event.projectUserIds,
-            title = "프로젝트 참여 요청",
-            body = "${event.projectTitle} 참여 요청이 도착했어요."
+            title = event.projectTitle,
+            body = "참여 신청이 들어왔습니다."
         )
     }
 
@@ -22,10 +22,10 @@ class ProjectEventListener(
     fun handleJoinResultEvent(event: JoinResultEvent) {
         messageService.sendMessage(
             ids = listOf(event.targetUserId),
-            title = "프로젝트 참여 요청 결과",
+            title = event.projectTitle,
             body = when (event.accepted) {
-                true -> "${event.projectTitle}에 참가하게 되었어요."
-                false -> "${event.projectTitle}에 참가하지 못하게 되었어요."
+                true -> "참여 신청 승인되었습니다."
+                false -> "참여 신청이 반려되었습니다."
             }
         )
     }
