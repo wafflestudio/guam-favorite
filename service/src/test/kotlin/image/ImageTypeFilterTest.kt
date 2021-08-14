@@ -3,7 +3,6 @@ package waffle.guam.image
 import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import waffle.guam.annotation.DatabaseTest
-import waffle.guam.image.model.Image
 import waffle.guam.image.model.ImageType
 import waffle.guam.image.model.ImageType.Companion.filter
 
@@ -22,9 +21,9 @@ class ImageTypeFilterTest : FeatureSpec() {
                     )
                 )
                 result shouldBe listOf(
-                    Image(id = 1, path = "COMMENT/1"),
-                    Image(id = 2, path = "COMMENT/2"),
-                    Image(id = 4, path = "COMMENT/4"),
+                    ImageEntity(id = 1, type = "COMMENT", parentId = 10),
+                    ImageEntity(id = 2, type = "COMMENT", parentId = 10),
+                    ImageEntity(id = 4, type = "COMMENT", parentId = 40),
                 )
             }
         }
