@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.transaction.annotation.Transactional
@@ -50,7 +51,8 @@ class GetFullThreadSpec @Autowired constructor(
     private val projectRepository: ProjectRepository,
     private val taskRepository: TaskRepository,
     private val imageRepository: ImageRepository,
-    private val database: Database
+    private val database: Database,
+    private val eventPublisher: ApplicationEventPublisher
 ) {
 
     val imageService = mockk<ImageService>()
@@ -63,6 +65,7 @@ class GetFullThreadSpec @Autowired constructor(
         taskRepository = taskRepository,
         imageRepository = imageRepository,
         imageService = imageService,
+        eventPublisher = eventPublisher
     )
 
     @BeforeEach
