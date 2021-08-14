@@ -297,6 +297,12 @@ class ProjectService(
 
                             taskViewRepository.save(it.copy(userState = newState))
 
+                            projectViewRepository.findById(it.projectId).orElseThrow(::DataNotFoundException).let { prj ->
+                                val model = ProjectDetail.of(prj)
+                                if(model.backLeftCnt + model.frontLeftCnt + model.designLeftCnt == 0)
+                                    prj.state = ProjectState.ONGOING
+                            }
+
                             eventPublisher.publishEvent(
                                 JoinResultEvent(
                                     projectTitle = projectRepository.findById(id).get().title,
