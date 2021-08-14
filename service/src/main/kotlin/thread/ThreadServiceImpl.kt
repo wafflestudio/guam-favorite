@@ -27,6 +27,7 @@ import java.time.Instant
 @Service
 class ThreadServiceImpl(
     private val threadRepository: ThreadRepository,
+    private val threadViewRepository: ThreadViewRepository,
     private val projectRepository: ProjectRepository,
     private val taskService: TaskService,
     private val commentRepository: CommentRepository
@@ -34,17 +35,20 @@ class ThreadServiceImpl(
 
     private val nonMemberUserStates = listOf(UserState.GUEST, UserState.QUIT, UserState.DECLINED)
 
-    override fun getThread(threadId: Long): ThreadOverView {
-        TODO("Not yet implemented")
-    }
+    override fun getThread(threadId: Long): ThreadOverView =
+        threadViewRepository.findById(threadId).orElseThrow(::DataNotFoundException).let {
+            ThreadOverView.of(it) { threadId -> commentRepository.countByThreadId(threadId) }
+        }
 
-    override fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> {
-        TODO("Not yet implemented")
-    }
+    override fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> =
+        threadViewRepository.findByProjectId(projectId, pageable).map {
+            ThreadOverView.of(it) { threadId -> commentRepository.countByThreadId(threadId) }
+        }
 
-    override fun getFullThread(threadId: Long): ThreadDetail {
-        TODO("Not yet implemented")
-    }
+    override fun getFullThread(threadId: Long): ThreadDetail =
+        threadViewRepository.findById(threadId).orElseThrow(::DataNotFoundException).let {
+            ThreadDetail.of(it)
+        }
 
     @Transactional
     override fun setNoticeThread(command: SetNoticeThread): NoticeThreadSet {
@@ -60,6 +64,7 @@ class ThreadServiceImpl(
             projectRepository.save(project.copy(noticeThreadId = null, modifiedAt = Instant.now()))
             return NoticeThreadSet(project.id)
         }
+
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             projectRepository.save(project.copy(noticeThreadId = it.id, modifiedAt = Instant.now()))
             return NoticeThreadSet(project.id, it.id)

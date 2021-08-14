@@ -1,8 +1,10 @@
 package waffle.guam.thread.model
 
 import waffle.guam.comment.model.Comment
-import waffle.guam.image.ImageEntity
 import waffle.guam.image.model.Image
+import waffle.guam.image.model.Image.Companion.toDomain
+import waffle.guam.image.model.ImageType
+import waffle.guam.image.model.ImageType.Companion.filter
 import waffle.guam.thread.ThreadView
 import waffle.guam.user.model.User.Companion.toDomain
 import java.time.Instant
@@ -21,8 +23,7 @@ data class ThreadDetail(
 ) {
     companion object {
         fun of(
-            e: ThreadView,
-            filterThreadImages: (List<ImageEntity>) -> List<Image>,
+            e: ThreadView
         ): ThreadDetail =
             ThreadDetail(
                 id = e.id,
@@ -30,8 +31,8 @@ data class ThreadDetail(
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
-                creatorImageUrl = e.user.toDomain().imageUrl, // e.user.image?.getPath(),
-                threadImages = filterThreadImages.invoke(e.images),
+                creatorImageUrl = e.user.toDomain().imageUrl,
+                threadImages = ImageType.THREAD.filter(e.images).map { it.toDomain() },
                 comments = e.comments.map { Comment.of(it) },
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
