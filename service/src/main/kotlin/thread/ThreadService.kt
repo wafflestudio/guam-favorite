@@ -5,9 +5,7 @@ import org.springframework.data.domain.Pageable
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
 import waffle.guam.thread.command.EditThreadContent
-import waffle.guam.thread.command.RemoveNoticeThread
 import waffle.guam.thread.command.SetNoticeThread
-import waffle.guam.thread.event.NoticeThreadRemoved
 import waffle.guam.thread.event.NoticeThreadSet
 import waffle.guam.thread.event.ThreadContentEdited
 import waffle.guam.thread.event.ThreadCreated
@@ -20,7 +18,6 @@ interface ThreadService {
     fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView>
     fun getFullThread(threadId: Long): ThreadDetail
     fun setNoticeThread(command: SetNoticeThread): NoticeThreadSet
-    fun removeNoticeThread(command: RemoveNoticeThread): NoticeThreadRemoved
     fun createThread(command: CreateThread): ThreadCreated
     fun editThreadContent(command: EditThreadContent): ThreadContentEdited
     fun deleteThread(command: DeleteThread): ThreadDeleted

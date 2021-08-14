@@ -15,9 +15,7 @@ import waffle.guam.task.model.UserState
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
 import waffle.guam.thread.command.EditThreadContent
-import waffle.guam.thread.command.RemoveNoticeThread
 import waffle.guam.thread.command.SetNoticeThread
-import waffle.guam.thread.event.NoticeThreadRemoved
 import waffle.guam.thread.event.NoticeThreadSet
 import waffle.guam.thread.event.ThreadContentEdited
 import waffle.guam.thread.event.ThreadCreated
@@ -58,24 +56,14 @@ class ThreadServiceImpl(
             throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
         }
 
+        if (command.threadId == null) {
+            projectRepository.save(project.copy(noticeThreadId = null, modifiedAt = Instant.now()))
+            return NoticeThreadSet(project.id)
+        }
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             projectRepository.save(project.copy(noticeThreadId = it.id, modifiedAt = Instant.now()))
-            return NoticeThreadSet(it.id, project.id)
+            return NoticeThreadSet(project.id, it.id)
         }
-    }
-
-    @Transactional // TODO(setNoticeThread 1개로 통합 - 쓰레드 찾아서 id 값 대입해주는 로직이 없다는 점만 빼면 동일)
-    override fun removeNoticeThread(command: RemoveNoticeThread): NoticeThreadRemoved {
-        val project = projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
-
-        val task = taskService.getTasks(SearchTask(listOf(command.userId), listOf(project.id)))
-            .firstOrNull() ?: throw DataNotFoundException() // TODO(fix to getTask after merge - 단수조회 생기면 수정)
-        if (task.userState in nonMemberUserStates) {
-            throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
-        }
-
-        projectRepository.save(project.copy(noticeThreadId = null, modifiedAt = Instant.now()))
-        return NoticeThreadRemoved(project.id)
     }
 
     @Transactional
