@@ -16,9 +16,6 @@ class ThreadEventHandler(
     fun handleNoticeThreadSet(event: NoticeThreadSet) {}
 
     @EventListener
-    fun handleNoticeThreadRemoved(event: NoticeThreadRemoved) {}
-
-    @EventListener
     fun handleThreadCreated(event: ThreadCreated) {
         if (!event.imageFiles.isNullOrEmpty())
             for (imageFile in event.imageFiles)
