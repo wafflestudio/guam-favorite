@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.MediaType
@@ -52,7 +53,8 @@ class GetThreadsSpec @Autowired constructor(
     private val projectRepository: ProjectRepository,
     private val taskRepository: TaskRepository,
     private val imageRepository: ImageRepository,
-    private val database: Database
+    private val database: Database,
+    private val eventPublisher: ApplicationEventPublisher
 ) {
 
     val imageService = mockk<ImageService>()
@@ -65,8 +67,8 @@ class GetThreadsSpec @Autowired constructor(
         taskRepository = taskRepository,
         imageRepository = imageRepository,
         imageService = imageService,
+        eventPublisher = eventPublisher
     )
-
     @BeforeEach
     fun clearDatabase() {
         database.cleanUp()
