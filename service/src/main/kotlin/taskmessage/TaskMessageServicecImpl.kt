@@ -2,6 +2,7 @@ package waffle.guam.taskmessage
 
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import waffle.guam.DataNotFoundException
 import waffle.guam.NotAllowedException
 import waffle.guam.task.TaskRepository
@@ -19,6 +20,7 @@ class TaskMessageServiceImpl(
     private val taskRepository: TaskRepository
 ) : TaskMessageService {
 
+    @Transactional
     override fun createTaskMessage(command: CreateTaskMessage): TaskMessageCreated =
         taskRepository.findById(command.taskId).orElseThrow(::DataNotFoundException).let {
             if (it.user.id != command.userId) {
@@ -31,6 +33,7 @@ class TaskMessageServiceImpl(
             )
         }
 
+    @Transactional
     override fun updateTaskMessage(command: UpdateTaskMessage): TaskMessageUpdated =
         taskMessageRepository.findById(command.taskMessageId).orElseThrow(::DataNotFoundException).let {
             taskMessageRepository.save(
@@ -42,9 +45,9 @@ class TaskMessageServiceImpl(
             return TaskMessageUpdated(command.taskMessageId)
         }
 
+    @Transactional
     override fun deleteTaskMessage(command: DeleteTaskMessage): TaskMessageDeleted =
         taskMessageRepository.findById(command.taskMessageId).orElseThrow(::DataNotFoundException).let {
-
             taskRepository.findByIdOrNull(it.taskId)?.let { taskMessageCreator ->
                 if (taskMessageCreator.id != command.userId) {
                     throw NotAllowedException("해당 작업 현황을 삭제할 권한이 없습니다.")
