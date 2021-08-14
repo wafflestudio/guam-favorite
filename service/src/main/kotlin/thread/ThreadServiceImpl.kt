@@ -3,6 +3,15 @@ package waffle.guam.thread
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import waffle.guam.DataNotFoundException
+import waffle.guam.InvalidRequestException
+import waffle.guam.NotAllowedException
+import waffle.guam.comment.CommentRepository
+import waffle.guam.project.ProjectRepository
+import waffle.guam.task.TaskService
+import waffle.guam.task.command.SearchTask
+import waffle.guam.task.model.UserState
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
 import waffle.guam.thread.command.EditThreadContent
@@ -15,11 +24,17 @@ import waffle.guam.thread.event.ThreadCreated
 import waffle.guam.thread.event.ThreadDeleted
 import waffle.guam.thread.model.ThreadDetail
 import waffle.guam.thread.model.ThreadOverView
+import java.time.Instant
 
 @Service
 class ThreadServiceImpl(
-    private val threadRepository: ThreadRepository
+    private val threadRepository: ThreadRepository,
+    private val projectRepository: ProjectRepository,
+    private val taskService: TaskService,
+    private val commentRepository: CommentRepository
 ) : ThreadService {
+
+    private val nonMemberUserStates = listOf(UserState.GUEST, UserState.QUIT, UserState.DECLINED)
 
     override fun getThread(threadId: Long): ThreadOverView {
         TODO("Not yet implemented")
@@ -33,23 +48,94 @@ class ThreadServiceImpl(
         TODO("Not yet implemented")
     }
 
+    @Transactional
     override fun setNoticeThread(command: SetNoticeThread): NoticeThreadSet {
-        TODO("Not yet implemented")
+        val project = projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
+
+        val task = taskService.getTasks(SearchTask(listOf(command.userId), listOf(project.id)))
+            .firstOrNull() ?: throw DataNotFoundException() // TODO(fix to getTask after merge - 단수조회 생기면 수정)
+        if (task.userState in nonMemberUserStates) {
+            throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
+        }
+
+        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
+            projectRepository.save(project.copy(noticeThreadId = it.id, modifiedAt = Instant.now()))
+            return NoticeThreadSet(it.id, project.id)
+        }
     }
 
+    @Transactional // TODO(setNoticeThread 1개로 통합 - 쓰레드 찾아서 id 값 대입해주는 로직이 없다는 점만 빼면 동일)
     override fun removeNoticeThread(command: RemoveNoticeThread): NoticeThreadRemoved {
-        TODO("Not yet implemented")
+        val project = projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
+
+        val task = taskService.getTasks(SearchTask(listOf(command.userId), listOf(project.id)))
+            .firstOrNull() ?: throw DataNotFoundException() // TODO(fix to getTask after merge - 단수조회 생기면 수정)
+        if (task.userState in nonMemberUserStates) {
+            throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
+        }
+
+        projectRepository.save(project.copy(noticeThreadId = null, modifiedAt = Instant.now()))
+        return NoticeThreadRemoved(project.id)
     }
 
+    @Transactional
     override fun createThread(command: CreateThread): ThreadCreated {
-        TODO("Not yet implemented")
+        validateThreadCreator(command)
+
+        threadRepository.save(command.copy(content = command.content?.trim()).toEntity()).let {
+            return ThreadCreated(it.id, command.imageFiles)
+        }
     }
 
+    @Transactional // TODO(클라와 컴케 필수: 달린 이미지가 없는 쓰레드의 content를 ""로 만들려는 경우, deleteThread 호출하도록 수정)
     override fun editThreadContent(command: EditThreadContent): ThreadContentEdited {
-        TODO("Not yet implemented")
+        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
+            if (it.userId != command.userId) {
+                throw NotAllowedException()
+            }
+            if (it.content == command.content) {
+                throw InvalidRequestException("수정 전과 동일한 내용입니다.")
+            }
+
+            threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
+            return ThreadContentEdited(it.id)
+        }
     }
 
+    @Transactional
     override fun deleteThread(command: DeleteThread): ThreadDeleted {
-        TODO("Not yet implemented")
+        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
+            if (it.userId != command.userId) {
+                throw NotAllowedException("타인이 작성한 쓰레드를 삭제할 수는 없습니다.")
+            }
+            val task = taskService.getTasks(SearchTask(listOf(command.userId), listOf(it.projectId)))
+                .firstOrNull() ?: throw DataNotFoundException() // TODO(fix to getTask after merge - 단수조회 생기면 수정)
+            if (task.userState in nonMemberUserStates) {
+                throw NotAllowedException("해당 프로젝트의 쓰레드를 삭제할 권한이 없습니다.")
+            }
+
+            if (commentRepository.countByThreadId(command.threadId) > 0) {
+                threadRepository.save(it.copy(content = ""))
+            } else {
+                threadRepository.delete(it)
+            }
+            return ThreadDeleted(it.id, it.projectId)
+        }
+    }
+
+    protected fun validateThreadCreator(command: CreateThread) {
+        val parentProject = projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
+
+        val task = taskService.getTasks(SearchTask(listOf(command.userId), listOf(parentProject.id)))
+            .firstOrNull() ?: throw DataNotFoundException() // TODO(fix to getTask after merge - 단수조회 생기면 수정)
+
+        if (task.userState == UserState.GUEST) {
+            if (threadRepository.countByUserIdAndProjectId(command.userId, command.projectId) > 0) {
+                throw NotAllowedException("아직 새로운 쓰레드를 생성할 권한이 없습니다.")
+            }
+        }
+        if (task.userState in listOf(UserState.QUIT, UserState.DECLINED)) {
+            throw NotAllowedException("해당 프로젝트에 쓰레드를 생성할 권한이 없습니다.")
+        }
     }
 }
