@@ -2,8 +2,8 @@ package waffle.guam.thread.model
 
 import waffle.guam.image.ImageEntity
 import waffle.guam.image.model.Image
+import waffle.guam.image.model.Image.Companion.toDomain
 import waffle.guam.thread.ThreadView
-import waffle.guam.user.model.User.Companion.toDomain
 import java.time.Instant
 
 data class ThreadOverView(
@@ -30,7 +30,7 @@ data class ThreadOverView(
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
-                creatorImageUrl = e.user.toDomain().imageUrl, // e.user.image?.getPath(),
+                creatorImageUrl = e.user.image?.toDomain()?.path,
                 commentSize = countComments.invoke(e.id),
                 threadImages = filterImages.invoke(e.images),
                 createdAt = e.createdAt,

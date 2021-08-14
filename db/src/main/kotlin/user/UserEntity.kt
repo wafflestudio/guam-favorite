@@ -23,25 +23,26 @@ data class UserEntity(
     @Column
     val firebaseUid: String,
 
-    val deviceId: String? = null,
+    @Column(name = "device_token")
+    var fcmToken: String? = null,
 
-    val nickname: String = "",
+    var nickname: String = "",
 
-    val skills: String? = null,
+    var skills: String? = null,
 
-    val githubUrl: String? = null,
+    var githubUrl: String? = null,
 
-    val blogUrl: String? = null,
+    var blogUrl: String? = null,
 
-    val introduction: String? = null,
+    var introduction: String? = null,
 
     @OneToOne
     @JoinColumn(name = "image_id")
-    val image: ImageEntity? = null,
+    var image: ImageEntity? = null,
 
-    val status: String,
+    var status: String,
 
     val createdAt: Instant = Instant.now(),
 
-    var updatedAt: Instant = createdAt,
+    var modifiedAt: Instant = createdAt,
 )

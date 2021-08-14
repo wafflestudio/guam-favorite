@@ -9,7 +9,5 @@ data class UpdateUser(
     val blogUrl: String? = null,
     val introduction: String? = null,
     val willUploadImage: Boolean,
-    val image: MultipartFile? = null
-) : UserCommand {
-    fun withImage(image: MultipartFile): UpdateUser = copy(image = image)
-}
+    val image: MultipartFile? = null,
+) : UserCommand
