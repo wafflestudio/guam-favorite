@@ -26,15 +26,20 @@ class MessageServiceImpl(
         }
 
         kotlin.runCatching {
-            FirebaseMessaging.getInstance().sendMulticast(
+            val result = FirebaseMessaging.getInstance().sendMulticast(
                 multicastMessage(
                     targetTokens = targetTokens,
                     title = title,
                     body = body
                 )
             )
+            if (result.failureCount > 0) {
+                result.responses.forEach {
+                    logger.error("FCM failed", it)
+                }
+            }
         }.getOrElse {
-            logger.info("FCM failed", it)
+            logger.error("FCM errored", it)
         }
     }
 
