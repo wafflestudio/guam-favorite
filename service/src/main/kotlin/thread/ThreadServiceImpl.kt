@@ -20,6 +20,11 @@ import waffle.guam.thread.model.ThreadOverView
 class ThreadServiceImpl(
     private val threadRepository: ThreadRepository
 ) : ThreadService {
+
+    override fun getThread(threadId: Long): ThreadOverView {
+        TODO("Not yet implemented")
+    }
+
     override fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> {
         TODO("Not yet implemented")
     }
