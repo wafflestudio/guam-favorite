@@ -18,7 +18,7 @@ data class TaskMessageEntity(
 
     val msg: String = "New task msg",
 
-    var status: String,
+    val status: String,
 
     val createdAt: Instant = Instant.now(),
 

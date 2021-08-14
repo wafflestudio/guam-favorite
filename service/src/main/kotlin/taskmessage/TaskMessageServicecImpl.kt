@@ -51,7 +51,9 @@ class TaskMessageServiceImpl(
                 }
             }
 
-            it.status = TaskStatus.DELETED.name
+            taskMessageRepository.save(
+                it.copy(status = TaskStatus.DELETED.name)
+            )
             return TaskMessageDeleted(command.taskMessageId)
         }
 }
