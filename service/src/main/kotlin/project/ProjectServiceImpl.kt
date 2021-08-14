@@ -20,7 +20,6 @@ import waffle.guam.project.model.ProjectState
 import waffle.guam.projectstack.ProjectStackService
 import waffle.guam.projectstack.command.StackIdList
 import waffle.guam.projectstack.util.SearchEngine
-import waffle.guam.stack.model.TechStack
 import waffle.guam.task.TaskService
 import waffle.guam.task.command.SearchTask
 import java.time.Instant
@@ -44,7 +43,7 @@ class ProjectServiceImpl(
                 entity = e,
                 techStacks = projectStackService.getProjectStacks(projectId).map { it.stack },
                 tasks = taskService.getTasks(SearchTask(listOf(projectId)))
-                )
+            )
         }
 
     override fun getAllProjects(pageable: Pageable): Page<Project> =
