@@ -26,6 +26,7 @@ data class UserEntity(
     @Column
     val firebaseUid: String,
 
+    @Column(name = "device_token")
     var deviceId: String? = null,
 
     @Enumerated(EnumType.STRING)
@@ -50,6 +51,7 @@ data class UserEntity(
 
     val createdAt: Instant = Instant.now(),
 
+    @Column(name = "modified_at")
     var updatedAt: Instant = createdAt,
 )
 
