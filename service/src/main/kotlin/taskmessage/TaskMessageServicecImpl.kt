@@ -28,8 +28,8 @@ class TaskMessageServiceImpl(
             }
 
             return TaskMessageCreated(
-                command.taskId,
-                taskMessageRepository.save(command.toEntity()).id
+                taskId = command.taskId,
+                taskMessageId = taskMessageRepository.save(command.toEntity()).id
             )
         }
 
@@ -54,9 +54,7 @@ class TaskMessageServiceImpl(
                 }
             }
 
-            taskMessageRepository.save(
-                it.copy(status = TaskStatus.DELETED.name)
-            )
+            it.status = TaskStatus.DELETED.name
             return TaskMessageDeleted(command.taskMessageId)
         }
 }
