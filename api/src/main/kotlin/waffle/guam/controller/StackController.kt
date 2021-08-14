@@ -16,27 +16,22 @@ class StackController(
     private val stackService: StackService
 ) {
 
-    @GetMapping("/stackinit")
-    fun createInitialStack() {
-        stackService.init()
-    }
-
     // C
-    @PostMapping("/stack")
-    fun createStack(
-        command: CreateStack
-    ): Boolean {
-        return stackService.create(command)
-    }
+//    @PostMapping("/stack")
+//    fun createStack(
+//        command: CreateStack
+//    ): Boolean {
+//        return stackService.create(command)
+//    }
 
     // U
-    @PutMapping("/stack/{stackId}")
-    fun updateStack(
-        @PathVariable stackId: Long,
-        command: UpdateStack
-    ): Boolean {
-        return stackService.update(stackId, command)
-    }
+//    @PutMapping("/stack/{stackId}")
+//    fun updateStack(
+//        @PathVariable stackId: Long,
+//        command: UpdateStack
+//    ): Boolean {
+//        return stackService.update(stackId, command)
+//    }
 
     // R
     @GetMapping("/stacks")
