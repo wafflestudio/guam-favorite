@@ -14,11 +14,11 @@ import waffle.guam.thread.model.ThreadDetail
 import waffle.guam.thread.model.ThreadOverView
 
 interface ThreadService {
-    fun getThread(threadId: Long): ThreadOverView
     fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView>
     fun getFullThread(threadId: Long): ThreadDetail
     fun setNoticeThread(command: SetNoticeThread): NoticeThreadSet
     fun createThread(command: CreateThread): ThreadCreated
     fun editThreadContent(command: EditThreadContent): ThreadContentEdited
     fun deleteThread(command: DeleteThread): ThreadDeleted
+    fun validateThreadOwner(threadId: Long, userId: Long)
 }

@@ -35,11 +35,6 @@ class ThreadServiceImpl(
 
     private val nonMemberUserStates = listOf(UserState.GUEST, UserState.QUIT, UserState.DECLINED)
 
-    override fun getThread(threadId: Long): ThreadOverView =
-        threadViewRepository.findById(threadId).orElseThrow(::DataNotFoundException).let {
-            ThreadOverView.of(it) { threadId -> commentRepository.countByThreadId(threadId) }
-        }
-
     override fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> =
         threadViewRepository.findByProjectId(projectId, pageable).map {
             ThreadOverView.of(it) { threadId -> commentRepository.countByThreadId(threadId) }
@@ -113,6 +108,14 @@ class ThreadServiceImpl(
                 threadRepository.delete(it)
             }
             return ThreadDeleted(it.id, it.projectId)
+        }
+    }
+
+    override fun validateThreadOwner(threadId: Long, userId: Long) {
+        threadRepository.findById(threadId).orElseThrow(::DataNotFoundException).let {
+            if (it.userId != userId) {
+                throw NotAllowedException("타인이 작성한 쓰레드입니다.")
+            }
         }
     }
 

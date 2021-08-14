@@ -56,7 +56,11 @@ class CommentController(
     ): SuccessResponse<CommentContentEdited> =
         SuccessResponse(
             commentService.editCommentContent(
-                command = EditCommentContent(commentId = commentId, userId = userContext.id, content = contentInput.content)
+                command = EditCommentContent(
+                    commentId = commentId,
+                    userId = userContext.id,
+                    content = contentInput.content
+                )
             )
         )
 
@@ -67,7 +71,9 @@ class CommentController(
         userContext: UserContext
     ): SuccessResponse<ImagesDeleted> =
         commentService.getComment(commentId).let {
-            if (it.creatorId != userContext.id) throw NotAllowedException()
+            if (it.creatorId != userContext.id) {
+                throw NotAllowedException()
+            }
             return SuccessResponse(
                 imageService.deleteImages(DeleteImages.ById(listOf(imageId)))
             )
