@@ -1,6 +1,7 @@
 package waffle.guam.comment
 
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import waffle.guam.DataNotFoundException
 import waffle.guam.InvalidRequestException
 import waffle.guam.NotAllowedException
@@ -31,6 +32,7 @@ class CommentServiceImpl(
             Comment.of(it)
         }
 
+    @Transactional
     override fun createComment(command: CreateComment): CommentCreated {
         validateCommentCreator(command)
 
@@ -41,6 +43,7 @@ class CommentServiceImpl(
         }
     }
 
+    @Transactional
     override fun editCommentContent(command: EditCommentContent): CommentContentEdited =
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
             if (it.user.id != command.userId) {
@@ -54,6 +57,7 @@ class CommentServiceImpl(
             return CommentContentEdited(it.id)
         }
 
+    @Transactional
     override fun deleteComment(command: DeleteComment): CommentDeleted =
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
             if (it.user.id != command.userId) {
