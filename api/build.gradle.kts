@@ -11,6 +11,7 @@ dependencies {
     implementation("io.springfox:springfox-swagger2:2.9.2")
     implementation("io.springfox:springfox-swagger-ui:2.9.2")
     implementation("com.google.firebase:firebase-admin:7.1.0")
+    api("org.springframework.boot:spring-boot-starter-data-jpa")
 }
 
 /**
