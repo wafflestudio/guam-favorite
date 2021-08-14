@@ -300,7 +300,7 @@ class ProjectService(
                             eventPublisher.publishEvent(
                                 JoinResultEvent(
                                     projectTitle = projectRepository.findById(id).get().title,
-                                    targetUserId = userId,
+                                    targetUserId = guestId,
                                     accepted = accept
                                 )
                             )
