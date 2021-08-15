@@ -22,7 +22,7 @@ data class Task(
             Task(
                 id = id,
                 position = Position.valueOf(position),
-                projectId = projectId,
+                projectId = project.id,
                 user = User.of(user),
                 userState = UserState.valueOf(userState),
                 taskMsgs = when (extraFieldParams.withTaskMsgs) {
