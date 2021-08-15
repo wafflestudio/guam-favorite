@@ -21,7 +21,7 @@ import waffle.guam.projectstack.ProjectStackService
 import waffle.guam.projectstack.command.StackIdList
 import waffle.guam.projectstack.util.SearchEngine
 import waffle.guam.task.TaskService
-import waffle.guam.task.command.SearchTask
+import waffle.guam.task.command.SearchTask.Companion.taskQuery
 import java.time.Instant
 
 /**
@@ -31,7 +31,7 @@ import java.time.Instant
 class ProjectServiceImpl(
     private val projectStackService: ProjectStackService,
     private val taskService: TaskService,
-    private val projectRepository: ProjectRepository
+    private val projectRepository: ProjectRepository,
 ) : ProjectService {
 
     private val searchEngine = SearchEngine()
@@ -42,7 +42,7 @@ class ProjectServiceImpl(
             Project.of(
                 entity = e,
                 techStacks = projectStackService.getProjectStacks(projectId).map { it.stack },
-                tasks = taskService.getTasks(SearchTask(listOf(projectId)))
+                tasks = taskService.getTasks(taskQuery().projectIds(projectId))
             )
         }
 
@@ -73,11 +73,12 @@ class ProjectServiceImpl(
 
             val prjStacks = projectStackService.getAllProjectStacks(ids)
 
-            val tasks = taskService.getTasks(command = SearchTask(projectIds = ids))
+            val tasks = taskService.getTasks(taskQuery().projectIds(ids))
 
             val filterProjects =
                 this.filter {
-                    command.stackId in prjStacks.filter { prjStacks -> prjStacks.projectId == it.id }.map { prjStacks -> prjStacks.id }
+                    command.stackId in prjStacks.filter { prjStacks -> prjStacks.projectId == it.id }
+                        .map { prjStacks -> prjStacks.id }
                 }
                     .map { it to searchEngine.search(dic = listOf(it.title, it.description), q = command.query) }
                     .filter { it.second > 0 }
@@ -192,7 +193,7 @@ class ProjectServiceImpl(
                 .mapValues { it.value.map { prjStack -> prjStack.stack } }
 
         val tasks =
-            taskService.getTasks(SearchTask(ids))
+            taskService.getTasks(taskQuery().projectIds(ids))
                 .groupBy { it.projectId }
 
         return page.map {

@@ -13,7 +13,7 @@ import waffle.guam.comment.event.CommentCreated
 import waffle.guam.comment.event.CommentDeleted
 import waffle.guam.comment.model.Comment
 import waffle.guam.task.TaskService
-import waffle.guam.task.command.SearchTask
+import waffle.guam.task.command.SearchTask.Companion.taskQuery
 import waffle.guam.task.model.UserState
 import waffle.guam.thread.ThreadRepository
 import waffle.guam.user.UserRepository
@@ -71,8 +71,7 @@ class CommentServiceImpl(
     protected fun validateCommentCreator(command: CreateComment) {
         val parentThread = threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException)
 
-        val task = taskService.getTasks(SearchTask(listOf(command.userId), listOf(parentThread.projectId)))
-            .firstOrNull() ?: throw DataNotFoundException() // TODO(fix to getTask after merge)
+        val task = taskService.getTask(taskQuery().userIds(command.userId).projectIds(parentThread.projectId))
 
         if (task.userState == UserState.GUEST) {
             val joinRequestThread = threadRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId)
