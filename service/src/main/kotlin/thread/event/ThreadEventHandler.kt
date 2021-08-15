@@ -29,6 +29,9 @@ class ThreadEventHandler(
     }
 
     @EventListener
+    fun handleJoinRequestThreadCreated(event: JoinRequestThreadCreated) {}
+
+    @EventListener
     fun handleThreadContentEdited(event: ThreadContentEdited) {}
 
     @EventListener

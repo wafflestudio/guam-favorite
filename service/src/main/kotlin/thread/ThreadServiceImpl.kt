@@ -12,10 +12,12 @@ import waffle.guam.project.ProjectRepository
 import waffle.guam.task.TaskService
 import waffle.guam.task.command.SearchTask
 import waffle.guam.task.model.UserState
+import waffle.guam.thread.command.CreateJoinRequestThread
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
 import waffle.guam.thread.command.EditThreadContent
 import waffle.guam.thread.command.SetNoticeThread
+import waffle.guam.thread.event.JoinRequestThreadCreated
 import waffle.guam.thread.event.NoticeThreadSet
 import waffle.guam.thread.event.ThreadContentEdited
 import waffle.guam.thread.event.ThreadCreated
@@ -74,15 +76,26 @@ class ThreadServiceImpl(
 
     @Transactional
     override fun createThread(command: CreateThread): ThreadCreated {
-        validateThreadCreator(command)
+        val parentProject = projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
+        val task = taskService.getTasks(SearchTask(listOf(command.userId), listOf(parentProject.id)))
+            .firstOrNull() ?: throw DataNotFoundException() // TODO(fix to getTask after merge - 단수조회 생기면 수정)
+        if (task.userState in nonMemberUserStates) {
+            throw NotAllowedException("해당 프로젝트에 쓰레드를 생성할 권한이 없습니다.")
+        }
 
         threadRepository.save(command.copy(content = command.content?.trim()).toEntity()).let {
             return ThreadCreated(it.id, command.imageFiles)
         }
     }
 
+    @Transactional
+    override fun createJoinRequestThread(command: CreateJoinRequestThread): JoinRequestThreadCreated =
+        threadRepository.save(command.copy(content = command.content).toEntity()).let {
+            return JoinRequestThreadCreated(it.id)
+        }
+
     @Transactional // TODO(클라와 컴케 필수: 달린 이미지가 없는 쓰레드의 content를 ""로 만들려는 경우, deleteThread 호출하도록 수정)
-    override fun editThreadContent(command: EditThreadContent): ThreadContentEdited {
+    override fun editThreadContent(command: EditThreadContent): ThreadContentEdited =
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) {
                 throw NotAllowedException("타인의 쓰레드를 수정할 수는 없습니다.")
@@ -94,10 +107,9 @@ class ThreadServiceImpl(
             threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
             return ThreadContentEdited(it.id)
         }
-    }
 
     @Transactional
-    override fun deleteThread(command: DeleteThread): ThreadDeleted {
+    override fun deleteThread(command: DeleteThread): ThreadDeleted =
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) {
                 throw NotAllowedException("타인이 작성한 쓰레드를 삭제할 수는 없습니다.")
@@ -115,21 +127,4 @@ class ThreadServiceImpl(
             }
             return ThreadDeleted(threadId = it.id, projectId = it.projectId)
         }
-    }
-
-    protected fun validateThreadCreator(command: CreateThread) {
-        val parentProject = projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
-
-        val task = taskService.getTasks(SearchTask(listOf(command.userId), listOf(parentProject.id)))
-            .firstOrNull() ?: throw DataNotFoundException() // TODO(fix to getTask after merge - 단수조회 생기면 수정)
-
-        if (task.userState == UserState.GUEST) {
-            if (threadRepository.countByUserIdAndProjectId(command.userId, command.projectId) > 0) {
-                throw NotAllowedException("아직 새로운 쓰레드를 생성할 권한이 없습니다.")
-            }
-        }
-        if (task.userState in listOf(UserState.QUIT, UserState.DECLINED)) {
-            throw NotAllowedException("해당 프로젝트에 쓰레드를 생성할 권한이 없습니다.")
-        }
-    }
 }
