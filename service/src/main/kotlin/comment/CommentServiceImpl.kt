@@ -47,7 +47,7 @@ class CommentServiceImpl(
     override fun editCommentContent(command: EditCommentContent): CommentContentEdited =
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
             if (it.user.id != command.userId) {
-                throw NotAllowedException()
+                throw NotAllowedException("타인의 댓글을 수정할 수는 없습니다.")
             }
             if (it.content == command.content) {
                 throw InvalidRequestException("수정 전과 동일한 내용입니다.")

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import waffle.guam.NotAllowedException
 import waffle.guam.common.UserContext
 import waffle.guam.controller.request.ContentInput
 import waffle.guam.controller.request.CreateFullInfoInput
@@ -124,7 +125,11 @@ class ThreadController(
         @PathVariable imageId: Long,
         userContext: UserContext
     ): SuccessResponse<ImagesDeleted> {
-        threadService.validateThreadOwner(threadId = threadId, userId = userContext.id)
+        threadService.getThread(threadId).let {
+            if (it.creatorId != userContext.id) {
+                throw NotAllowedException("타인이 업로드한 이미지를 삭제할 수는 없습니다.")
+            }
+        }
         return SuccessResponse(
             imageService.deleteImages(DeleteImages.ById(listOf(imageId)))
         )

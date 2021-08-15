@@ -21,6 +21,7 @@ import waffle.guam.thread.event.ThreadContentEdited
 import waffle.guam.thread.event.ThreadCreated
 import waffle.guam.thread.event.ThreadDeleted
 import waffle.guam.thread.model.ThreadDetail
+import waffle.guam.thread.model.ThreadInfo
 import waffle.guam.thread.model.ThreadOverView
 import java.time.Instant
 
@@ -34,6 +35,11 @@ class ThreadServiceImpl(
 ) : ThreadService {
 
     private val nonMemberUserStates = listOf(UserState.GUEST, UserState.QUIT, UserState.DECLINED)
+
+    override fun getThread(threadId: Long): ThreadInfo =
+        threadRepository.findById(threadId).orElseThrow(::DataNotFoundException).let {
+            ThreadInfo.of(it)
+        }
 
     override fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> =
         threadViewRepository.findByProjectId(projectId, pageable).map {
@@ -79,7 +85,7 @@ class ThreadServiceImpl(
     override fun editThreadContent(command: EditThreadContent): ThreadContentEdited {
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) {
-                throw NotAllowedException()
+                throw NotAllowedException("타인의 쓰레드를 수정할 수는 없습니다.")
             }
             if (it.content == command.content) {
                 throw InvalidRequestException("수정 전과 동일한 내용입니다.")
@@ -108,14 +114,6 @@ class ThreadServiceImpl(
                 threadRepository.delete(it)
             }
             return ThreadDeleted(it.id, it.projectId)
-        }
-    }
-
-    override fun validateThreadOwner(threadId: Long, userId: Long) {
-        threadRepository.findById(threadId).orElseThrow(::DataNotFoundException).let {
-            if (it.userId != userId) {
-                throw NotAllowedException("타인이 작성한 쓰레드입니다.")
-            }
         }
     }
 
