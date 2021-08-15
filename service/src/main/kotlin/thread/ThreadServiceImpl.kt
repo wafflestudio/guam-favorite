@@ -120,10 +120,9 @@ class ThreadServiceImpl(
                 throw NotAllowedException("해당 프로젝트의 쓰레드를 삭제할 권한이 없습니다.")
             }
 
-            if (commentRepository.countByThreadId(command.threadId) > 0) {
-                threadRepository.save(it.copy(content = ""))
-            } else {
-                threadRepository.delete(it)
+            when (commentRepository.existsByThreadId(command.threadId)) {
+                true -> threadRepository.save(it.copy(content = ""))
+                false -> threadRepository.delete(it)
             }
             return ThreadDeleted(threadId = it.id, projectId = it.projectId)
         }
