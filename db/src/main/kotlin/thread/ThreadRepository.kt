@@ -8,8 +8,6 @@ import java.util.Optional
 interface ThreadRepository : JpaRepository<ThreadEntity, Long> {
 
     fun findByUserIdAndProjectId(userId: Long, projectId: Long): Optional<ThreadEntity>
-
-    fun countByUserIdAndProjectId(userId: Long, projectId: Long): Int
 }
 
 interface ThreadViewRepository : JpaRepository<ThreadView, Long> {
