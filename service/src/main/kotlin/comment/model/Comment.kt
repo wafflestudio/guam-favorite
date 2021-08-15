@@ -3,6 +3,8 @@ package waffle.guam.comment.model
 import waffle.guam.comment.CommentEntity
 import waffle.guam.image.model.Image
 import waffle.guam.image.model.Image.Companion.toDomain
+import waffle.guam.image.model.ImageType
+import waffle.guam.image.model.ImageType.Companion.filter
 import java.time.Instant
 
 data class Comment(
@@ -18,15 +20,15 @@ data class Comment(
 ) {
 
     companion object {
-        fun of(e: CommentEntity, filteredImages: List<Image>): Comment =
+        fun of(e: CommentEntity): Comment =
             Comment(
                 id = e.id,
                 content = e.content,
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
-                creatorImageUrl = e.user.image?.toDomain()?.path, // e.user.image?.getPath(),
-                commentImages = filteredImages,
+                creatorImageUrl = e.user.image?.toDomain()?.path,
+                commentImages = ImageType.COMMENT.filter(e.images).map { it.toDomain() },
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )

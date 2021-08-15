@@ -10,7 +10,7 @@ import waffle.guam.thread.ThreadRepository
 import waffle.guam.thread.ThreadService
 
 @Component
-class CommentEventListener(
+class CommentEventHandler(
     private val imageService: ImageService,
     private val threadService: ThreadService,
     private val threadRepository: ThreadRepository, // FIXME: ThreadService 수정하면서 대체
