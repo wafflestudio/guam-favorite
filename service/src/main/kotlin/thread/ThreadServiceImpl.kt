@@ -10,7 +10,7 @@ import waffle.guam.NotAllowedException
 import waffle.guam.comment.CommentRepository
 import waffle.guam.project.ProjectRepository
 import waffle.guam.task.TaskService
-import waffle.guam.task.command.SearchTask
+import waffle.guam.task.command.SearchTask.Companion.taskQuery
 import waffle.guam.task.model.UserState
 import waffle.guam.thread.command.CreateJoinRequestThread
 import waffle.guam.thread.command.CreateThread
@@ -33,7 +33,7 @@ class ThreadServiceImpl(
     private val threadViewRepository: ThreadViewRepository,
     private val projectRepository: ProjectRepository,
     private val taskService: TaskService,
-    private val commentRepository: CommentRepository
+    private val commentRepository: CommentRepository,
 ) : ThreadService {
 
     private val nonMemberUserStates = listOf(UserState.GUEST, UserState.QUIT, UserState.DECLINED)
@@ -57,8 +57,8 @@ class ThreadServiceImpl(
     override fun setNoticeThread(command: SetNoticeThread): NoticeThreadSet {
         val project = projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
 
-        val task = taskService.getTasks(SearchTask(listOf(command.userId), listOf(project.id)))
-            .firstOrNull() ?: throw DataNotFoundException() // TODO(fix to getTask after merge - 단수조회 생기면 수정)
+        val task = taskService.getTask(taskQuery().userIds(command.userId).projectIds(project.id))
+
         if (task.userState in nonMemberUserStates) {
             throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
         }
@@ -77,8 +77,8 @@ class ThreadServiceImpl(
     @Transactional
     override fun createThread(command: CreateThread): ThreadCreated {
         val parentProject = projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
-        val task = taskService.getTasks(SearchTask(listOf(command.userId), listOf(parentProject.id)))
-            .firstOrNull() ?: throw DataNotFoundException() // TODO(fix to getTask after merge - 단수조회 생기면 수정)
+        val task = taskService.getTask(taskQuery().userIds(command.userId).projectIds(parentProject.id))
+
         if (task.userState in nonMemberUserStates) {
             throw NotAllowedException("해당 프로젝트에 쓰레드를 생성할 권한이 없습니다.")
         }
@@ -114,8 +114,8 @@ class ThreadServiceImpl(
             if (it.userId != command.userId) {
                 throw NotAllowedException("타인이 작성한 쓰레드를 삭제할 수는 없습니다.")
             }
-            val task = taskService.getTasks(SearchTask(listOf(command.userId), listOf(it.projectId)))
-                .firstOrNull() ?: throw DataNotFoundException() // TODO(fix to getTask after merge - 단수조회 생기면 수정)
+            val task = taskService.getTask(taskQuery().userIds(command.userId).projectIds(it.projectId))
+
             if (task.userState in nonMemberUserStates) {
                 throw NotAllowedException("해당 프로젝트의 쓰레드를 삭제할 권한이 없습니다.")
             }

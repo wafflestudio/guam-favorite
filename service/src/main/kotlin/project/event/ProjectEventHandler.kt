@@ -9,7 +9,7 @@ import waffle.guam.image.model.ImageType
 import waffle.guam.projectstack.ProjectStackService
 import waffle.guam.task.TaskService
 import waffle.guam.task.command.CreateTask
-import waffle.guam.task.command.SearchTask
+import waffle.guam.task.command.SearchTask.Companion.taskQuery
 import waffle.guam.task.command.UpdateTaskUserState
 import waffle.guam.task.model.UserState
 
@@ -71,9 +71,7 @@ class ProjectEventHandler(
     fun prjDeleted(event: ProjectDeleted) {
 
         taskService.getTasks(
-            command = SearchTask(
-                projectIds = listOf(event.projectId)
-            )
+            command = taskQuery().projectIds(event.projectId)
         ).let { taskList ->
             taskService.updateTaskState(
                 command = UpdateTaskUserState(
@@ -88,10 +86,7 @@ class ProjectEventHandler(
     fun prjCompleted(event: ProjectCompleted) {
 
         taskService.getTasks(
-            command = SearchTask(
-                projectIds = listOf(event.projectId),
-                userStates = listOf(UserState.LEADER, UserState.MEMBER)
-            )
+            command = taskQuery().projectIds(event.projectId).userStates(UserState.LEADER, UserState.MEMBER)
         ).let { taskList ->
             taskService.updateTaskState(
                 command = UpdateTaskUserState(

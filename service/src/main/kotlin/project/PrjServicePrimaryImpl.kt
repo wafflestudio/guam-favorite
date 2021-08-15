@@ -21,8 +21,7 @@ import waffle.guam.project.event.ProjectUpdated
 import waffle.guam.project.model.Project
 import waffle.guam.project.model.ProjectState
 import waffle.guam.task.TaskService
-import waffle.guam.task.command.SearchTask
-import waffle.guam.task.command.TaskExtraFieldParams
+import waffle.guam.task.command.SearchTask.Companion.taskQuery
 import waffle.guam.task.model.Position
 import waffle.guam.task.model.UserState
 
@@ -30,7 +29,7 @@ import waffle.guam.task.model.UserState
 @Service
 class PrjServicePrimaryImpl(
     private val taskService: TaskService,
-    private val prjService: ProjectService
+    private val prjService: ProjectService,
 ) : ProjectService {
 
     // TODO ERROR 세분화
@@ -57,16 +56,7 @@ class PrjServicePrimaryImpl(
     @Transactional
     override fun createProject(command: CreateProject, userId: Long): ProjectCreated {
 
-        val checkUserTasks =
-            taskService.getTasks(
-                command =
-                SearchTask(
-                    userIds = listOf(userId)
-                ),
-                TaskExtraFieldParams(
-                    false
-                )
-            )
+        val checkUserTasks = taskService.getTasks(command = taskQuery().userIds(userId))
 
         // TODO : 한번 반려되었어도 다시 요청을 보낼 수 있도록 수정
         if (checkUserTasks.size >= 3)
@@ -82,13 +72,7 @@ class PrjServicePrimaryImpl(
     override fun updateProject(command: UpdateProject, projectId: Long, userId: Long): ProjectUpdated {
 
         val checkPrjTasks =
-            taskService.getTasks(
-                command =
-                SearchTask(
-                    projectIds = listOf(projectId),
-                    userStates = listOf(UserState.LEADER, UserState.MEMBER)
-                )
-            )
+            taskService.getTasks(taskQuery().projectIds(projectId).userStates(UserState.LEADER, UserState.MEMBER))
 
         if (checkPrjTasks.none { it.user.id == userId && it.userState == UserState.LEADER })
             throw NotAllowedException("리더만 프로젝트를 수정할 수 있어요.")
@@ -108,12 +92,7 @@ class PrjServicePrimaryImpl(
     @Transactional
     override fun deleteProject(projectId: Long, userId: Long): ProjectDeleted {
 
-        val checkPrjTasks =
-            taskService.getTasks(
-                command = SearchTask(
-                    projectIds = listOf(projectId)
-                )
-            )
+        val checkPrjTasks = taskService.getTasks(taskQuery().projectIds(projectId))
 
         if (checkPrjTasks.none { it.user.id == userId && it.userState == UserState.LEADER })
             throw NotAllowedException("리더만 프로젝트를 종료할 수 있어요.")
@@ -124,12 +103,7 @@ class PrjServicePrimaryImpl(
     @Transactional
     override fun completeProject(projectId: Long, userId: Long): ProjectCompleted {
 
-        val checkPrjTasks =
-            taskService.getTasks(
-                command = SearchTask(
-                    projectIds = listOf(projectId)
-                )
-            )
+        val checkPrjTasks = taskService.getTasks(taskQuery().projectIds(projectId))
 
         if (checkPrjTasks.none { it.user.id == userId && it.userState == UserState.LEADER })
             throw NotAllowedException("리더만 프로젝트를 완료할 수 있어요.")
