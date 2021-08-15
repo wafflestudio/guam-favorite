@@ -8,6 +8,7 @@ import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.TechStackEntity
 import waffle.guam.db.repository.ImageRepository
 import waffle.guam.db.repository.StackRepository
+import waffle.guam.exception.DataNotFoundException
 import waffle.guam.model.TechStack
 import waffle.guam.service.command.CreateStack
 import waffle.guam.service.command.UpdateStack
@@ -63,22 +64,22 @@ class StackService(
     // 클라에서 쓸 일 없다고 해서 잠시 막아놨습니다. 혹시라도 api 잘못 날려서 S3 건들까봐..
     @Transactional
     fun update(stackId: Long, o: UpdateStack): Boolean {
-//        stackRepository.findById(stackId).orElseThrow(::DataNotFoundException).let {
-//            it.position = o.position ?: it.position
-//            it.aliases = o.aliases ?: it.aliases
-//            it.name = o.name ?: it.name
-//            o.imageFiles?.let { image ->
-//                imageRepository.deleteByParentIdAndType(
-//                    it.id, ImageType.STACK
-//                )
-//                it.thumbnail = imageService.upload(
-//                    image,
-//                    ImageInfo(
-//                        it.id, ImageType.STACK
-//                    )
-//                )
-//            }
-//        }
+        stackRepository.findById(stackId).orElseThrow(::DataNotFoundException).let {
+            it.position = o.position ?: it.position
+            it.aliases = o.aliases ?: it.aliases
+            it.name = o.name ?: it.name
+            o.imageFiles?.let { image ->
+                imageRepository.deleteByParentIdAndType(
+                    it.id, ImageType.STACK
+                )
+                it.thumbnail = imageService.upload(
+                    image,
+                    ImageInfo(
+                        it.id, ImageType.STACK
+                    )
+                )
+            }
+        }
         return true
     }
 

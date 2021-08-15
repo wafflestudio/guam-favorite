@@ -24,7 +24,7 @@ data class TechStack(
                 name = e.name,
                 aliases = e.aliases,
                 thumbnail =
-                if (e.thumbnail != null) Image.ofStack(e.thumbnail!!, e.name)
+                if (e.thumbnail != null) Image.of(e.thumbnail!!)
                 else null,
                 position = e.position
             )
