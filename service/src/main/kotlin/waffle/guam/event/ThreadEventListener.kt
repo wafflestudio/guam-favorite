@@ -24,7 +24,7 @@ class ThreadEventListener(
 
         messageService.sendMessage(
             ids = targetIds,
-            title = "새로운 스레드가 작성되었습니다.",
+            title = "새로운 쓰레드가 작성되었습니다.",
             body = "$userName: ${event.content}"
         )
     }
@@ -37,7 +37,7 @@ class ThreadEventListener(
 
         messageService.sendMessage(
             ids = listOf(event.threadCreatorId),
-            title = "새로운 답글이 달렸습니다.",
+            title = "새로운 댓글이 달렸습니다.",
             body = "$userName: ${event.content}"
         )
     }
