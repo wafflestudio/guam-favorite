@@ -6,7 +6,8 @@ import waffle.guam.task.TaskSpec
 import waffle.guam.task.model.Position
 import waffle.guam.task.model.UserState
 
-data class SearchTask(
+@Suppress("DataClassPrivateConstructor")
+data class SearchTask private constructor(
     val userIds: List<Long>? = null,
     val projectIds: List<Long>? = null,
     val userStates: List<UserState>? = null,
@@ -22,4 +23,32 @@ data class SearchTask(
 
     fun specWithFetch(extraFieldParams: TaskExtraFieldParams): Specification<TaskEntity> =
         spec.and(extraFieldParams.spec)
+
+    fun userIds(vararg value: Long): SearchTask =
+        copy(userIds = value.toList())
+
+    fun userIds(value: List<Long>): SearchTask =
+        copy(userIds = value)
+
+    fun projectIds(vararg value: Long): SearchTask =
+        copy(projectIds = value.toList())
+
+    fun projectIds(value: List<Long>): SearchTask =
+        copy(projectIds = value)
+
+    fun userStates(vararg value: UserState): SearchTask =
+        copy(userStates = value.toList())
+
+    fun userStates(value: List<UserState>): SearchTask =
+        copy(userStates = value)
+
+    fun positions(vararg value: Position): SearchTask =
+        copy(positions = value.toList())
+
+    fun positions(value: List<Position>): SearchTask =
+        copy(positions = value)
+
+    companion object {
+        fun taskQuery(): SearchTask = SearchTask()
+    }
 }

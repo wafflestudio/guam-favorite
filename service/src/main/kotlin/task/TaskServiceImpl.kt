@@ -59,4 +59,7 @@ class TaskServiceImpl(
 
         return taskRepository.findAll(spec).map { it.toDomain(extraFieldParams) }
     }
+
+    override fun getTask(command: SearchTask, extraFieldParams: TaskExtraFieldParams): Task =
+        getTasks(command, extraFieldParams).firstOrNull() ?: throw DataNotFoundException()
 }

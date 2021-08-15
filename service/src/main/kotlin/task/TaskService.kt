@@ -12,4 +12,5 @@ interface TaskService {
     fun createTask(userId: Long, command: CreateTask): TaskCreated
     fun updateTaskState(command: UpdateTaskUserState): TaskUserStateUpdated
     fun getTasks(command: SearchTask, extraFieldParams: TaskExtraFieldParams = TaskExtraFieldParams()): List<Task>
+    fun getTask(command: SearchTask, extraFieldParams: TaskExtraFieldParams = TaskExtraFieldParams()): Task
 }
