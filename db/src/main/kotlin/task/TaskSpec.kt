@@ -2,6 +2,7 @@ package waffle.guam.task
 
 import org.springframework.data.jpa.domain.Specification
 import waffle.guam.image.ImageEntity
+import waffle.guam.project.ProjectEntity
 import waffle.guam.taskmessage.TaskMessageEntity
 import waffle.guam.user.UserEntity
 import javax.persistence.criteria.CriteriaBuilder
@@ -23,6 +24,13 @@ object TaskSpec {
             fetch<UserEntity, ImageEntity>("image", JoinType.LEFT)
         }
         query.distinct(true)
+        builder.conjunction()
+    }
+
+    fun fetchProject(): Specification<TaskEntity> = Specification { root, query, builder: CriteriaBuilder ->
+        root.fetch<TaskEntity, ProjectEntity>("project", JoinType.INNER).run {
+            fetch<ProjectEntity, ImageEntity>("thumbnail", JoinType.LEFT)
+        }
         builder.conjunction()
     }
 

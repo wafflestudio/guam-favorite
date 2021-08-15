@@ -47,7 +47,7 @@ data class ProjectEntity(
     @OneToMany(mappedBy = "projectId")
     var techStacks: Set<ProjectStackEntity> = emptySet(),
 
-    @OneToMany(mappedBy = "projectId")
+    @OneToMany(mappedBy = "project")
     val tasks: Set<TaskEntity> = emptySet(),
 
 )
