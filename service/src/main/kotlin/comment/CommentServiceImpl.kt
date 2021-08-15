@@ -65,7 +65,7 @@ class CommentServiceImpl(
             }
 
             commentRepository.delete(it)
-            return CommentDeleted(command.commentId, it.threadId)
+            return CommentDeleted(commentId = command.commentId, threadId = it.threadId)
         }
 
     protected fun validateCommentCreator(command: CreateComment) {

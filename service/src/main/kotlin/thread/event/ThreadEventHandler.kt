@@ -17,15 +17,15 @@ class ThreadEventHandler(
 
     @EventListener
     fun handleThreadCreated(event: ThreadCreated) {
-        if (!event.imageFiles.isNullOrEmpty())
-            for (imageFile in event.imageFiles)
-                imageService.createImages(
-                    CreateImages(
-                        files = event.imageFiles,
-                        type = ImageType.THREAD,
-                        parentId = event.threadId
-                    )
-                )
+        if (event.imageFiles.isNullOrEmpty()) return
+
+        imageService.createImages(
+            CreateImages(
+                files = event.imageFiles,
+                type = ImageType.THREAD,
+                parentId = event.threadId
+            )
+        )
     }
 
     @EventListener
