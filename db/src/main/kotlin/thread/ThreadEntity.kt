@@ -27,7 +27,7 @@ data class ThreadEntity(
     @Column(name = "user_id")
     val userId: Long,
 
-    val content: String?,
+    val content: String,
 
     val createdAt: Instant = Instant.now(),
 
@@ -37,7 +37,8 @@ data class ThreadEntity(
 @Table(name = "threads")
 @Entity
 data class ThreadView(
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long,
 
     val projectId: Long,
@@ -52,7 +53,7 @@ data class ThreadView(
     @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)
     val images: List<ImageEntity>,
 
-    val content: String?,
+    val content: String,
 
     val createdAt: Instant = Instant.now(),
 
