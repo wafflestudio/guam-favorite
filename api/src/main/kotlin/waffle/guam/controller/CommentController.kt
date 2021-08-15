@@ -72,7 +72,7 @@ class CommentController(
     ): SuccessResponse<ImagesDeleted> =
         commentService.getComment(commentId).let {
             if (it.creatorId != userContext.id) {
-                throw NotAllowedException()
+                throw NotAllowedException("타인이 업로드한 이미지를 삭제할 수는 없습니다.")
             }
             return SuccessResponse(
                 imageService.deleteImages(DeleteImages.ById(listOf(imageId)))
