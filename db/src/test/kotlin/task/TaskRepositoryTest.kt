@@ -6,16 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.annotation.DatabaseTest
 
-@DatabaseTest(["task/image.sql", "task/user.sql", "task/task.sql", "task/task_message.sql"])
+@DatabaseTest(["task/image.sql", "task/user.sql", "task/project.sql", "task/task.sql", "task/task_message.sql"])
 class TaskRepositoryTest @Autowired constructor(
     private val taskRepository: TaskRepository
 ) {
     @Transactional
     @Test
     fun fetchNothing() {
-        taskRepository.findAll().forEach {
-            println(it)
-        }
+        taskRepository.findAll()
         /**
          *  (1)
          *  select * from tasks
@@ -23,6 +21,8 @@ class TaskRepositoryTest @Autowired constructor(
          *  select * from users X (task count)
          *  (3)
          *  select * from task_msgs X (task count)
+         *  (4)
+         *  select * from projects X (task count)
          */
     }
 
@@ -39,6 +39,8 @@ class TaskRepositoryTest @Autowired constructor(
          *  left join images
          *  (2)
          *  select * from task_msgs X (task count)
+         *  (3)
+         *  select * from projects X (task count)
          */
     }
 
@@ -54,6 +56,28 @@ class TaskRepositoryTest @Autowired constructor(
          *  inner join users
          *  outer join images
          *  outer join task_msgs
+         *  (2)
+         *  select * from projects X (task count)
+         */
+    }
+
+    @Transactional
+    @Test
+    fun fetchUserAndProject() {
+        taskRepository.findAll(
+            TaskSpec.fetchUser().and(TaskSpec.fetchProject())
+        )
+
+        /**
+         * (1)
+         * select * from tasks
+         * inner join users
+         * outer join images
+         * inner join project
+         * outer join images
+         *
+         * (2)
+         * select * from task_msgs X (task count)
          */
     }
 

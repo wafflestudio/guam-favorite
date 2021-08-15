@@ -3,6 +3,7 @@ package waffle.guam.task
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.DataNotFoundException
+import waffle.guam.project.ProjectRepository
 import waffle.guam.task.command.CreateTask
 import waffle.guam.task.command.SearchTask
 import waffle.guam.task.command.TaskExtraFieldParams
@@ -17,13 +18,24 @@ import waffle.guam.user.UserRepository
 class TaskServiceImpl(
     private val taskRepository: TaskRepository,
     private val userRepository: UserRepository,
+    private val projectRepository: ProjectRepository,
 ) : TaskService {
 
     @Transactional
     override fun createTask(userId: Long, command: CreateTask): TaskCreated {
-        val newTask = command.toEntity { userRepository.findById(userId).orElseThrow { DataNotFoundException() } }
+        val user = userRepository.findById(userId).orElseThrow { DataNotFoundException() }
+        val project = projectRepository.findById(command.projectId).orElseThrow { DataNotFoundException() }
 
-        return TaskCreated(taskId = taskRepository.save(newTask).id)
+        return taskRepository.save(
+            TaskEntity(
+                project = project,
+                user = user,
+                userState = command.userState.name,
+                position = command.position.name
+            )
+        ).let {
+            TaskCreated(it.id)
+        }
     }
 
     @Transactional

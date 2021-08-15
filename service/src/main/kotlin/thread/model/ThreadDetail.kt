@@ -6,7 +6,6 @@ import waffle.guam.image.model.Image.Companion.toDomain
 import waffle.guam.image.model.ImageType
 import waffle.guam.image.model.ImageType.Companion.filter
 import waffle.guam.thread.ThreadView
-import waffle.guam.user.model.User.Companion.toDomain
 import java.time.Instant
 
 data class ThreadDetail(
@@ -19,11 +18,11 @@ data class ThreadDetail(
     val threadImages: List<Image>,
     val comments: List<Comment>,
     val createdAt: Instant,
-    val modifiedAt: Instant
+    val modifiedAt: Instant,
 ) {
     companion object {
         fun of(
-            e: ThreadView
+            e: ThreadView,
         ): ThreadDetail =
             ThreadDetail(
                 id = e.id,
@@ -31,7 +30,7 @@ data class ThreadDetail(
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
-                creatorImageUrl = e.user.toDomain().imageUrl,
+                creatorImageUrl = e.user.image?.toDomain()?.path,
                 threadImages = ImageType.THREAD.filter(e.images).map { it.toDomain() },
                 comments = e.comments.map { Comment.of(it) },
                 createdAt = e.createdAt,
