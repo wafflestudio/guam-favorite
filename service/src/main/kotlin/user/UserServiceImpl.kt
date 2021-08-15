@@ -6,7 +6,7 @@ import waffle.guam.DataNotFoundException
 import waffle.guam.task.TaskRepository
 import waffle.guam.task.TaskSpec
 import waffle.guam.user.command.UpdateUser
-import waffle.guam.user.command.UserExtraFieldParams
+import waffle.guam.user.command.UserExtraInfo
 import waffle.guam.user.event.DeviceUpdated
 import waffle.guam.user.event.UserUpdated
 import waffle.guam.user.model.User
@@ -18,11 +18,11 @@ class UserServiceImpl(
     private val userRepository: UserRepository,
     private val taskRepository: TaskRepository,
 ) : UserService {
-    override fun getUser(userId: Long, extraFieldOptions: UserExtraFieldParams): User =
+    override fun getUser(userId: Long, extraInfo: UserExtraInfo): User =
         userRepository.findById(userId).orElseThrow(::DataNotFoundException)
             .let { User.of(it) }
             .run {
-                when (extraFieldOptions.withProjects) {
+                when (extraInfo.projects) {
                     true -> copy(projects = getProjectInfos(id))
                     false -> this
                 }
