@@ -63,12 +63,12 @@ class ThreadServiceImpl(
 
         if (command.threadId == null) {
             projectRepository.save(project.copy(noticeThreadId = null, modifiedAt = Instant.now()))
-            return NoticeThreadSet(project.id)
+            return NoticeThreadSet(projectId = project.id)
         }
 
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             projectRepository.save(project.copy(noticeThreadId = it.id, modifiedAt = Instant.now()))
-            return NoticeThreadSet(project.id, it.id)
+            return NoticeThreadSet(projectId = project.id, threadId = it.id)
         }
     }
 
@@ -113,7 +113,7 @@ class ThreadServiceImpl(
             } else {
                 threadRepository.delete(it)
             }
-            return ThreadDeleted(it.id, it.projectId)
+            return ThreadDeleted(threadId = it.id, projectId = it.projectId)
         }
     }
 
