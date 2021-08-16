@@ -2,6 +2,11 @@ spring.config.import:
   - classpath:application-aws.yml
 
 spring:
+#  이미지 업로드 코드 실행할 때는 켜기
+#  datasource:
+#    url: ${DB_URL}
+#    username: ${DB_USERNAME}
+#    password: ${DB_PASSWORD}
   jpa:
     properties:
       hibernate:
