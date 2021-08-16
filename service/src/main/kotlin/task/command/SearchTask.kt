@@ -6,7 +6,6 @@ import waffle.guam.task.TaskSpec
 import waffle.guam.task.model.Position
 import waffle.guam.task.model.UserState
 
-@Suppress("DataClassPrivateConstructor")
 data class SearchTask private constructor(
     val userIds: List<Long>? = null,
     val projectIds: List<Long>? = null,
@@ -26,9 +25,6 @@ data class SearchTask private constructor(
 
     fun userIds(vararg value: Long): SearchTask =
         copy(userIds = value.toList())
-
-    fun userIds(value: List<Long>): SearchTask =
-        copy(userIds = value)
 
     fun projectIds(vararg value: Long): SearchTask =
         copy(projectIds = value.toList())
