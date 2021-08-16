@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import waffle.guam.annotation.DatabaseTest
 
-@DatabaseTest(["user/image.sql", "user/user.sql"])
+@DatabaseTest(["images/image.sql", "user/user.sql"])
 class UserRepositoryTest @Autowired constructor(
     private val userRepository: UserRepository
 ) {

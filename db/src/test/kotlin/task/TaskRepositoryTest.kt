@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.annotation.DatabaseTest
 
-@DatabaseTest(["task/image.sql", "task/user.sql", "task/project.sql", "task/task.sql", "task/task_message.sql"])
+@DatabaseTest(["images/image.sql", "task/user.sql", "task/project.sql", "task/task.sql", "task/task_message.sql"])
 class TaskRepositoryTest @Autowired constructor(
     private val taskRepository: TaskRepository
 ) {
