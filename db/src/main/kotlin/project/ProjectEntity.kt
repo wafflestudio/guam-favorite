@@ -30,7 +30,7 @@ data class ProjectEntity(
 
     var designerHeadcount: Int,
 
-    val due: String,
+    var due: String,
 
     var state: String,
 
@@ -42,12 +42,6 @@ data class ProjectEntity(
 
     @OneToOne
     @JoinColumn(name = "thumbnail_id")
-    var thumbnail: ImageEntity? = null,
-
-    @OneToMany(mappedBy = "projectId")
-    var techStacks: Set<ProjectStackEntity> = emptySet(),
-
-    @OneToMany(mappedBy = "project")
-    val tasks: Set<TaskEntity> = emptySet(),
+    var thumbnail: ImageEntity? = null
 
 )
