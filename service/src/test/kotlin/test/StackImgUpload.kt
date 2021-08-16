@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.ClassPathResource
 import org.springframework.mock.web.MockMultipartFile
+import org.springframework.test.annotation.Rollback
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.DatabaseTest
 import waffle.guam.db.entity.ImageType
@@ -23,6 +24,7 @@ class StackImgUpload @Autowired constructor(
 
     @Transactional
     @Test
+    @Rollback(false)
     fun uploadFiles() {
         stackRepository.findAll().map { entity ->
             val file = ClassPathResource("stacks/${entity.name}.png").file
