@@ -124,11 +124,11 @@ class ProjectServiceImpl(
 
         prj.title = command.title ?: prj.title
         prj.description = command.description ?: prj.description
+        prj.due = (command.due ?: prj.due).toString()
         prj.frontHeadcount = command.frontHeadCnt
         prj.backHeadcount = command.backHeadCnt
         prj.designerHeadcount = command.designHeadCnt
         prj.modifiedAt = Instant.now()
-        prj.techStacks = emptySet()
 
         return ProjectUpdated(
             projectId = prj.id,
