@@ -10,6 +10,7 @@ import waffle.guam.db.entity.Due
 import waffle.guam.db.entity.ImageType
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectStackEntity
+import waffle.guam.db.entity.ProjectStackView
 import waffle.guam.db.entity.ProjectState
 import waffle.guam.db.entity.TaskEntity
 import waffle.guam.db.entity.UserState
@@ -27,6 +28,7 @@ import waffle.guam.db.spec.ProjectSpecs
 import waffle.guam.event.JoinRequestEvent
 import waffle.guam.event.JoinResultEvent
 import waffle.guam.exception.DataNotFoundException
+import waffle.guam.exception.InvalidRequestException
 import waffle.guam.exception.JoinException
 import waffle.guam.exception.NotAllowedException
 import waffle.guam.model.Image
@@ -192,44 +194,58 @@ class ProjectService(
             projectViewRepository.getById(projectId).let {
                 it.title = command.title ?: it.title
                 it.description = command.description ?: it.description
-                it.frontHeadcount = command.frontHeadCnt
-                it.backHeadcount = command.backHeadCnt
-                it.designerHeadcount = command.designHeadCnt
+                it.due = command.due ?: it.due
+                val currHeadCnt = ProjectList.currHeadCntOf(it)
+                it.frontHeadcount =
+                    if (currHeadCnt[0] <= command.frontHeadCnt)
+                        command.frontHeadCnt
+                    else
+                        throw InvalidRequestException("프론트엔드 정원을 더 줄일 수 없습니다.")
+                it.backHeadcount =
+                    if (currHeadCnt[1] <= command.backHeadCnt)
+                        command.backHeadCnt
+                    else
+                        throw InvalidRequestException("백엔드 정원을 더 줄일 수 없습니다.")
+                it.designerHeadcount =
+                    if (currHeadCnt[2] <= command.designHeadCnt)
+                        command.designHeadCnt
+                    else
+                        throw InvalidRequestException("디자이너 정원을 더 줄일 수 없습니다.")
                 it.modifiedAt = LocalDateTime.now()
-                projectStackViewRepository.deleteAll(it.techStacks)
-                val l = mutableListOf<ProjectStackEntity>()
+                val newList = mutableListOf<ProjectStackEntity>()
+                val delList = mutableListOf<ProjectStackView>()
                 command.backStackId?.let { it1 ->
-                    l.add(
+                    newList.add(
                         ProjectStackEntity(
                             projectId = it.id,
                             techStackId = it1,
                             position = Position.BACKEND
                         )
                     )
+                    delList.add(it.techStacks.single { it2 -> it2.position == Position.BACKEND })
                 }
                 command.frontStackId?.let { it1 ->
-                    l.add(
+                    newList.add(
                         ProjectStackEntity(
                             projectId = it.id,
                             techStackId = it1,
                             position = Position.FRONTEND
                         )
                     )
+                    delList.add(it.techStacks.single { it2 -> it2.position == Position.FRONTEND })
                 }
                 command.designStackId?.let { it1 ->
-                    l.add(
+                    newList.add(
                         ProjectStackEntity(
                             projectId = it.id,
                             techStackId = it1,
                             position = Position.DESIGNER
                         )
                     )
+                    delList.add(it.techStacks.single { it2 -> it2.position == Position.DESIGNER })
                 }
-                projectStackRepository.saveAll(
-                    l
-                ).map { projectStackEntity ->
-                    it.techStacks.plus(projectStackEntity?.let { it1 -> projectStackViewRepository.getById(it1.id) })
-                }
+                projectStackViewRepository.deleteAll(delList)
+                projectStackRepository.saveAll(newList)
                 command.imageFiles?.let { file ->
                     imageRepository.deleteByParentIdAndType(it.id, ImageType.PROJECT)
                     it.thumbnail = imageService.upload(
@@ -299,7 +315,7 @@ class ProjectService(
 
                             projectViewRepository.findById(it.projectId).orElseThrow(::DataNotFoundException).let { prj ->
                                 val model = ProjectDetail.of(prj)
-                                if(model.backLeftCnt + model.frontLeftCnt + model.designLeftCnt == 0)
+                                if (model.backLeftCnt + model.frontLeftCnt + model.designLeftCnt == 0)
                                     prj.state = ProjectState.ONGOING
                             }
 

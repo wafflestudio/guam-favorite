@@ -76,14 +76,14 @@ data class ProjectView(
 
     var modifiedAt: LocalDateTime,
 
-    @OneToMany(mappedBy = "projectId", fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(mappedBy = "projectId", fetch = FetchType.EAGER)
     var techStacks: Set<ProjectStackView>,
 
-    @OneToMany(mappedBy = "projectId", fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "projectId", fetch = FetchType.LAZY)
     val tasks: Set<TaskOverView>,
 
     @Enumerated(EnumType.STRING)
-    val due: Due
+    var due: Due
 ) : ProjectModel()
 
 @Table(name = "projects")
