@@ -34,12 +34,11 @@ class ProjectController(
 
     /***
      * (1) select task t from tasks t inner join users u outer join images i
-     * (2) select project outer join images
-     * (3) insert project
-     * (4) select stack X 3 (front, back, designer)
-     * (5) insert project_stacks X 3 (front, back, designer)
-     * (6) select project outer join images
-     * (7) insert tasks
+     * (2) insert project
+     * (3) select stack X 1
+     * (4) insert project_stacks X 3 (front, back, designer) <- batch insert 해야할지 고민
+     * (5) select project outer join images
+     * (6) insert tasks
      */
 
     @GetMapping("/project/list")
