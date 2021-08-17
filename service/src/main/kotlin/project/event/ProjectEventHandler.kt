@@ -1,5 +1,6 @@
 package waffle.guam.project.event
 
+import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 import waffle.guam.image.ImageService
@@ -20,8 +21,11 @@ class ProjectEventHandler(
     private val taskService: TaskService
 ) {
 
+    private val logger = LoggerFactory.getLogger(this::javaClass.name)
+
     @EventListener
     fun prjCreated(event: ProjectCreated) {
+        logger.info("$event")
 
         projectStackService.createProjectStacks(
             projectId = event.projectId,
@@ -48,6 +52,7 @@ class ProjectEventHandler(
 
     @EventListener
     fun prjUpdated(event: ProjectUpdated) {
+        logger.info("$event")
 
         projectStackService.updateProjectStacks(
             projectId = event.projectId,
@@ -69,6 +74,7 @@ class ProjectEventHandler(
 
     @EventListener
     fun prjDeleted(event: ProjectDeleted) {
+        logger.info("$event")
 
         taskService.getTasks(
             command = taskQuery().projectIds(event.projectId)
@@ -84,6 +90,7 @@ class ProjectEventHandler(
 
     @EventListener
     fun prjCompleted(event: ProjectCompleted) {
+        logger.info("$event")
 
         taskService.getTasks(
             command = taskQuery().projectIds(event.projectId).userStates(UserState.LEADER, UserState.MEMBER)
@@ -99,6 +106,7 @@ class ProjectEventHandler(
 
     @EventListener
     fun prjJoinRequested(event: ProjectJoinRequested) {
+        logger.info("$event")
         TODO("여기서 task 만들 수 없음; task level 에서 추가적인 validation 필요")
     }
 }
