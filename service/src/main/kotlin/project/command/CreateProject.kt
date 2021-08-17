@@ -1,11 +1,11 @@
 package waffle.guam.project.command
 
 import org.springframework.web.multipart.MultipartFile
+import waffle.guam.InvalidRequestException
 import waffle.guam.project.ProjectEntity
 import waffle.guam.project.model.Due
 import waffle.guam.project.model.ProjectState
 import waffle.guam.task.model.Position
-// import waffle.guam.util.TypeCheck
 
 data class CreateProject(
     val title: String?,
@@ -18,13 +18,14 @@ data class CreateProject(
     val backStackId: Long?,
     val designStackId: Long?,
     val due: Due?,
-    val myPosition: Position?
+    val myPosition: Position?,
 ) {
     init {
-//        if (imageFiles != null) {
-//            TypeCheck.validImageFile(imageFiles!!)
-//        }
+        if (frontHeadCnt < 0 || backHeadCnt <= 0 || designHeadCnt <= 0) {
+            throw InvalidRequestException("TODO")
+        }
     }
+
     fun toEntity(): ProjectEntity =
         ProjectEntity(
             title = title ?: "default project title",

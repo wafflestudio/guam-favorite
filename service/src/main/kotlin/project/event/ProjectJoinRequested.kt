@@ -3,7 +3,7 @@ package waffle.guam.project.event
 import waffle.guam.task.model.Position
 import java.time.Instant
 
-class ProjectJoinRequested(
+data class ProjectJoinRequested(
     val projectId: Long,
     val userId: Long,
     val position: Position,
