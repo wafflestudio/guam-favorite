@@ -8,12 +8,11 @@ import waffle.guam.projectstack.event.ProjectStacksCreated
 import waffle.guam.projectstack.event.ProjectStacksUpdated
 import waffle.guam.projectstack.model.ProjectStack
 import waffle.guam.stack.StackRepository
-import waffle.guam.task.model.Position
 
 @Service
 class PrjStackServiceImpl(
     private val projectStackRepository: ProjectStackRepository,
-    private val stackRepository: StackRepository
+    private val stackRepository: StackRepository,
 ) : ProjectStackService {
 
     override fun getProjectStacks(projectId: Long): List<ProjectStack> =
@@ -26,11 +25,7 @@ class PrjStackServiceImpl(
 
     @Transactional
     override fun createProjectStacks(projectId: Long, command: StackIdList): ProjectStacksCreated {
-
-        val list =
-            projectStackRepository.saveAll(
-                buildPrjStackList(command, projectId)
-            )
+        val list = projectStackRepository.saveAll(buildPrjStackList(command, projectId))
 
         return ProjectStacksCreated(projectId, list.map { it.id })
     }
@@ -50,36 +45,8 @@ class PrjStackServiceImpl(
         return ProjectStacksUpdated(projectId, list.map { it.id })
     }
 
-    fun buildPrjStackList(stackIds: StackIdList, projectId: Long): List<ProjectStackEntity> {
-
-        val res = mutableListOf<ProjectStackEntity>()
-        stackIds.front?.run {
-            res.add(
-                ProjectStackEntity(
-                    projectId = projectId,
-                    position = Position.FRONTEND.name,
-                    techStack = stackRepository.findById(this).orElseThrow(::DataNotFoundException)
-                )
-            )
-        }
-        stackIds.back?.run {
-            res.add(
-                ProjectStackEntity(
-                    projectId = projectId,
-                    position = Position.BACKEND.name,
-                    techStack = stackRepository.findById(this).orElseThrow(::DataNotFoundException)
-                )
-            )
-        }
-        stackIds.design?.run {
-            res.add(
-                ProjectStackEntity(
-                    projectId = projectId,
-                    position = Position.DESIGNER.name,
-                    techStack = stackRepository.findById(this).orElseThrow(::DataNotFoundException)
-                )
-            )
-        }
-        return res
-    }
+    private fun buildPrjStackList(stackIds: StackIdList, projectId: Long): List<ProjectStackEntity> =
+        stackRepository.findAllById(stackIds.validList)
+            .apply { if (size != stackIds.validCount) throw DataNotFoundException() }
+            .map { ProjectStackEntity(0L, it.position, projectId, it) }
 }
