@@ -65,6 +65,6 @@ class UserController(
         userContext: UserContext
     ): SuccessResponse<List<Long>> =
         SuccessResponse(
-            data = userService.get(userContext.id).projects.map { it.projectId }
+            data = userService.getProjectIds(userContext.id)
         )
 }

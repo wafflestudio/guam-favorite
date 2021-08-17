@@ -21,6 +21,9 @@ class UserService(
     fun get(id: Long): User =
         userRepository.findById(id).orElseThrow(::DataNotFoundException).let { User.of(it) }
 
+    fun getProjectIds(id: Long): List<Long> =
+        userRepository.findById(id).orElseThrow(::DataNotFoundException).let { User.of(it, false) }.projects.map { it.projectId }
+
     fun getByFirebaseUid(firebaseUid: String): User =
         User.of(
             userRepository.findByFirebaseUid(firebaseUid)

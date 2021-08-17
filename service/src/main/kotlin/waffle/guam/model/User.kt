@@ -23,7 +23,7 @@ data class User(
         nickname.isNotEmpty() && createdAt != updatedAt
 
     companion object {
-        fun of(e: UserEntity): User =
+        fun of(e: UserEntity, filterGuest: Boolean = true): User =
             User(
                 id = e.id,
                 status = e.status.name,
@@ -33,7 +33,7 @@ data class User(
                 githubUrl = e.githubUrl,
                 blogUrl = e.blogUrl,
                 introduction = e.introduction,
-                projects = e.tasks.filter { it.userState.isValidMember() }
+                projects = e.tasks.filter { it.userState.isValidMember(filterGuest) }
                     .filter { it.project.state != ProjectState.CLOSED }
                     .sortedByDescending { it.modifiedAt }
                     .map { UserProject.of(it) },
