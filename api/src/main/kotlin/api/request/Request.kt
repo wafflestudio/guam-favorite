@@ -1,4 +1,4 @@
-package waffle.guam.controller.request
+package waffle.guam.api.request
 
 import org.springframework.web.multipart.MultipartFile
 import waffle.guam.taskmessage.model.TaskStatus

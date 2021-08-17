@@ -71,7 +71,6 @@ object ProjectSpec {
      *  legacy codes : techStack, task -> fetch 없이 사용하기 위해 아예 엔티티에서 뺌. dependency injection 통해 다른 서비스에서 불러오도록 함.
      */
 
-
     fun fetchStacks(): Specification<ProjectEntity> =
         Specification { root, query, builder: CriteriaBuilder ->
             root.fetch<ProjectEntity, Set<ProjectStackEntity>>("techStacks", JoinType.LEFT)

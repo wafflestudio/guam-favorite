@@ -1,4 +1,4 @@
-package waffle.guam.controller.response
+package waffle.guam.api.response
 
 sealed class GuamResponse
 

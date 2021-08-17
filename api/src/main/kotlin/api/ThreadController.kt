@@ -1,4 +1,4 @@
-package waffle.guam.controller
+package waffle.guam.api
 
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import waffle.guam.NotAllowedException
+import waffle.guam.api.request.ContentInput
+import waffle.guam.api.request.CreateFullInfoInput
+import waffle.guam.api.response.PageableResponse
+import waffle.guam.api.response.SuccessResponse
 import waffle.guam.common.UserContext
-import waffle.guam.controller.request.ContentInput
-import waffle.guam.controller.request.CreateFullInfoInput
-import waffle.guam.controller.response.PageableResponse
-import waffle.guam.controller.response.SuccessResponse
 import waffle.guam.image.ImageService
 import waffle.guam.image.command.DeleteImages
 import waffle.guam.image.event.ImagesDeleted
