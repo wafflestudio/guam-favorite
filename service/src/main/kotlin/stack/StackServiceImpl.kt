@@ -12,6 +12,7 @@ import waffle.guam.stack.event.StackCreated
 import waffle.guam.stack.event.StackDeleted
 import waffle.guam.stack.event.StackUpdated
 import waffle.guam.stack.model.TechStack
+import javax.annotation.PostConstruct
 
 @Service
 class StackServiceImpl(
@@ -65,7 +66,7 @@ class StackServiceImpl(
         )
     }
 
-    // @PostConstruct
+    @PostConstruct
     fun init() {
         if (stackRepository.findAll().isEmpty()) {
             val stream = this.javaClass.getResourceAsStream("/stacks.csv")
