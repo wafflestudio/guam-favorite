@@ -59,10 +59,8 @@ class SessionServiceImpl(
 ) : SessionService {
 
     override fun takeUserId(token: String): UserContext =
-        kotlin.runCatching {
-            userService.getUser(token.toLong())
-        }.getOrNull()?.let { UserContext(it.id) }
-            ?: userService.createUser(token).let { UserContext(it.userId) }
+        UserContext(userService.getUserId(firebaseUid = token))
+
     // TODO: impl real authentication
 
     private fun getFirebaseUid(token: String): String {
