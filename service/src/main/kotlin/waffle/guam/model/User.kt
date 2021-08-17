@@ -23,7 +23,7 @@ data class User(
         nickname.isNotEmpty() && createdAt != updatedAt
 
     companion object {
-        fun of(e: UserEntity, filterGuest: Boolean = true): User =
+        fun of(e: UserEntity, filterGuest: Boolean = false): User =
             User(
                 id = e.id,
                 status = e.status.name,
