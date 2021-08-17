@@ -24,6 +24,9 @@ data class CreateProject(
         if (frontHeadCnt < 0 || backHeadCnt <= 0 || designHeadCnt <= 0) {
             throw InvalidRequestException("TODO")
         }
+
+        if (myPosition == null || myPosition == Position.WHATEVER)
+            throw InvalidRequestException("포지션을 입력해주세요")
     }
 
     fun toEntity(): ProjectEntity =

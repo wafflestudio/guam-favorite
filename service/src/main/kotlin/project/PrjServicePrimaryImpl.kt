@@ -6,7 +6,6 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.ConflictException
-import waffle.guam.InvalidRequestException
 import waffle.guam.JoinException
 import waffle.guam.NotAllowedException
 import waffle.guam.project.command.CreateProject
@@ -55,15 +54,16 @@ class PrjServicePrimaryImpl(
 
     @Transactional
     override fun createProject(command: CreateProject, userId: Long): ProjectCreated {
-
-        val checkUserTasks = taskService.getTasks(command = taskQuery().userIds(userId))
+        /**
+         * Leader, Member, Guest인 프로젝트가 3개 이상일 경우, 프로젝트 참여 불가능
+         */
+        val checkUserTasks = taskService.getTasks(
+            command = taskQuery().userIds(userId).userStates(UserState.MEMBER, UserState.LEADER, UserState.GUEST)
+        )
 
         // TODO : 한번 반려되었어도 다시 요청을 보낼 수 있도록 수정
         if (checkUserTasks.size >= 3)
             throw ConflictException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
-
-        if (command.myPosition == null || command.myPosition == Position.WHATEVER)
-            throw InvalidRequestException("포지션을 입력해주세요")
 
         return prjService.createProject(command, userId)
     }
