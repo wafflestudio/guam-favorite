@@ -314,8 +314,10 @@ class ProjectService(
                             taskViewRepository.save(it.copy(userState = newState))
 
                             projectViewRepository.findById(it.projectId).orElseThrow(::DataNotFoundException).let { prj ->
-                                val model = ProjectDetail.of(prj)
-                                if (model.backLeftCnt + model.frontLeftCnt + model.designLeftCnt == 0)
+                                val arr = ProjectList.currHeadCntOf(prj)
+                                if (prj.backHeadcount + prj.frontHeadcount + prj.designerHeadcount -
+                                    (arr[0] + arr[1] + arr[2]) == 0
+                                )
                                     prj.state = ProjectState.ONGOING
                             }
 
