@@ -13,7 +13,9 @@ import waffle.guam.thread.ThreadService
 class CommentEventHandler(
     private val imageService: ImageService,
     private val threadService: ThreadService,
-    private val threadRepository: ThreadRepository, // FIXME: ThreadService 수정하면서 대체
+    private val threadRepository: ThreadRepository,
+    // private val userRepository: UserRepository
+    // private val messageService: MessageService,
 ) {
 
     @EventListener
@@ -26,6 +28,16 @@ class CommentEventHandler(
                     parentId = event.commentId
                 )
             )
+
+        //  if (event.threadCreatorId == event.commentCreatorId) return
+
+        //  val userName = userRepository.findById(event.commentCreatorId).get().nickname
+
+        //  messageService.sendMessage(
+        //      ids = listOf(event.threadCreatorId),
+        //      title = "새로운 댓글이 달렸습니다.",
+        //      body = "$userName: ${event.content}"
+        //  )
     }
 
     @EventListener

@@ -84,7 +84,13 @@ class ThreadServiceImpl(
         }
 
         threadRepository.save(command.copy(content = command.content?.trim()).toEntity()).let {
-            return ThreadCreated(it.id, command.imageFiles)
+            return ThreadCreated(
+                projectId = parentProject.id,
+                threadId = it.id,
+                creatorId = command.userId,
+                content = command.content ?: "이미지 등록",
+                imageFiles = command.imageFiles,
+            )
         }
     }
 
