@@ -21,7 +21,7 @@ data class CreateProject(
     val myPosition: Position?,
 ) {
     init {
-        if (frontHeadCnt < 0 || backHeadCnt <= 0 || designHeadCnt <= 0) {
+        if (frontHeadCnt <= 0 || backHeadCnt <= 0 || designHeadCnt <= 0) {
             throw InvalidRequestException("TODO")
         }
 
