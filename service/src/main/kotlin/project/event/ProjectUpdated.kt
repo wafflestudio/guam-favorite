@@ -4,7 +4,7 @@ import org.springframework.web.multipart.MultipartFile
 import waffle.guam.projectstack.command.StackIdList
 import java.time.Instant
 
-class ProjectUpdated(
+data class ProjectUpdated(
     val projectId: Long,
     val projectTitle: String,
     val stackIdList: StackIdList,

@@ -1,0 +1,40 @@
+React;"React, js, React.js, ReactJS, 리액트, 리엑트";FRONTEND
+Angular;"Angular, js, Angular.js, AngularJS, 앵귤러, 엥귤러";FRONTEND
+Vue;"Vue, js, Vue.js, VueJS, 뷰";FRONTEND
+jQuery;"jQuery, js, 제이쿼리";FRONTEND
+Ember;"Ember, js, Ember.js, 엠버";FRONTEND
+Semantic UI;"Semantic, UI, js, 시맨틱, 씨맨틱, 시멘틱, 씨멘틱";FRONTEND
+Foundation;"Foundation, 파운데이션";FRONTEND
+Svelte;"Svelte, js, Svelte.js, SvelteJS, 스벨트, 스밸트";FRONTEND
+React Native;"React, Native, RN, 모바일, 리액트, 네이티브, 알엔";FRONTEND
+Next;"Next, Next.js, NextJS, js, React, 넥스트";FRONTEND
+Gatsby;"Gatsby, Gatsby.js, GatsbyJS, js, React, 개츠비";FRONTEND
+Nuxt;"Nuxt, Nuxt.js, NuxtJS, js, 넉스트, Vue";FRONTEND
+Nest;"Nest, Nest.js, NestJS, js, 네스트";BACKEND
+Fastify;"Fastify, Fastify.js, FastifyJS, js, 패스티파이, 페스티파이;BACKEND
+Bootstrap;"Bootstrap, js, css, 부트스트랩";FRONTEND
+Tailwind;"Tailwind, css, Tailwind CSS, 테일윈드, 태일윈드";FRONTEND
+Flutter;"Flutter, Dart, 플러터, 모바일";FRONTEND
+Ionic;"Ionic, 아이오닉, 모바일";FRONTEND
+Xamarin;"Xamarin, 자마린, 모바일";FRONTEND
+Android;"Android, 안드로이드, 모바일";FRONTEND
+Swift;"Swift, 스위프트, iOS, 모바일";FRONTEND
+Laravel;"Laravel, 라라벨, 라라밸";BACKEND
+Express;"Express, Express.js, 익스프레스";BACKEND
+Spring;"Spring, 스프링, 스프링부트, java, kotlin";BACKEND
+Django;"Django, 장고";BACKEND
+.NET Core;".NET, Core, ASP, 닷넷, 코어, C#";BACKEND
+Ruby on Rails;"Ruby on Rails, ROR, Ruby, 루비, 레일즈";BACKEND
+Flask;"Flask, 플라스크";BACKEND
+Node.js;"Node, js, Node.js, NodeJS, 노드";BACKEND
+CakePHP;"Cake, php, 케이크";BACKEND
+CodeIgniter;"Code, Igniter, php, 코드, 이그나이터";BACKEND
+Phoenix;"Phoenix, Elixir, 피닉스";BACKEND
+Symfony;"Symfony, php, 심포니";BACKEND
+Go;"Go, golang, 고";BACKEND
+Zeplin;"Zeplin, 제플린";DESIGNER
+Figma;"Figma, 피그마";DESIGNER
+Adobe XD;"Adobe XD, Adobe, 어도비";DESIGNER
+ETC Front;"기타, 프론트";FRONTEND
+ETC Back;"기타, 백엔드";BACKEND
+ETC Design;"기타, 디자인, 디자이너";DESIGNER

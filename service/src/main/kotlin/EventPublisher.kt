@@ -15,7 +15,7 @@ class EventPublisher(
     private val eventPublisher: ApplicationEventPublisher
 ) {
 
-    @Pointcut("within(waffle.guam..*)")
+    @Pointcut("within(waffle.guam..*ServiceImpl)")
     fun calledInService() {}
 
     @Around("calledInService()")

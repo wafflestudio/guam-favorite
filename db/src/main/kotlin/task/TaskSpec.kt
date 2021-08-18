@@ -39,7 +39,7 @@ object TaskSpec {
     }
 
     fun projectIds(projectIds: List<Long>): Specification<TaskEntity> = Specification { root, _, builder ->
-        root.get<Long>("projectId").`in`(projectIds)
+        root.get<ProjectEntity>("project").get<Long>("id").`in`(projectIds)
     }
 
     fun userStates(userStates: List<String>): Specification<TaskEntity> = Specification { root, _, _ ->

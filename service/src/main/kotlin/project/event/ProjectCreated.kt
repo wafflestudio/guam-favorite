@@ -5,7 +5,7 @@ import waffle.guam.projectstack.command.StackIdList
 import waffle.guam.task.model.Position
 import java.time.Instant
 
-class ProjectCreated(
+data class ProjectCreated(
     val projectId: Long,
     val projectTitle: String,
     val stackIdList: StackIdList,

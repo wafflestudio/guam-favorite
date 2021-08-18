@@ -1,6 +1,7 @@
 package waffle.guam.stack.model
 
 import waffle.guam.image.model.Image
+import waffle.guam.image.model.Image.Companion.toDomain
 import waffle.guam.stack.StackEntity
 import waffle.guam.task.model.Position
 
@@ -24,7 +25,7 @@ data class TechStack(
                 id = e.id,
                 name = e.name,
                 aliases = e.aliases,
-                thumbnail = TODO("e.thumbnail?.let { Image.stackThumbnailOf(it) }"),
+                thumbnail = e.thumbnail?.toDomain(),
                 position = Position.valueOf(e.position)
             )
     }
