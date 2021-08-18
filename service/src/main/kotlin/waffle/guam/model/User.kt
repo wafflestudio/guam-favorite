@@ -1,5 +1,6 @@
 package waffle.guam.model
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectState
 import waffle.guam.db.entity.TaskProjectView
@@ -16,7 +17,9 @@ data class User(
     val blogUrl: String?,
     val introduction: String?,
     val projects: List<UserProject> = emptyList(),
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "Asia/Seoul")
     val createdAt: Instant,
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "Asia/Seoul")
     val updatedAt: Instant,
 ) {
     val isProfileSet: Boolean =
