@@ -58,7 +58,7 @@ data class TaskOverView(
 
     val createdAt: LocalDateTime,
 
-    val modifiedAt: LocalDateTime,
+    var modifiedAt: LocalDateTime,
 
     @Enumerated(EnumType.STRING)
     var userState: UserState

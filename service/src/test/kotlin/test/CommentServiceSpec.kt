@@ -527,7 +527,7 @@ class CommentServiceSpec @Autowired constructor(
             CommentEntity(
                 threadId = thread.id,
                 userId = user.id,
-                content = null,
+                content = "",
             )
         )
         val prevDBImages = database.getImages()

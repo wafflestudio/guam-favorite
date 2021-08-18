@@ -26,17 +26,17 @@ data class CreateProject(
 ) : ProjectCommand() {
     init {
 
-        when(myPosition){
-            Position.DESIGNER -> if( designHeadCnt < 1 ) throw InvalidRequestException("나의 포지션 $myPosition 로 참여할 수 있는 정원이 없어요.")
-            Position.FRONTEND -> if( frontHeadCnt < 1 ) throw InvalidRequestException("나의 포지션 $myPosition 로 참여할 수 있는 정원이 없어요.")
-            Position.BACKEND -> if( backHeadCnt < 1 ) throw InvalidRequestException("나의 포지션 $myPosition 로 참여할 수 있는 정원이 없어요.")
+        when (myPosition) {
+            Position.DESIGNER -> if (designHeadCnt < 1) throw InvalidRequestException("나의 포지션 $myPosition 로 참여할 수 있는 정원이 없어요.")
+            Position.FRONTEND -> if (frontHeadCnt < 1) throw InvalidRequestException("나의 포지션 $myPosition 로 참여할 수 있는 정원이 없어요.")
+            Position.BACKEND -> if (backHeadCnt < 1) throw InvalidRequestException("나의 포지션 $myPosition 로 참여할 수 있는 정원이 없어요.")
             Position.WHATEVER -> throw InvalidRequestException("WHATEVER 는 아직 설정할 수 없는 포지션입니다.")
         }
 
         if (imageFiles != null) {
             TypeCheck.validImageFile(imageFiles!!)
         }
-        if(frontHeadCnt + backHeadCnt + designHeadCnt == 0)
+        if (frontHeadCnt + backHeadCnt + designHeadCnt == 0)
             throw InvalidRequestException("적어도 한 명의 구성원이 필요합니다.")
     }
     fun toEntity(): ProjectEntity =

@@ -12,7 +12,9 @@ import waffle.guam.db.entity.Position
 import waffle.guam.db.entity.ProjectStackEntity
 import waffle.guam.db.entity.ProjectStackView
 import waffle.guam.db.entity.ProjectState
+import waffle.guam.db.entity.ProjectView
 import waffle.guam.db.entity.TaskEntity
+import waffle.guam.db.entity.TaskOverView
 import waffle.guam.db.entity.UserState
 import waffle.guam.db.repository.CommentRepository
 import waffle.guam.db.repository.ImageRepository
@@ -56,7 +58,7 @@ class ProjectService(
     private val chatService: ChatService,
     private val imageService: ImageService,
     private val userService: UserService,
-    private val eventPublisher: ApplicationEventPublisher
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
 
     private val searchEngine: SearchEngine = SearchEngine()
@@ -257,57 +259,52 @@ class ProjectService(
         }
 
     @Transactional
-    fun join(id: Long, userId: Long, position: Position, introduction: String): Boolean =
-        when {
-            taskRepository.countByUserIdAndUserStateNotIn(userId) >= 3 -> throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
-            else -> projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).run {
+    fun join(id: Long, userId: Long, position: Position, introduction: String): Boolean {
+        if (taskRepository.countByUserIdAndUserStateNotIn(userId) >= 3) {
+            throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
+        }
 
-                val checkHistory = tasks.filter { it.user.id == userId }
+        if (position == Position.WHATEVER) {
+            throw JoinException("포지션을 입력해주세요.")
+        }
 
-                if (checkHistory.isNotEmpty()) {
-                    when(checkHistory.singleOrNull()?.userState){
-                        UserState.QUIT -> {
-                            checkHistory.singleOrNull()?.userState = UserState.GUEST
-//                            chatService.createThread( CreateThread(id, userId, introduction, null) )
-//                            return true
-                            throw JoinException("이전에 참여하려 했던 기록이 남아있습니다. 재요청이 정상적으로 처리되었으며, 메시지는 갱신할 수 없습니다.")
-                        }
-                        UserState.DECLINED ->  throw JoinException("이미 반려된 프로젝트입니다.")
-                        null -> throw NotAllowedException("한 프로젝트에 여러 작업 현황 감지; 서버에 문의해주세요.")
-                        else -> throw JoinException("이미 참여 중인 프로젝트입니다.")
+        val project = projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).apply {
+            if (state != ProjectState.RECRUITING) {
+                throw JoinException("이 프로젝트는 현재 팀원을 모집하고 있지 않습니다.")
+            }
+
+            if (currentMemberCnt(position) >= headCount(position)) {
+                throw JoinException("해당 포지션에는 남은 정원이 없습니다.")
+            }
+
+            when (task(userId)?.userState) {
+                UserState.MEMBER, UserState.LEADER, UserState.GUEST -> throw JoinException("이미 참여 중인 프로젝트입니다.")
+                UserState.DECLINED -> throw JoinException("이미 반려된 프로젝트입니다.")
+                UserState.QUIT -> {
+                    task(userId)!!.let {
+                        it.userState = UserState.GUEST
+                        it.modifiedAt = LocalDateTime.now()
                     }
                 }
-                if (state != ProjectState.RECRUITING)
-                    throw JoinException("이 프로젝트는 현재 팀원을 모집하고 있지 않습니다.")
-
-                val headCnt =
-                    when (position) {
-                        Position.WHATEVER -> throw JoinException("포지션을 입력해주세요.")
-                        Position.DESIGNER -> designerHeadcount
-                        Position.BACKEND -> backHeadcount
-                        Position.FRONTEND -> frontHeadcount
-                    }
-                val currCnt = taskRepository.countByProjectIdAndPosition(id, position)
-
-                if (currCnt >= headCnt)
-                    throw JoinException("해당 포지션에는 남은 정원이 없습니다.")
-
-                taskRepository.save(
-                    TaskEntity(projectId = id, userId = userId, position = position, userState = UserState.GUEST)
-                )
-
-                eventPublisher.publishEvent(
-                    JoinRequestEvent(
-                        projectTitle = title,
-                        projectUserIds = tasks.filter { it.userState == UserState.MEMBER || it.userState == UserState.LEADER }
-                            .map { it.user.id },
+                null -> {
+                    taskRepository.save(
+                        TaskEntity(projectId = id, userId = userId, position = position, userState = UserState.GUEST)
                     )
-                )
-
-                // TODO default join image 어떨까
-                chatService.createThread( CreateThread(id, userId, introduction, null) )
+                }
             }
         }
+
+        return chatService.createThread(CreateThread(id, userId, introduction, null)).also {
+            eventPublisher.publishEvent(
+                JoinRequestEvent(
+                    projectTitle = project.title,
+                    projectUserIds = project.tasks
+                        .filter { it.userState == UserState.MEMBER || it.userState == UserState.LEADER }
+                        .map { it.user.id },
+                )
+            )
+        }
+    }
 
     // TODO 승인을 한번 거절하면 복구 할 수 없을까?
     @Transactional
@@ -324,13 +321,14 @@ class ProjectService(
 
                             taskViewRepository.save(it.copy(userState = newState))
 
-                            projectViewRepository.findById(it.projectId).orElseThrow(::DataNotFoundException).let { prj ->
-                                val arr = ProjectList.currHeadCntOf(prj)
-                                if (prj.backHeadcount + prj.frontHeadcount + prj.designerHeadcount -
-                                    (arr[0] + arr[1] + arr[2]) == 0
-                                )
-                                    prj.state = ProjectState.ONGOING
-                            }
+                            projectViewRepository.findById(it.projectId).orElseThrow(::DataNotFoundException)
+                                .let { prj ->
+                                    val arr = ProjectList.currHeadCntOf(prj)
+                                    if (prj.backHeadcount + prj.frontHeadcount + prj.designerHeadcount -
+                                        (arr[0] + arr[1] + arr[2]) == 0
+                                    )
+                                        prj.state = ProjectState.ONGOING
+                                }
 
                             eventPublisher.publishEvent(
                                 JoinResultEvent(
@@ -357,6 +355,9 @@ class ProjectService(
                 UserState.MEMBER -> taskRepository.save(it.copy(userState = UserState.QUIT))
                     .let { "프로젝트에서 정상적으로 탈퇴되었습니다." }
                 UserState.GUEST -> taskRepository.save(it.copy(userState = UserState.QUIT))
+                    .let {
+                        threadViewRepository.deleteByProjectIdAndUserId(projectId = id, userId = it.userId)
+                    }
                     .let { "가입 신청이 정상적으로 취소되었습니다." }
                 UserState.LEADER -> throw NotAllowedException("리더는 나갈 수 없습니다. 권한을 위임하거나 프로젝트를 종료해 주세요")
                 else -> throw NotAllowedException("이미 프로젝트에서 제외된 유저입니다.")
@@ -377,4 +378,18 @@ class ProjectService(
                 return "프로젝트가 정상적으로 종료되었습니다."
             }
     }
+
+    private fun ProjectView.headCount(p: Position): Int =
+        when (p) {
+            Position.FRONTEND -> frontHeadcount
+            Position.BACKEND -> backHeadcount
+            Position.DESIGNER -> designerHeadcount
+            else -> throw Exception()
+        }
+
+    private fun ProjectView.currentMemberCnt(p: Position): Int =
+        tasks.filter { it.userState.isValidMember(filterGuest = true) }.size
+
+    private fun ProjectView.task(userId: Long): TaskOverView? =
+        tasks.find { it.user.id == userId }
 }
