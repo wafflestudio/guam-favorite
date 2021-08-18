@@ -88,6 +88,7 @@ class ThreadServiceImpl(
                 projectId = parentProject.id,
                 threadId = it.id,
                 creatorId = command.userId,
+                creatorName = task.user.nickname,
                 content = command.content ?: "이미지 등록",
                 imageFiles = command.imageFiles,
             )

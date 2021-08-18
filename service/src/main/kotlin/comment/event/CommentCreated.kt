@@ -8,6 +8,7 @@ data class CommentCreated(
     val commentId: Long,
     val threadCreatorId: Long,
     val commentCreatorId: Long,
+    val commentCreatorName: String,
     val content: String,
     val imageFiles: List<MultipartFile>?,
     override val timestamp: Instant = Instant.now()

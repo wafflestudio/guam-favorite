@@ -1,5 +1,6 @@
 package waffle.guam.comment.event
 
+import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 import waffle.guam.image.ImageService
@@ -14,13 +15,13 @@ class CommentEventHandler(
     private val imageService: ImageService,
     private val threadService: ThreadService,
     private val threadRepository: ThreadRepository,
-    // private val userRepository: UserRepository
     // private val messageService: MessageService,
 ) {
+    private val logger = LoggerFactory.getLogger(this::javaClass.name)
 
     @EventListener
-    fun handleCommentCreated(event: CommentCreated) {
-        if (!event.imageFiles.isNullOrEmpty())
+    fun handle(event: CommentCreated) {
+        if (!event.imageFiles.isNullOrEmpty()) {
             imageService.createImages(
                 CreateImages(
                     files = event.imageFiles,
@@ -28,40 +29,41 @@ class CommentEventHandler(
                     parentId = event.commentId
                 )
             )
+        }
 
-        //  if (event.threadCreatorId == event.commentCreatorId) return
+        logger.info("$event")
 
-        //  val userName = userRepository.findById(event.commentCreatorId).get().nickname
+        // if (event.threadCreatorId == event.commentCreatorId) return
 
-        //  messageService.sendMessage(
-        //      ids = listOf(event.threadCreatorId),
-        //      title = "새로운 댓글이 달렸습니다.",
-        //      body = "$userName: ${event.content}"
-        //  )
+        // messageService.sendMessage(
+        //     ids = listOf(event.threadCreatorId),
+        //     title = "새로운 댓글이 달렸습니다.",
+        //     body = "${event.commentCreatorName}: ${event.content}"
+        // )
     }
 
     @EventListener
-    fun handleCommentContentEdited(event: CommentContentEdited) {
+    fun handle(event: CommentContentEdited) {
+        logger.info("$event")
+    }
         /* TODO(클라이언트 추가 작업?: 내용이 비게 되는 경우 editCommentContent가 아닌 deleteComment가 호출되도록 조건문 추가)
             this.deleteComment(DeleteComment(commentId = command.commentId, userId = command.userId)) */
-    }
 
-//    @EventListener
-//    fun handleCommentImageDeleted(event: CommentImageDeleted) {
-        /* TODO(클라이언트 추가 작업?: 마지막 이미지를 삭제하려는 경우 deleteCommentImage가 아닌 deleteComment가 호출되도록 조건문 추가)
-               val parentComment = commentRepository.findById(command.commentId).get()
-                if (parentComment.content.isNullOrBlank()) {
-                    if (imageRepository.findByParentIdAndType(parentComment.id, ImageType.COMMENT).size < 2)
-                        commentRepository.deleteById(command.commentId)
-                }*/
-//    }
+    // CommentImageDeleted
+    /* TODO(클라이언트 추가 작업?: 마지막 이미지를 삭제하려는 경우 deleteCommentImage가 아닌 deleteComment가 호출되도록 조건문 추가)
+           val parentComment = commentRepository.findById(command.commentId).get()
+            if (parentComment.content.isNullOrBlank()) {
+                if (imageRepository.findByParentIdAndType(parentComment.id, ImageType.COMMENT).size < 2)
+                    commentRepository.deleteById(command.commentId)
+            }*/
 
     @EventListener
-    fun handleCommentDeleted(event: CommentDeleted) {
+    fun handle(event: CommentDeleted) {
         imageService.deleteImages(DeleteImages.ByParentId(event.commentId, ImageType.COMMENT))
         threadService.getFullThread(event.threadId).let {
             if (it.comments.isEmpty() && it.content.isNullOrBlank() && it.threadImages.isEmpty())
                 threadRepository.deleteById(event.threadId) // FIXME : 쓰레드 생성자가 아닌 경우 쓰레드 제거하는 서비스 추가하여 대체
         }
+        logger.info("$event")
     }
 }
