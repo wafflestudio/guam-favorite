@@ -12,12 +12,12 @@ data class CreateFullInfoInput(
     val imageFiles: List<MultipartFile>?
 )
 
-data class CreateTaskMsgInput(
+data class CreateTaskMessageInput(
     val msg: String,
     val status: TaskStatus
 )
 
-data class UpdateTaskMsgInput(
+data class UpdateTaskMessageInput(
     val msg: String?,
     val status: TaskStatus?
 )
