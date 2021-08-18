@@ -6,12 +6,12 @@ import waffle.guam.taskmessage.model.TaskStatus
 data class CreateTaskMessage(
     val userId: Long,
     val taskId: Long,
-    val msg: String,
+    val messageContent: String,
     val status: TaskStatus
 ) : TaskMessageCommand {
     fun toEntity(): TaskMessageEntity =
         TaskMessageEntity(
-            msg = msg,
+            msg = messageContent,
             status = status.name,
             taskId = taskId
         )

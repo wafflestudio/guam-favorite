@@ -4,6 +4,6 @@ import waffle.guam.taskmessage.model.TaskStatus
 
 data class UpdateTaskMessage(
     val taskMessageId: Long,
-    val msg: String?,
+    val messageContent: String?,
     val status: TaskStatus?
 ) : TaskMessageCommand
