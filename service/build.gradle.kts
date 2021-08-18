@@ -4,8 +4,10 @@ plugins {
 
 dependencies {
     implementation(project(":db"))
-    implementation("org.springframework.boot:spring-boot-starter-web")
     testImplementation(project(":test"))
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-cache")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.0.3")
 }
 
 dependencies {
