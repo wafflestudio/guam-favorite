@@ -34,12 +34,21 @@ class CommentServiceImpl(
 
     @Transactional
     override fun createComment(command: CreateComment): CommentCreated {
-        validateCommentCreator(command)
+        val parentThread = threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException)
+
+        validateCommentCreator(command, parentThread.projectId)
 
         val user = userRepository.findById(command.userId).orElseThrow(::DataNotFoundException)
 
         commentRepository.save(command.copy(content = command.content?.trim()).toEntity(user)).let {
-            return CommentCreated(it.id, command.imageFiles)
+            return CommentCreated(
+                projectId = parentThread.projectId,
+                commentId = it.id,
+                threadCreatorId = parentThread.userId,
+                commentCreatorId = command.userId,
+                content = command.content ?: "이미지 등록",
+                imageFiles = command.imageFiles
+            )
         }
     }
 
@@ -68,13 +77,11 @@ class CommentServiceImpl(
             return CommentDeleted(commentId = command.commentId, threadId = it.threadId)
         }
 
-    protected fun validateCommentCreator(command: CreateComment) {
-        val parentThread = threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException)
-
-        val task = taskService.getTask(taskQuery().userIds(command.userId).projectIds(parentThread.projectId))
+    protected fun validateCommentCreator(command: CreateComment, projectId: Long) {
+        val task = taskService.getTask(taskQuery().userIds(command.userId).projectIds(projectId))
 
         if (task.userState == UserState.GUEST) {
-            val joinRequestThread = threadRepository.findByUserIdAndProjectId(command.userId, parentThread.projectId)
+            val joinRequestThread = threadRepository.findByUserIdAndProjectId(command.userId, projectId)
                 .orElseThrow(::DataNotFoundException)
             if (joinRequestThread.id != command.threadId) {
                 throw NotAllowedException("아직 다른 쓰레드에 댓글을 생성할 권한이 없습니다.")
