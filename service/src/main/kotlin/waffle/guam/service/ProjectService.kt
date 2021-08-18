@@ -261,8 +261,21 @@ class ProjectService(
         when {
             taskRepository.countByUserIdAndUserStateNotIn(userId) >= 3 -> throw JoinException("3개 이상의 프로젝트에는 참여할 수 없습니다.")
             else -> projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).run {
-                if (tasks.filter { it.user.id == userId }.isNotEmpty()) {
-                    throw JoinException("이미 참여 중인 프로젝트입니다.")
+
+                val checkHistory = tasks.filter { it.user.id == userId }
+
+                if (checkHistory.isNotEmpty()) {
+                    when(checkHistory.singleOrNull()?.userState){
+                        UserState.QUIT -> {
+                            checkHistory.singleOrNull()?.userState = UserState.GUEST
+//                            chatService.createThread( CreateThread(id, userId, introduction, null) )
+//                            return true
+                            throw JoinException("이전에 참여하려 했던 기록이 남아있습니다. 재요청이 정상적으로 처리되었으며, 메시지는 갱신할 수 없습니다.")
+                        }
+                        UserState.DECLINED ->  throw JoinException("이미 반려된 프로젝트입니다.")
+                        null -> throw NotAllowedException("한 프로젝트에 여러 작업 현황 감지; 서버에 문의해주세요.")
+                        else -> throw JoinException("이미 참여 중인 프로젝트입니다.")
+                    }
                 }
                 if (state != ProjectState.RECRUITING)
                     throw JoinException("이 프로젝트는 현재 팀원을 모집하고 있지 않습니다.")
@@ -292,9 +305,7 @@ class ProjectService(
                 )
 
                 // TODO default join image 어떨까
-                chatService.createThread(
-                    CreateThread(id, userId, introduction, null)
-                )
+                chatService.createThread( CreateThread(id, userId, introduction, null) )
             }
         }
 
