@@ -20,16 +20,11 @@ import waffle.guam.api.response.SuccessResponse
 import waffle.guam.common.UserContext
 import waffle.guam.image.ImageService
 import waffle.guam.image.command.DeleteImages
-import waffle.guam.image.event.ImagesDeleted
 import waffle.guam.thread.ThreadService
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
 import waffle.guam.thread.command.EditThreadContent
 import waffle.guam.thread.command.SetNoticeThread
-import waffle.guam.thread.event.NoticeThreadSet
-import waffle.guam.thread.event.ThreadContentEdited
-import waffle.guam.thread.event.ThreadCreated
-import waffle.guam.thread.event.ThreadDeleted
 import waffle.guam.thread.model.ThreadDetail
 import waffle.guam.thread.model.ThreadOverView
 
@@ -68,71 +63,62 @@ class ThreadController(
         @PathVariable projectId: Long,
         @PathVariable threadId: Long,
         userContext: UserContext
-    ): SuccessResponse<NoticeThreadSet> =
-        SuccessResponse(
-            threadService.setNoticeThread(
-                command = SetNoticeThread(projectId = projectId, threadId = threadId, userId = userContext.id)
-            )
-        )
+    ): SuccessResponse<Unit> =
+        threadService.setNoticeThread(
+            command = SetNoticeThread(projectId = projectId, threadId = threadId, userId = userContext.id)
+        ).let { SuccessResponse(Unit) }
 
     @PutMapping("/project/{projectId}/notice/reset")
     fun removeNoticeThread(
         @PathVariable projectId: Long,
         userContext: UserContext
-    ): SuccessResponse<NoticeThreadSet> =
-        SuccessResponse(
-            threadService.setNoticeThread(
-                command = SetNoticeThread(projectId = projectId, threadId = null, userId = userContext.id)
-            )
-        )
+    ): SuccessResponse<Unit> =
+        threadService.setNoticeThread(
+            command = SetNoticeThread(projectId = projectId, threadId = null, userId = userContext.id)
+        ).let { SuccessResponse(Unit) }
 
     @PostMapping("/thread/create/{projectId}")
     fun createThread(
         @PathVariable projectId: Long,
         @ModelAttribute("contentAndOrImages") createFullInfoInput: CreateFullInfoInput,
         userContext: UserContext
-    ): SuccessResponse<ThreadCreated> =
-        SuccessResponse(
-            threadService.createThread(
-                command = CreateThread(
-                    projectId = projectId,
-                    userId = userContext.id,
-                    content = createFullInfoInput.content,
-                    imageFiles = createFullInfoInput.imageFiles
-                )
+    ): SuccessResponse<Unit> =
+        threadService.createThread(
+            command = CreateThread(
+                projectId = projectId,
+                userId = userContext.id,
+                content = createFullInfoInput.content,
+                imageFiles = createFullInfoInput.imageFiles
             )
-        )
+        ).let { SuccessResponse(Unit) }
 
     @PutMapping("/thread/{threadId}/content")
     fun editThreadContent(
         @PathVariable threadId: Long,
         @RequestBody contentInput: ContentInput,
         userContext: UserContext
-    ): SuccessResponse<ThreadContentEdited> =
-        SuccessResponse(
-            threadService.editThreadContent(
-                command = EditThreadContent(
-                    threadId = threadId,
-                    userId = userContext.id,
-                    content = contentInput.content
-                )
+    ): SuccessResponse<Unit> =
+        threadService.editThreadContent(
+            command = EditThreadContent(
+                threadId = threadId,
+                userId = userContext.id,
+                content = contentInput.content
             )
-        )
+        ).let { SuccessResponse(Unit) }
 
     @DeleteMapping("/thread/{threadId}/image/{imageId}")
     fun deleteThreadImage(
         @PathVariable threadId: Long,
         @PathVariable imageId: Long,
         userContext: UserContext
-    ): SuccessResponse<ImagesDeleted> {
+    ): SuccessResponse<Unit> {
         threadService.getThread(threadId).let {
             if (it.creatorId != userContext.id) {
                 throw NotAllowedException("타인이 업로드한 이미지를 삭제할 수는 없습니다.")
             }
         }
-        return SuccessResponse(
-            imageService.deleteImages(DeleteImages.ById(listOf(imageId)))
-        )
+        imageService.deleteImages(DeleteImages.ById(listOf(imageId)))
+        return SuccessResponse(Unit)
     }
     // TODO(클라이언트 추가 작업: content=null, image 개수가 1개인 쓰레드의 경우 deleteThread를 호출할 것)
     //    if (it.content.isBlank()) {
@@ -144,10 +130,8 @@ class ThreadController(
     fun deleteThread(
         @PathVariable threadId: Long,
         userContext: UserContext
-    ): SuccessResponse<ThreadDeleted> =
-        SuccessResponse(
-            threadService.deleteThread(
-                command = DeleteThread(threadId = threadId, userId = userContext.id)
-            )
-        )
+    ): SuccessResponse<Unit> =
+        threadService.deleteThread(
+            command = DeleteThread(threadId = threadId, userId = userContext.id)
+        ).let { SuccessResponse(Unit) }
 }
