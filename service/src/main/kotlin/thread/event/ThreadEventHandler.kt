@@ -1,57 +1,67 @@
 package waffle.guam.thread.event
 
+import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 import waffle.guam.image.ImageService
 import waffle.guam.image.command.CreateImages
 import waffle.guam.image.command.DeleteImages
 import waffle.guam.image.model.ImageType
+import waffle.guam.task.TaskService
+import waffle.guam.task.command.SearchTask
+import waffle.guam.task.model.UserState
 
 @Component
 class ThreadEventHandler(
-    //    private val messageService: MessageService,
-    //    private val projectViewRepository: ProjectViewRepository,
-    //    private val userRepository: UserRepository,
     private val imageService: ImageService,
+    private val taskService: TaskService,
+    // private val messageService: MessageService,
 ) {
+    private val logger = LoggerFactory.getLogger(this::javaClass.name)
 
     @EventListener
-    fun handleNoticeThreadSet(event: NoticeThreadSet) {}
+    fun handle(event: NoticeThreadSet) {
+        logger.info("$event")
+    }
 
     @EventListener
-    fun handleThreadCreated(event: ThreadCreated) {
-        if (event.imageFiles.isNullOrEmpty()) return
-
-        imageService.createImages(
-            CreateImages(
-                files = event.imageFiles,
-                type = ImageType.THREAD,
-                parentId = event.threadId
+    fun handle(event: ThreadCreated) {
+        if (!event.imageFiles.isNullOrEmpty()) {
+            imageService.createImages(
+                CreateImages(
+                    files = event.imageFiles,
+                    type = ImageType.THREAD,
+                    parentId = event.threadId
+                )
             )
-        )
+        }
 
-        //    val targetIds = projectViewRepository.findById(event.projectId).get().run {
-        //        tasks.filter { it.userState == UserState.MEMBER || it.userState == UserState.LEADER }
-        //            .map { it.user.id }
-        //            .filter { event.creatorId != it }
-        //    }
-        //    val userName = userRepository.findById(event.creatorId).get().nickname
-        //
+        logger.info("$event")
+
+        val targetIds = taskService.getTasks(SearchTask.taskQuery().projectIds(event.projectId))
+            .filter { it.userState == UserState.MEMBER || it.userState == UserState.LEADER }
+            .map { it.user.id }
+            .filter { event.creatorId != it }
         //    messageService.sendMessage(
         //        ids = targetIds,
         //        title = "새로운 쓰레드가 작성되었습니다.",
-        //        body = "$userName: ${event.content}"
+        //        body = "${event.creatorName}: ${event.content}"
         //    )
     }
 
     @EventListener
-    fun handleJoinRequestThreadCreated(event: JoinRequestThreadCreated) {}
+    fun handle(event: JoinRequestThreadCreated) {
+        logger.info("$event")
+    }
 
     @EventListener
-    fun handleThreadContentEdited(event: ThreadContentEdited) {}
+    fun handle(event: ThreadContentEdited) {
+        logger.info("$event")
+    }
 
     @EventListener
-    fun handleThreadDeleted(event: ThreadDeleted) {
+    fun handle(event: ThreadDeleted) {
         imageService.deleteImages(DeleteImages.ByParentId(event.threadId, ImageType.THREAD))
+        logger.info("$event")
     }
 }

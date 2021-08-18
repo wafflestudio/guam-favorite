@@ -46,6 +46,7 @@ class CommentServiceImpl(
                 commentId = it.id,
                 threadCreatorId = parentThread.userId,
                 commentCreatorId = command.userId,
+                commentCreatorName = user.nickname,
                 content = command.content ?: "이미지 등록",
                 imageFiles = command.imageFiles
             )
