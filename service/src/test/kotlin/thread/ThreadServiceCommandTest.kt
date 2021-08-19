@@ -1,11 +1,15 @@
 package waffle.guam.thread
 
+import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
+import waffle.guam.DataNotFoundException
+import waffle.guam.InvalidRequestException
+import waffle.guam.NotAllowedException
 import waffle.guam.annotation.DatabaseTest
 import waffle.guam.comment.CommentRepository
 import waffle.guam.project.ProjectRepository
@@ -20,12 +24,12 @@ import javax.persistence.EntityManager
 
 @DatabaseTest(["thread/image.sql", "thread/user.sql", "thread/project.sql", "thread/task.sql", "thread/thread.sql", "thread/comment.sql"])
 class ThreadServiceCommandTest @Autowired constructor(
+    private val entityManager: EntityManager,
     private val projectRepository: ProjectRepository,
     private val threadRepository: ThreadRepository,
     threadViewRepository: ThreadViewRepository,
     taskService: TaskService,
     commentRepository: CommentRepository,
-    private val entityManager: EntityManager,
 ) {
 
     private val threadService = ThreadServiceImpl(
@@ -76,6 +80,36 @@ class ThreadServiceCommandTest @Autowired constructor(
         project.noticeThreadId shouldBe null
     }
 
+    @DisplayName("공지 쓰레드 설정 예외 : 존재하지 않는 프로젝트에 공지 쓰레드 설정 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun setNoticeThreadProjectNotFoundException() {
+        shouldThrowExactly<DataNotFoundException> {
+            threadService.setNoticeThread(
+                command = SetNoticeThread(
+                    projectId = 999999,
+                    threadId = 1,
+                    userId = 2,
+                )
+            )
+        }
+    }
+
+    @DisplayName("공지 쓰레드 설정 예외 : 게스트 등 비멤버들은 공지 쓰레드 설정 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun setNoticeThreadGuestNotAllowedException() {
+        shouldThrowExactly<NotAllowedException> {
+            threadService.setNoticeThread(
+                command = SetNoticeThread(
+                    projectId = 1,
+                    threadId = 2,
+                    userId = 2,
+                )
+            )
+        }
+    }
+
     // 주의: mocking 없이 MockMultipartFile 리스트 대입하면 S3에 그대로 업로드됨
     @DisplayName("쓰레드 생성 : 리더와 멤버는 새로운 쓰레드를 생성할 수 있다.")
     @Transactional
@@ -104,6 +138,38 @@ class ThreadServiceCommandTest @Autowired constructor(
         createdThread.isEdited shouldBe false
         createdThread.threadImages shouldBe listOf()
         createdThread.comments.size shouldBe 0
+    }
+
+    @DisplayName("쓰레드 생성 예외 : 존재하지 않는 프로젝트에 쓰레드 생성 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun createThreadProjectNotFoundException() {
+        shouldThrowExactly<DataNotFoundException> {
+            threadService.createThread(
+                command = CreateThread(
+                    projectId = 999999999999,
+                    userId = 1,
+                    content = "새로운 쓰레드",
+                    imageFiles = null
+                )
+            )
+        }
+    }
+
+    @DisplayName("쓰레드 생성 예외 : 게스트 등 비멤버들은 일반 쓰레드 생성 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun createThreadGuestNotAllowedException() {
+        shouldThrowExactly<NotAllowedException> {
+            threadService.createThread(
+                command = CreateThread(
+                    projectId = 1,
+                    userId = 2,
+                    content = "조인 쓰레드 이외의 쓰레드를 게스트가 달려고 시도한 경우",
+                    imageFiles = null
+                )
+            )
+        }
     }
 
     @DisplayName("조인 쓰레드 생성 : 리더와 멤버는 새로운 쓰레드를 생성할 수 있다.")
@@ -157,6 +223,36 @@ class ThreadServiceCommandTest @Autowired constructor(
         editedThread.comments[0].content shouldBe "댓글 내용 1"
         editedThread.comments[0].commentImages.size shouldBe 3
         editedThread.comments[0].commentImages[0].path shouldBe "COMMENT/109"
+    }
+
+    @DisplayName("쓰레드 수정 예외 : 타인이 생성한 쓰레드를 수정 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun editThreadContentEditOthersThreadNotAllowedException() {
+        shouldThrowExactly<NotAllowedException> {
+            threadService.editThreadContent(
+                command = EditThreadContent(
+                    threadId = 4,
+                    userId = 1,
+                    content = "타인이 작성한 쓰레드 수정 시도"
+                )
+            )
+        }
+    }
+
+    @DisplayName("쓰레드 수정 예외 : 이전과 동일한 내용으로 쓰레드를 수정 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun editThreadContentSameContentException() {
+        shouldThrowExactly<InvalidRequestException> {
+            threadService.editThreadContent(
+                command = EditThreadContent(
+                    threadId = 1,
+                    userId = 1,
+                    content = "쓰레드 내용 1"
+                )
+            )
+        }
     }
 
     @DisplayName("쓰레드 삭제 : 쓰레드의 생성자는 해당 쓰레드를 삭제할 수 있다.")
@@ -218,5 +314,33 @@ class ThreadServiceCommandTest @Autowired constructor(
         deletedThread.comments[0].content shouldBe "삭제될 쓰레드에 달려있을 댓글"
         deletedThread.comments[0].commentImages.size shouldBe 1
         deletedThread.comments[0].commentImages[0].path shouldBe "COMMENT/114"
+    }
+
+    @DisplayName("쓰레드 삭제 예외 : 타인이 생성한 쓰레드를 삭제 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun deleteThreadDeleteOthersThreadNotAllowedException() {
+        shouldThrowExactly<NotAllowedException> {
+            threadService.deleteThread(
+                command = DeleteThread(
+                    threadId = 4,
+                    userId = 1,
+                )
+            )
+        }
+    }
+
+    @DisplayName("쓰레드 삭제 예외 : 게스트 등 비멤버들은 자신이 생성한 쓰레드를 삭제 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun deleteThreadDeleteGuestNotAllowedException() {
+        shouldThrowExactly<NotAllowedException> {
+            threadService.deleteThread(
+                command = DeleteThread(
+                    threadId = 4,
+                    userId = 2,
+                )
+            )
+        }
     }
 }
