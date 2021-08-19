@@ -1,11 +1,15 @@
 package waffle.guam.comment
 
+import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
+import waffle.guam.DataNotFoundException
+import waffle.guam.InvalidRequestException
+import waffle.guam.NotAllowedException
 import waffle.guam.annotation.DatabaseTest
 import waffle.guam.comment.command.CreateComment
 import waffle.guam.comment.command.DeleteComment
@@ -18,9 +22,9 @@ import java.util.Optional
 @DatabaseTest(["comment/image.sql", "comment/user.sql", "comment/project.sql", "comment/task.sql", "comment/thread.sql", "comment/comment.sql"])
 class CommentServiceCommandTest @Autowired constructor(
     private val commentRepository: CommentRepository,
-    private val threadRepository: ThreadRepository,
-    private val taskService: TaskService,
-    private val userRepository: UserRepository
+    threadRepository: ThreadRepository,
+    taskService: TaskService,
+    userRepository: UserRepository
 ) {
     private val commentService = CommentServiceImpl(
         commentRepository,
@@ -64,6 +68,54 @@ class CommentServiceCommandTest @Autowired constructor(
         createdComment.createdAt shouldBeLessThanOrEqualTo createdComment.modifiedAt
     }
 
+    @DisplayName("댓글 생성 예외 : 존재하지 않는 쓰레드에 댓글을 생성 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun createCommentThreadNotFoundException() {
+        shouldThrowExactly<DataNotFoundException> {
+            commentService.createComment(
+                command = CreateComment(
+                    threadId = 999999999,
+                    userId = 1,
+                    content = "존재하지 않는 쓰레드에 댓글 달아보기",
+                    imageFiles = null
+                )
+            )
+        }
+    }
+
+    @DisplayName("댓글 생성 예외 : GUEST가 타인이 생성한 쓰레드에 댓글을 생성 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun createCommentGuestNotAllowedException() {
+        shouldThrowExactly<NotAllowedException> {
+            commentService.createComment(
+                command = CreateComment(
+                    threadId = 1,
+                    userId = 2,
+                    content = "본인의 참가 신청 쓰레드가 아닌 쓰레드에 댓글 달아보기",
+                    imageFiles = null
+                )
+            )
+        }
+    }
+
+    @DisplayName("댓글 생성 예외 : DECLINED된 사용자가 자신의 참가 신청 쓰레드에 댓글을 생성 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun createCommentDeclinedNotAllowedException() {
+        shouldThrowExactly<NotAllowedException> {
+            commentService.createComment(
+                command = CreateComment(
+                    threadId = 5,
+                    userId = 2,
+                    content = "탈퇴한 사용자가 자신의 조인 쓰레드에 댓글 달아보기",
+                    imageFiles = null
+                )
+            )
+        }
+    }
+
     @DisplayName("댓글 수정 : 특정 댓글의 content 정보를 수정한다.")
     @Transactional
     @Test
@@ -91,6 +143,51 @@ class CommentServiceCommandTest @Autowired constructor(
         editedComment.createdAt shouldBeLessThanOrEqualTo editedComment.modifiedAt
     }
 
+    @DisplayName("댓글 수정 예외 : 존재하지 않는 댓글을 수정 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun editCommentContentCommentNotFoundException() {
+        shouldThrowExactly<DataNotFoundException> {
+            commentService.editCommentContent(
+                command = EditCommentContent(
+                    commentId = 9999999999999,
+                    userId = 1,
+                    content = "존재하지 않는 댓글"
+                )
+            )
+        }
+    }
+
+    @DisplayName("댓글 수정 예외 : 타인이 생성한 댓글을 수정 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun editCommentContentNotCreatorException() {
+        shouldThrowExactly<NotAllowedException> {
+            commentService.editCommentContent(
+                command = EditCommentContent(
+                    commentId = 1,
+                    userId = 99999,
+                    content = "댓글의 생성자가 아닌 경우"
+                )
+            )
+        }
+    }
+
+    @DisplayName("댓글 수정 예외 : 기존 content와 동일한 내용으로 수정 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun editCommentContentNoChangeException() {
+        shouldThrowExactly<InvalidRequestException> {
+            commentService.editCommentContent(
+                command = EditCommentContent(
+                    commentId = 2,
+                    userId = 1,
+                    content = ""
+                )
+            )
+        }
+    }
+
     @DisplayName("댓글 삭제 : 사용자는 자신이 생성한 댓글을 삭제할 수 있다.")
     @Transactional
     @Test
@@ -108,5 +205,33 @@ class CommentServiceCommandTest @Autowired constructor(
         val deletedComment = commentRepository.findById(3L)
 
         deletedComment shouldBe Optional.empty()
+    }
+
+    @DisplayName("댓글 삭제 예외 : 존재하지 않는 댓글을 삭제 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun deleteCommentNotFoundException() {
+        shouldThrowExactly<DataNotFoundException> {
+            commentService.deleteComment(
+                command = DeleteComment(
+                    commentId = 9999999999999999,
+                    userId = 1,
+                )
+            )
+        }
+    }
+
+    @DisplayName("댓글 삭제 예외 : 타인이 생성한 댓글을 삭제 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun deleteCommentNotCreatorException() {
+        shouldThrowExactly<NotAllowedException> {
+            commentService.deleteComment(
+                command = DeleteComment(
+                    commentId = 1,
+                    userId = 9999999999999999,
+                )
+            )
+        }
     }
 }
