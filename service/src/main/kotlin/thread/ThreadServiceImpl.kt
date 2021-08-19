@@ -128,7 +128,7 @@ class ThreadServiceImpl(
             }
 
             when (commentRepository.existsByThreadId(command.threadId)) {
-                true -> threadRepository.save(it.copy(content = ""))
+                true -> threadRepository.save(it.copy(content = "", modifiedAt = Instant.now()))
                 false -> threadRepository.delete(it)
             }
             return ThreadDeleted(threadId = it.id, projectId = it.projectId)

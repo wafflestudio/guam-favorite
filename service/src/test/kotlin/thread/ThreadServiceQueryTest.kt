@@ -1,6 +1,5 @@
 package waffle.guam.thread
 
-import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
 import io.kotest.matchers.shouldBe
@@ -8,6 +7,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.annotation.DatabaseTest
 import waffle.guam.comment.CommentRepository
@@ -39,7 +39,7 @@ class ThreadServiceQueryTest @Autowired constructor(
 
         result.id shouldBe 1L
         result.content shouldBe "쓰레드 내용 1"
-        result.isEdited shouldBe true
+        result.isEdited shouldBe false
         result.creatorId shouldBe 1
         result.createdAt shouldBeLessThanOrEqualTo result.modifiedAt
     }
@@ -53,6 +53,7 @@ class ThreadServiceQueryTest @Autowired constructor(
             pageable = PageRequest.of(
                 0,
                 10,
+                Sort.by("id").descending()
             )
         )
 
@@ -63,9 +64,13 @@ class ThreadServiceQueryTest @Autowired constructor(
         val totalCount = result.totalElements.toInt()
         val hasNext = result.pageable.offset + result.size < result.totalElements
 
-        data[0].id shouldBeGreaterThan data[1].id // id 내림차순으로 반환
+        data[0].id shouldBeLessThan data[1].id // id 오름차순으로 반환. 1,2,3,4,5
 
-        data[1].creatorImageUrl shouldBe null
+        data[0].content shouldBe "쓰레드 내용 1"
+        data[0].threadImages.size shouldBe 3
+        data[0].threadImages[0].path shouldBe "THREAD/105"
+        data[0].commentSize shouldBe 3
+        data[0].isEdited shouldBe false
 
         data[2].content shouldBe null // '' => null로 반환
         data[2].creatorId shouldBe 1
@@ -74,11 +79,7 @@ class ThreadServiceQueryTest @Autowired constructor(
         data[2].commentSize shouldBe 0
         data[2].isEdited shouldBe false
 
-        data[4].content shouldBe "쓰레드 내용 1"
-        data[4].threadImages.size shouldBe 3
-        data[4].threadImages[0].path shouldBe "THREAD/105"
-        data[4].commentSize shouldBe 3
-        data[4].isEdited shouldBe true
+        data[3].creatorImageUrl shouldBe null
 
         size shouldBe 5
         offset shouldBe 0
@@ -95,6 +96,7 @@ class ThreadServiceQueryTest @Autowired constructor(
             pageable = PageRequest.of(
                 10,
                 10,
+                Sort.by("id").descending()
             )
         )
 
@@ -121,6 +123,7 @@ class ThreadServiceQueryTest @Autowired constructor(
             pageable = PageRequest.of(
                 0,
                 10,
+                Sort.by("id").descending()
             )
         )
 
@@ -146,7 +149,7 @@ class ThreadServiceQueryTest @Autowired constructor(
 
         result.id shouldBe 1
         result.content shouldBe "쓰레드 내용 1"
-        result.isEdited shouldBe true
+        result.isEdited shouldBe false
         result.creatorId shouldBe 1
         result.creatorNickname shouldBe "사용자 1"
         result.creatorImageUrl shouldBe "PROFILE/101"
