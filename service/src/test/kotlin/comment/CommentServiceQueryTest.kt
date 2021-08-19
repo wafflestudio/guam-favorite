@@ -15,6 +15,7 @@ class CommentServiceQueryTest(
     taskService: TaskService,
     userRepository: UserRepository
 ) : FeatureSpec() {
+
     private val commentService = CommentServiceImpl(
         commentRepository,
         threadRepository,

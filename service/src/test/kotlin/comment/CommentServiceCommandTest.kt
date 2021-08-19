@@ -26,6 +26,7 @@ class CommentServiceCommandTest @Autowired constructor(
     taskService: TaskService,
     userRepository: UserRepository
 ) {
+
     private val commentService = CommentServiceImpl(
         commentRepository,
         threadRepository,
