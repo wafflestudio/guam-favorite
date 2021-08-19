@@ -17,7 +17,7 @@ data class ThreadInfo(
         ): ThreadInfo =
             ThreadInfo(
                 id = e.id,
-                content = e.content,
+                content = e.content.ifBlank { null },
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.userId,
                 createdAt = e.createdAt,
