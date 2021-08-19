@@ -23,7 +23,7 @@ data class Comment(
         fun of(e: CommentEntity): Comment =
             Comment(
                 id = e.id,
-                content = e.content,
+                content = e.content.ifBlank { null },
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
