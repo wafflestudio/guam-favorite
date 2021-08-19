@@ -50,21 +50,15 @@ class CommentEventHandler(
             commentRepository.deleteById(event.commentId)
             this.deleteThreadIfEmpty(event.parentThreadId)
         }
+
         logger.info("$event")
     }
-
-    // CommentImageDeleted
-    /* TODO(클라이언트 추가 작업?: 마지막 이미지를 삭제하려는 경우 deleteCommentImage가 아닌 deleteComment가 호출되도록 조건문 추가)
-           val parentComment = commentRepository.findById(command.commentId).get()
-            if (parentComment.content.isNullOrBlank()) {
-                if (imageRepository.findByParentIdAndType(parentComment.id, ImageType.COMMENT).size < 2)
-                    commentRepository.deleteById(command.commentId)
-            }*/
 
     @EventListener
     fun handle(event: CommentDeleted) {
         imageService.deleteImages(DeleteImages.ByParentId(event.commentId, ImageType.COMMENT))
         this.deleteThreadIfEmpty(event.threadId)
+
         logger.info("$event")
     }
 
