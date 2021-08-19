@@ -41,15 +41,7 @@ class CommentServiceImpl(
         val user = userRepository.findById(command.userId).orElseThrow(::DataNotFoundException)
 
         commentRepository.save(command.copy(content = command.content?.trim()).toEntity(user)).let {
-            return CommentCreated(
-                projectId = parentThread.projectId,
-                commentId = it.id,
-                threadCreatorId = parentThread.userId,
-                commentCreatorId = command.userId,
-                commentCreatorName = user.nickname,
-                content = command.content ?: "이미지 등록",
-                imageFiles = command.imageFiles
-            )
+            return CommentCreated.of(thread = parentThread, commentId = it.id, command = command, creator = user)
         }
     }
 
