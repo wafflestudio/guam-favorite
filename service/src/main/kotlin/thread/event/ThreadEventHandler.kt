@@ -53,7 +53,7 @@ class ThreadEventHandler(
     fun handle(event: JoinRequestThreadCreated) {
         logger.info("$event")
     }
-
+    // TODO(클라와 컴케 필수: 달린 이미지가 없는 쓰레드의 content를 ""로 만들려는 경우, deleteThread 호출하도록 수정)
     @EventListener
     fun handle(event: ThreadContentEdited) {
         logger.info("$event")

@@ -55,8 +55,9 @@ class CommentServiceImpl(
                 throw InvalidRequestException("수정 전과 동일한 내용입니다.")
             }
 
-            commentRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
-            return CommentContentEdited(it.id)
+            val editedComment = commentRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
+
+            return CommentContentEdited(it.id, editedComment.content, it.images, it.threadId)
         }
 
     @Transactional
