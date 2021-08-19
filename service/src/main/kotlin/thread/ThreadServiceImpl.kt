@@ -94,7 +94,7 @@ class ThreadServiceImpl(
             return JoinRequestThreadCreated(it.id)
         }
 
-    @Transactional // TODO(클라와 컴케 필수: 달린 이미지가 없는 쓰레드의 content를 ""로 만들려는 경우, deleteThread 호출하도록 수정)
+    @Transactional
     override fun editThreadContent(command: EditThreadContent): ThreadContentEdited =
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             if (it.userId != command.userId) {
@@ -104,8 +104,8 @@ class ThreadServiceImpl(
                 throw InvalidRequestException("수정 전과 동일한 내용입니다.")
             }
 
-            threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
-            return ThreadContentEdited(it.id)
+            val editedThread = threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
+            return ThreadContentEdited(it.id, editedThread)
         }
 
     @Transactional
