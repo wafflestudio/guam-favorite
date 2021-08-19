@@ -3,6 +3,8 @@ package waffle.guam.thread.event
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
+import waffle.guam.comment.CommentRepository
+import waffle.guam.image.ImageRepository
 import waffle.guam.image.ImageService
 import waffle.guam.image.command.CreateImages
 import waffle.guam.image.command.DeleteImages
@@ -10,11 +12,15 @@ import waffle.guam.image.model.ImageType
 import waffle.guam.task.TaskService
 import waffle.guam.task.command.SearchTask
 import waffle.guam.task.model.UserState
+import waffle.guam.thread.ThreadRepository
 
 @Component
 class ThreadEventHandler(
     private val imageService: ImageService,
     private val taskService: TaskService,
+    private val threadRepository: ThreadRepository,
+    private val commentRepository: CommentRepository,
+    private val imageRepository: ImageRepository
     // private val messageService: MessageService,
 ) {
     private val logger = LoggerFactory.getLogger(this::javaClass.name)
@@ -53,10 +59,20 @@ class ThreadEventHandler(
     fun handle(event: JoinRequestThreadCreated) {
         logger.info("$event")
     }
-    // TODO(클라와 컴케 필수: 달린 이미지가 없는 쓰레드의 content를 ""로 만들려는 경우, deleteThread 호출하도록 수정)
+
     @EventListener
     fun handle(event: ThreadContentEdited) {
         logger.info("$event")
+
+        if (event.thread.content.isNotBlank()) return
+
+        val threadImages = imageRepository.findByParentIdAndType(event.thread.id, ImageType.THREAD.name)
+
+        if (threadImages.isNotEmpty()) return
+
+        if (!commentRepository.existsByThreadId(event.threadId)) {
+            threadRepository.delete(event.thread)
+        }
     }
 
     @EventListener
