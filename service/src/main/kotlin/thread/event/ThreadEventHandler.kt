@@ -78,6 +78,7 @@ class ThreadEventHandler(
     @EventListener
     fun handle(event: ThreadDeleted) {
         imageService.deleteImages(DeleteImages.ByParentId(event.threadId, ImageType.THREAD))
+
         logger.info("$event")
     }
 }
