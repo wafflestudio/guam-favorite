@@ -11,5 +11,6 @@ interface ThreadRepository : JpaRepository<ThreadEntity, Long> {
 }
 
 interface ThreadViewRepository : JpaRepository<ThreadView, Long> {
+
     fun findByProjectId(projectId: Long, pageable: Pageable): Page<ThreadView>
 }
