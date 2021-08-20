@@ -21,7 +21,7 @@ import waffle.guam.projectstack.ProjectStackService
 import waffle.guam.projectstack.command.StackIdList
 import waffle.guam.projectstack.util.SearchEngine
 import waffle.guam.task.TaskService
-import waffle.guam.task.command.SearchTask.Companion.taskQuery
+import waffle.guam.task.query.SearchTask.Companion.taskQuery
 import java.time.Instant
 
 /**

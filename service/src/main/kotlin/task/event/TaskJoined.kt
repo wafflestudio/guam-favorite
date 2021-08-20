@@ -1,10 +1,8 @@
 package waffle.guam.task.event
 
-import waffle.guam.task.model.UserState
 import java.time.Instant
 
-data class TaskUserStateUpdated(
-    val taskIds: List<Long>,
-    val newState: UserState,
+data class TaskJoined(
+    val taskId: Long,
     override val timestamp: Instant = Instant.now()
 ) : TaskEvent(timestamp)

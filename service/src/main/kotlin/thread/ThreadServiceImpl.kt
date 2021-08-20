@@ -10,8 +10,7 @@ import waffle.guam.NotAllowedException
 import waffle.guam.comment.CommentRepository
 import waffle.guam.project.ProjectRepository
 import waffle.guam.task.TaskService
-import waffle.guam.task.command.SearchTask.Companion.taskQuery
-import waffle.guam.task.model.UserState
+import waffle.guam.task.query.SearchTask.Companion.taskQuery
 import waffle.guam.thread.command.CreateJoinRequestThread
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
@@ -36,8 +35,6 @@ class ThreadServiceImpl(
     private val commentRepository: CommentRepository,
 ) : ThreadService {
 
-    private val nonMemberUserStates = listOf(UserState.GUEST, UserState.QUIT, UserState.DECLINED)
-
     override fun getThread(threadId: Long): ThreadInfo =
         threadRepository.findById(threadId).orElseThrow(::DataNotFoundException).let {
             ThreadInfo.of(it)
@@ -59,7 +56,7 @@ class ThreadServiceImpl(
 
         val task = taskService.getTask(taskQuery().userIds(command.userId).projectIds(project.id))
 
-        if (task.userState in nonMemberUserStates) {
+        if (!task.userState.isOfficialState()) {
             throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
         }
 
@@ -79,7 +76,7 @@ class ThreadServiceImpl(
         val parentProject = projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
         val task = taskService.getTask(taskQuery().userIds(command.userId).projectIds(parentProject.id))
 
-        if (task.userState in nonMemberUserStates) {
+        if (!task.userState.isOfficialState()) {
             throw NotAllowedException("해당 프로젝트에 쓰레드를 생성할 권한이 없습니다.")
         }
 
@@ -116,7 +113,7 @@ class ThreadServiceImpl(
             }
             val task = taskService.getTask(taskQuery().userIds(command.userId).projectIds(it.projectId))
 
-            if (task.userState in nonMemberUserStates) {
+            if (!task.userState.isOfficialState()) {
                 throw NotAllowedException("해당 프로젝트의 쓰레드를 삭제할 권한이 없습니다.")
             }
 

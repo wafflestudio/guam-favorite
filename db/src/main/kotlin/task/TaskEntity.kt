@@ -4,6 +4,7 @@ import waffle.guam.project.ProjectEntity
 import waffle.guam.taskmessage.TaskMessageEntity
 import waffle.guam.user.UserEntity
 import java.time.Instant
+import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.FetchType
 import javax.persistence.GeneratedValue
@@ -14,8 +15,16 @@ import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
+import javax.persistence.UniqueConstraint
 
-@Table(name = "tasks")
+@Table(
+    name = "tasks",
+    uniqueConstraints = [
+        UniqueConstraint(name = "user_project", columnNames = ["user_id", "project_id"]),
+        UniqueConstraint(name = "user_offset", columnNames = ["user_id", "user_offset"]),
+        UniqueConstraint(name = "project_position_offset", columnNames = ["project_id", "position", "position_offset"]),
+    ]
+)
 @Entity
 data class TaskEntity(
     @Id
@@ -35,7 +44,13 @@ data class TaskEntity(
     @JoinColumn(name = "user_id")
     val user: UserEntity,
 
-    val userState: String,
+    var userState: String,
+
+    @Column(name = "user_offset")
+    var userOffset: Int = 0,
+
+    @Column(name = "position_offset")
+    var positionOffset: Int? = null,
 
     val createdAt: Instant = Instant.now(),
 

@@ -1,7 +1,7 @@
 package waffle.guam.task.model
 
 import waffle.guam.task.TaskEntity
-import waffle.guam.task.command.TaskExtraFieldParams
+import waffle.guam.task.query.TaskExtraFieldParams
 import waffle.guam.taskmessage.model.TaskMessage
 import waffle.guam.taskmessage.model.TaskMessage.Companion.toDomain
 import waffle.guam.user.model.User

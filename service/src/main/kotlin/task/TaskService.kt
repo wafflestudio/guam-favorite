@@ -1,16 +1,13 @@
 package waffle.guam.task
 
-import waffle.guam.task.command.CreateTask
-import waffle.guam.task.command.SearchTask
-import waffle.guam.task.command.TaskExtraFieldParams
-import waffle.guam.task.command.UpdateTaskUserState
-import waffle.guam.task.event.TaskCreated
-import waffle.guam.task.event.TaskUserStateUpdated
+import waffle.guam.task.command.TaskCommand
+import waffle.guam.task.event.TaskEvent
 import waffle.guam.task.model.Task
+import waffle.guam.task.query.SearchTask
+import waffle.guam.task.query.TaskExtraFieldParams
 
 interface TaskService {
-    fun createTask(userId: Long, command: CreateTask): TaskCreated
-    fun updateTaskState(command: UpdateTaskUserState): TaskUserStateUpdated
+    fun handle(command: TaskCommand): TaskEvent
     fun getTasks(command: SearchTask, extraFieldParams: TaskExtraFieldParams = TaskExtraFieldParams()): List<Task>
     fun getTask(command: SearchTask, extraFieldParams: TaskExtraFieldParams = TaskExtraFieldParams()): Task
 }

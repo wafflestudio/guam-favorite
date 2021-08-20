@@ -20,9 +20,9 @@ import waffle.guam.project.event.ProjectUpdated
 import waffle.guam.project.model.Project
 import waffle.guam.project.model.ProjectState
 import waffle.guam.task.TaskService
-import waffle.guam.task.command.SearchTask.Companion.taskQuery
 import waffle.guam.task.model.Position
 import waffle.guam.task.model.UserState
+import waffle.guam.task.query.SearchTask.Companion.taskQuery
 
 @Primary
 @Service

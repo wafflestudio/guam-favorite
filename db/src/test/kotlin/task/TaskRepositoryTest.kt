@@ -100,12 +100,4 @@ class TaskRepositoryTest @Autowired constructor(
 
         result.size shouldBe 1
     }
-
-    @Transactional
-    @Test
-    fun updateTask() {
-        val result = taskRepository.updateStates(listOf(1L, 2L, 3L, 4L), "GUEST")
-
-        result shouldBe 3
-    }
 }

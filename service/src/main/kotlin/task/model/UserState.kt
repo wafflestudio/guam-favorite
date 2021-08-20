@@ -1,7 +1,13 @@
 package waffle.guam.task.model
 
 enum class UserState {
-    GUEST, MEMBER, LEADER, QUIT, DECLINED, CONTRIBUTED;
+    GUEST, MEMBER, LEADER, DECLINED, LEFT, CANCELED, CONTRIBUTED;
 
-    fun isValidMember(): Boolean = this == GUEST || this == MEMBER || this == LEADER
+    companion object {
+        val validStates: List<UserState> = listOf(GUEST, MEMBER, LEADER)
+        val officialStates: List<UserState> = listOf(MEMBER, LEADER)
+    }
+
+    fun isValidState(): Boolean = validStates.contains(this)
+    fun isOfficialState(): Boolean = officialStates.contains(this)
 }
