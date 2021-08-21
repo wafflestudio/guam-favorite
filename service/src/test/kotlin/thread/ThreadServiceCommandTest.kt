@@ -306,7 +306,7 @@ class ThreadServiceCommandTest @Autowired constructor(
         prevThread.comments[0].commentImages[0].path shouldBe "COMMENT/114"
 
         deletedThread.id shouldBe event.threadId
-        deletedThread.content shouldBe null
+        deletedThread.content shouldBe "" // 컨트롤러에서 반환할 때만 ""
         deletedThread.creatorId shouldBe command.userId
         deletedThread.isEdited shouldBe true
         // deletedThread.threadImages : EventListener에 의해 제거됨

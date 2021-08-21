@@ -10,7 +10,7 @@ import java.time.Instant
 
 data class ThreadDetail(
     val id: Long,
-    val content: String?,
+    val content: String,
     val isEdited: Boolean,
     val creatorId: Long,
     val creatorNickname: String,
@@ -26,7 +26,7 @@ data class ThreadDetail(
         ): ThreadDetail =
             ThreadDetail(
                 id = e.id,
-                content = e.content.ifBlank { null },
+                content = e.content,
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.user.id,
                 creatorNickname = e.user.nickname,
