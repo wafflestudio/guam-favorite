@@ -17,6 +17,8 @@ import waffle.guam.api.request.ContentInput
 import waffle.guam.api.request.CreateFullInfoInput
 import waffle.guam.api.response.PageableResponse
 import waffle.guam.api.response.SuccessResponse
+import waffle.guam.api.response.ThreadDetailResponse
+import waffle.guam.api.response.ThreadOverViewResponse
 import waffle.guam.common.UserContext
 import waffle.guam.image.ImageService
 import waffle.guam.image.command.DeleteImages
@@ -25,8 +27,6 @@ import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
 import waffle.guam.thread.command.EditThreadContent
 import waffle.guam.thread.command.SetNoticeThread
-import waffle.guam.thread.model.ThreadDetail
-import waffle.guam.thread.model.ThreadOverView
 
 @RestController
 @RequestMapping
@@ -39,10 +39,10 @@ class ThreadController(
     fun getThreads(
         @PathVariable projectId: Long,
         @PageableDefault(size = 10, page = 0, sort = ["id"], direction = Sort.Direction.DESC) pageable: Pageable
-    ): PageableResponse<ThreadOverView> =
+    ): PageableResponse<ThreadOverViewResponse> =
         threadService.getThreads(projectId, pageable).let {
             PageableResponse(
-                data = it.content.asReversed(),
+                data = it.content.map { ThreadOverViewResponse.of(it) }.asReversed(),
                 size = it.content.size,
                 offset = it.pageable.offset.toInt(),
                 totalCount = it.totalElements.toInt(),
@@ -53,9 +53,9 @@ class ThreadController(
     @GetMapping("/thread/{threadId}")
     fun getFullThread(
         @PathVariable threadId: Long
-    ): SuccessResponse<ThreadDetail> =
+    ): SuccessResponse<ThreadDetailResponse> =
         SuccessResponse(
-            threadService.getFullThread(threadId)
+            ThreadDetailResponse.of(threadService.getFullThread(threadId))
         )
 
     @PutMapping("/project/{projectId}/notice/{threadId}")
@@ -120,11 +120,6 @@ class ThreadController(
         imageService.deleteImages(DeleteImages.ById(listOf(imageId)))
         return SuccessResponse(Unit)
     }
-    // TODO(클라이언트 추가 작업: content=null, image 개수가 1개인 쓰레드의 경우 deleteThread를 호출할 것)
-    //    if (it.content.isBlank()) {
-    //        if (imageRepository.findByParentIdAndType(it.id, ImageType.THREAD).size < 2)
-    //            this.deleteThread(DeleteThread(threadId = it.id, userId = command.userId))
-    //    }
 
     @DeleteMapping("/thread/{threadId}")
     fun deleteThread(

@@ -57,7 +57,7 @@ class ThreadServiceQueryTest @Autowired constructor(
             )
         )
 
-        // controller response format
+        // almost controller response format
         val data = result.content.asReversed()
         val size = result.content.size
         val offset = result.pageable.offset.toInt()
@@ -72,7 +72,7 @@ class ThreadServiceQueryTest @Autowired constructor(
         data[0].commentSize shouldBe 3
         data[0].isEdited shouldBe false
 
-        data[2].content shouldBe null // '' => null로 반환
+        data[2].content shouldBe "" // Response단에서 '' => null로 반환
         data[2].creatorId shouldBe 1
         data[2].creatorImageUrl shouldBe "PROFILE/101"
         data[2].threadImages shouldBe listOf()
@@ -100,7 +100,7 @@ class ThreadServiceQueryTest @Autowired constructor(
             )
         )
 
-        // controller response format
+        // almost controller response format
         val data = result.content.asReversed()
         val size = result.content.size
         val offset = result.pageable.offset.toInt()
@@ -127,7 +127,7 @@ class ThreadServiceQueryTest @Autowired constructor(
             )
         )
 
-        // controller response format
+        // almost controller response format
         val data = result.content.asReversed()
         val size = result.content.size
         val offset = result.pageable.offset.toInt()
