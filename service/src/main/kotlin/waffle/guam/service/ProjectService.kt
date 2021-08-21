@@ -388,7 +388,7 @@ class ProjectService(
         }
 
     private fun ProjectView.currentMemberCnt(p: Position): Int =
-        tasks.filter { it.userState.isValidMember(filterGuest = true) }.size
+        tasks.filter { it.userState.isValidMember(filterGuest = true) && it.position == p }.size
 
     private fun ProjectView.task(userId: Long): TaskOverView? =
         tasks.find { it.user.id == userId }
