@@ -14,40 +14,40 @@ class TaskEventHandler(
     @EventListener
     fun handle(event: TaskCreated) {
         logger.info("$event")
-        taskRepository.findAll().forEach {
-            println(it)
-        }
+//        taskRepository.findAll().forEach {
+//            println(it)
+//        }
     }
 
     @EventListener
     fun handle(event: TaskJoined) {
         logger.info("$event")
-        taskRepository.findAll().forEach {
-            println(it)
-        }
+//        taskRepository.findAll().forEach {
+//            println(it)
+//        }
     }
 
     @EventListener
     fun handle(event: TaskLeft) {
         logger.info("$event")
-        taskRepository.findAll().forEach {
-            println(it)
-        }
+//        taskRepository.findAll().forEach {
+//            println(it)
+//        }
     }
 
     @EventListener
     fun handle(event: TaskAccepted) {
         logger.info("$event")
-        taskRepository.findAll().forEach {
-            println(it)
-        }
+//        taskRepository.findAll().forEach {
+//            println(it)
+//        }
     }
 
     @EventListener
     fun handle(event: TaskDeclined) {
         logger.info("$event")
-        taskRepository.findAll().forEach {
-            println(it)
-        }
+//        taskRepository.findAll().forEach {
+//            println(it)
+//        }
     }
 }
