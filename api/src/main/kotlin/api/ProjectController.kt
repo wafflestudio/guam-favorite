@@ -13,11 +13,13 @@ import waffle.guam.api.response.ProjectResponse
 import waffle.guam.api.response.SuccessResponse
 import waffle.guam.common.UserContext
 import waffle.guam.project.ProjectService
+import waffle.guam.task.TaskService
 
 @RestController
 @RequestMapping
 class ProjectController(
     private val projectService: ProjectService,
+    private val taskService: TaskService,
 ) {
 
     @PostMapping("/project")
@@ -57,10 +59,4 @@ class ProjectController(
                 hasNext = page * size + it.size < it.totalElements
             )
         }
-
-    /**
-     * (1) select project outer join images
-     * (2) select project_stack inner join tech_stack
-     * (3) select task inner join users outer join images
-     */
 }

@@ -9,16 +9,16 @@ import waffle.guam.image.command.DeleteImages
 import waffle.guam.image.model.ImageType
 import waffle.guam.projectstack.ProjectStackService
 import waffle.guam.task.TaskService
+import waffle.guam.task.command.CancelTask
+import waffle.guam.task.command.CompleteTask
 import waffle.guam.task.command.CreateTask
-import waffle.guam.task.command.SearchTask.Companion.taskQuery
-import waffle.guam.task.command.UpdateTaskUserState
-import waffle.guam.task.model.UserState
+import waffle.guam.task.command.JoinTask
 
 @Component
 class ProjectEventHandler(
     private val projectStackService: ProjectStackService,
     private val imageService: ImageService,
-    private val taskService: TaskService
+    private val taskService: TaskService,
 ) {
 
     private val logger = LoggerFactory.getLogger(this::javaClass.name)
@@ -40,12 +40,11 @@ class ProjectEventHandler(
                 )
             )
         }
-        taskService.createTask(
-            userId = event.leaderId,
+        taskService.handle(
             command = CreateTask(
+                userId = event.leaderId,
                 projectId = event.projectId,
                 position = event.leaderPosition,
-                userState = UserState.LEADER
             )
         )
     }
@@ -76,37 +75,26 @@ class ProjectEventHandler(
     fun prjDeleted(event: ProjectDeleted) {
         logger.info("$event")
 
-        taskService.getTasks(
-            command = taskQuery().projectIds(event.projectId)
-        ).let { taskList ->
-            taskService.updateTaskState(
-                command = UpdateTaskUserState(
-                    taskIds = taskList.map { it.id },
-                    userState = UserState.QUIT
-                )
-            )
-        }
+        taskService.handle(CancelTask(projectId = event.projectId))
     }
 
     @EventListener
     fun prjCompleted(event: ProjectCompleted) {
         logger.info("$event")
 
-        taskService.getTasks(
-            command = taskQuery().projectIds(event.projectId).userStates(UserState.LEADER, UserState.MEMBER)
-        ).let { taskList ->
-            taskService.updateTaskState(
-                command = UpdateTaskUserState(
-                    taskIds = taskList.map { it.id },
-                    userState = UserState.CONTRIBUTED
-                )
-            )
-        }
+        taskService.handle(CompleteTask(projectId = event.projectId))
     }
 
     @EventListener
     fun prjJoinRequested(event: ProjectJoinRequested) {
         logger.info("$event")
-        TODO("여기서 task 만들 수 없음; task level 에서 추가적인 validation 필요")
+
+        taskService.handle(
+            JoinTask(
+                userId = event.userId,
+                projectId = event.projectId,
+                position = event.position,
+            )
+        )
     }
 }

@@ -1,4 +1,4 @@
-package waffle.guam.task.command
+package waffle.guam.task.query
 
 import org.springframework.data.jpa.domain.Specification
 import waffle.guam.task.TaskEntity
@@ -11,7 +11,7 @@ data class SearchTask private constructor(
     val projectIds: List<Long>? = null,
     val userStates: List<UserState>? = null,
     val positions: List<Position>? = null,
-) : TaskCommand {
+) {
     val spec: Specification<TaskEntity> =
         TaskSpec.run {
             all().and(userIds?.let { userIds(it) })

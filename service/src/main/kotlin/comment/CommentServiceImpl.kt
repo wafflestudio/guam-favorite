@@ -13,8 +13,8 @@ import waffle.guam.comment.event.CommentCreated
 import waffle.guam.comment.event.CommentDeleted
 import waffle.guam.comment.model.Comment
 import waffle.guam.task.TaskService
-import waffle.guam.task.command.SearchTask.Companion.taskQuery
 import waffle.guam.task.model.UserState
+import waffle.guam.task.query.SearchTask.Companion.taskQuery
 import waffle.guam.thread.ThreadRepository
 import waffle.guam.user.UserRepository
 import java.time.Instant
@@ -81,7 +81,7 @@ class CommentServiceImpl(
                 throw NotAllowedException("아직 다른 쓰레드에 댓글을 생성할 권한이 없습니다.")
             }
         }
-        if (task.userState in listOf(UserState.QUIT, UserState.DECLINED)) {
+        if (task.userState !in UserState.validStates) {
             throw NotAllowedException("해당 프로젝트에 댓글을 생성할 권한이 없습니다.")
         }
     }

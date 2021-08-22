@@ -1,4 +1,4 @@
-package waffle.guam.task.command
+package waffle.guam.task.query
 
 import org.springframework.data.jpa.domain.Specification
 import waffle.guam.task.TaskEntity
