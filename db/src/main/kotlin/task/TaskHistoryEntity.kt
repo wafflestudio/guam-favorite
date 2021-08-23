@@ -1,7 +1,6 @@
 package waffle.guam.task
 
 import waffle.guam.project.ProjectEntity
-import waffle.guam.taskmessage.TaskMessageEntity
 import waffle.guam.user.UserEntity
 import java.time.Instant
 import javax.persistence.Entity
@@ -11,17 +10,12 @@ import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
-import javax.persistence.UniqueConstraint
 
-@Table(
-    name = "tasks",
-    uniqueConstraints = [UniqueConstraint(name = "task_unique_key", columnNames = ["user_id", "project_id"])]
-)
+@Table(name = "task_history")
 @Entity
-data class TaskEntity(
+data class TaskHistoryEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
@@ -32,16 +26,13 @@ data class TaskEntity(
 
     @OneToOne
     @JoinColumn(name = "user_id")
-    var user: UserEntity? = null,
+    val user: UserEntity,
 
-    var userState: String? = null,
+    var userState: String,
 
     val position: String,
 
-    @OneToMany(mappedBy = "taskId")
-    val taskMessages: Set<TaskMessageEntity> = emptySet(),
+    val description: String = "QUIT",
 
-    val createdAt: Instant = Instant.now(),
-
-    val modifiedAt: Instant = createdAt,
+    val createdAt: Instant = Instant.now()
 )

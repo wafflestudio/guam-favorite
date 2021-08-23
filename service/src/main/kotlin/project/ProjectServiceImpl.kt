@@ -21,6 +21,8 @@ import waffle.guam.projectstack.ProjectStackService
 import waffle.guam.projectstack.command.StackIdList
 import waffle.guam.projectstack.util.SearchEngine
 import waffle.guam.task.TaskService
+import waffle.guam.task.model.Position
+import waffle.guam.task.model.PositionQuota
 import waffle.guam.task.query.SearchTask.Companion.taskQuery
 import java.time.Instant
 
@@ -112,7 +114,12 @@ class ProjectServiceImpl(
                 stackIdList = StackIdList(command.frontStackId, command.backStackId, command.designStackId),
                 leaderId = userId,
                 leaderPosition = command.myPosition!!,
-                imageFiles = command.imageFiles
+                imageFiles = command.imageFiles,
+                positionQuotas = listOf(
+                    PositionQuota(Position.FRONTEND, frontHeadcount),
+                    PositionQuota(Position.BACKEND, backHeadcount),
+                    PositionQuota(Position.DESIGNER, designerHeadcount)
+                )
             )
         }
     }

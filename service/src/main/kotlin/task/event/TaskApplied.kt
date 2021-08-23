@@ -2,7 +2,8 @@ package waffle.guam.task.event
 
 import java.time.Instant
 
-data class TaskJoined(
-    val taskId: Long,
+data class TaskApplied(
+    val projectId: Long,
+    val userId: Long,
     override val timestamp: Instant = Instant.now()
 ) : TaskEvent(timestamp)

@@ -23,7 +23,7 @@ class TaskMessageServiceImpl(
     @Transactional
     override fun createTaskMessage(command: CreateTaskMessage): TaskMessageCreated =
         taskRepository.findById(command.taskId).orElseThrow(::DataNotFoundException).let {
-            if (it.user.id != command.userId) {
+            if (it.user?.id != command.userId) {
                 throw NotAllowedException("이곳에는 작업 현황을 생성할 수 없습니다.")
             }
 

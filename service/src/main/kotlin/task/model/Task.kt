@@ -23,8 +23,8 @@ data class Task(
                 id = id,
                 position = Position.valueOf(position),
                 projectId = project.id,
-                user = User.of(user),
-                userState = UserState.valueOf(userState),
+                user = User.of(user!!),
+                userState = UserState.valueOf(userState!!),
                 taskMsgs = when (extraFieldParams.withTaskMsgs) {
                     true -> taskMessages.map { it.toDomain() }
                     false -> null

@@ -10,8 +10,8 @@ import waffle.guam.image.command.CreateImages
 import waffle.guam.image.command.DeleteImages
 import waffle.guam.image.model.ImageType
 import waffle.guam.task.TaskService
-import waffle.guam.task.command.SearchTask
 import waffle.guam.task.model.UserState
+import waffle.guam.task.query.SearchTask.Companion.taskQuery
 import waffle.guam.thread.ThreadRepository
 
 @Component
@@ -44,7 +44,7 @@ class ThreadEventHandler(
 
         logger.info("$event")
 
-        val targetIds = taskService.getTasks(SearchTask.taskQuery().projectIds(event.projectId))
+        val targetIds = taskService.getTasks(taskQuery().projectIds(event.projectId))
             .filter { it.userState == UserState.MEMBER || it.userState == UserState.LEADER }
             .map { it.user.id }
             .filter { event.creatorId != it }
