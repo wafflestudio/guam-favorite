@@ -2,13 +2,13 @@ package waffle.guam.api
 
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.DeleteMapping
 import waffle.guam.api.request.CreateProjectRequest
 import waffle.guam.api.request.JoinProjectRequest
 import waffle.guam.api.request.SearchProjectRequest
@@ -19,6 +19,9 @@ import waffle.guam.api.response.SuccessResponse
 import waffle.guam.common.UserContext
 import waffle.guam.project.ProjectService
 import waffle.guam.task.TaskService
+import waffle.guam.task.command.AcceptTask
+import waffle.guam.task.command.DeclineTask
+import waffle.guam.task.command.LeaveTask
 
 @RestController
 @RequestMapping
@@ -84,7 +87,7 @@ class ProjectController(
             searchProjectRequest.toCommand()
         ).let {
             PageableResponse(
-                data = it.content.map { prj ->ProjectResponse.of(prj) },
+                data = it.content.map { prj -> ProjectResponse.of(prj) },
                 size = it.content.size,
                 offset = page * size,
                 totalCount = it.totalElements.toInt(),
@@ -101,7 +104,7 @@ class ProjectController(
             PageRequest.of(page, size, Sort.by("modifiedAt").descending())
         ).let {
             PageableResponse(
-                data = it.content.map { prj ->ProjectResponse.of(prj) },
+                data = it.content.map { prj -> ProjectResponse.of(prj) },
                 size = it.content.size,
                 offset = page * size,
                 totalCount = it.totalElements.toInt(),
@@ -136,10 +139,17 @@ class ProjectController(
     fun acceptJoinOrNot(
         @PathVariable projectId: Long,
         @PathVariable userId: Long,
+        @RequestParam accept: Boolean,
         userContext: UserContext
     ): SuccessResponse<Unit> =
-        SuccessResponse(Unit)
-        // TODO("승인 / 반려")
+        taskService.handle(
+            if (accept)
+                AcceptTask(leaderId = userContext.id, guestId = userId, projectId = projectId)
+            else
+                DeclineTask(leaderId = userContext.id, guestId = userId, projectId = projectId)
+        ).run {
+            SuccessResponse(Unit)
+        }
 
     @PostMapping("/project/edit/{projectId}")
     fun updateProject(
@@ -153,8 +163,10 @@ class ProjectController(
 
     @PostMapping("/project/quit/{projectId}")
     fun quitProject(
-        @PathVariable projectId: Long
+        @PathVariable projectId: Long,
+        userContext: UserContext
     ): SuccessResponse<Unit> =
-        SuccessResponse(Unit)
-        //TODO("나가기")
+        taskService.handle(LeaveTask(userId = userContext.id, projectId = projectId)).run {
+            SuccessResponse(Unit)
+        }
 }

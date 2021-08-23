@@ -10,8 +10,8 @@ import waffle.guam.image.command.CreateImages
 import waffle.guam.image.command.DeleteImages
 import waffle.guam.image.model.ImageType
 import waffle.guam.task.TaskService
-import waffle.guam.task.command.SearchTask
 import waffle.guam.task.model.UserState
+import waffle.guam.task.query.SearchTask
 import waffle.guam.thread.ThreadRepository
 
 @Component

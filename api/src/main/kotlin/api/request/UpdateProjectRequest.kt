@@ -16,7 +16,7 @@ data class UpdateProjectRequest(
     val designStackId: Long?,
     val due: Due?
 ) {
-    fun toCommand() : UpdateProject =
+    fun toCommand(): UpdateProject =
         UpdateProject(
             title = title,
             description = description,
@@ -29,5 +29,4 @@ data class UpdateProjectRequest(
             designStackId = designStackId,
             due = due
         )
-
 }

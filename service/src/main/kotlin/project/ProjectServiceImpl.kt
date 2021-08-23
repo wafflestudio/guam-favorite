@@ -72,13 +72,15 @@ class ProjectServiceImpl(
             val ids = this.map { it.id }.toList()
 
             val prjStacks = projectStackService.getAllProjectStacks(ids)
+                .groupBy { it.projectId }
 
             val tasks = taskService.getTasks(taskQuery().projectIds(ids))
+                .groupBy { it.projectId }
 
-            val filterProjects =
-                this.filter {
-                    command.stackId in prjStacks.filter { prjStacks -> prjStacks.projectId == it.id }
-                        .map { prjStacks -> prjStacks.id }
+            val filteredProjects =
+                this.filter { project ->
+                    command.stackId == null ||
+                        prjStacks[project.id]!!.map { it.stack.id }.contains(command.stackId)
                 }
                     .map { it to searchEngine.search(dic = listOf(it.title, it.description), q = command.query) }
                     .filter { it.second > 0 }
@@ -86,15 +88,14 @@ class ProjectServiceImpl(
                     .map { it.first }
 
             return PageImpl(
-                filterProjects.map {
+                filteredProjects.map {
                     Project.of(
                         it,
                         techStacks =
-                        prjStacks
-                            .filter { prjStack -> prjStack.projectId == it.id }
+                        prjStacks[it.id]!!
                             .map { prjStack -> prjStack.stack },
                         tasks =
-                        tasks.filter { task -> task.projectId == it.id }
+                        tasks[it.id]!!
                     )
                 }
             )

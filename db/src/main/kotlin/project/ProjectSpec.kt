@@ -19,7 +19,7 @@ object ProjectSpec {
 
     fun fetchImages(): Specification<ProjectEntity> =
         Specification { root, query, builder: CriteriaBuilder ->
-            root.fetch<ProjectEntity, ImageEntity>("thumbnail", JoinType.LEFT)
+            root.join<ProjectEntity, ImageEntity>("thumbnail", JoinType.LEFT)
             query.distinct(true)
             builder.conjunction()
         }
