@@ -16,6 +16,7 @@ data class ThreadOverView(
     val creatorImageUrl: String?,
     val commentSize: Long,
     val threadImages: List<Image>,
+    val type: ThreadType,
     val createdAt: Instant,
     val modifiedAt: Instant
 ) {
@@ -33,6 +34,7 @@ data class ThreadOverView(
                 creatorImageUrl = e.user.image?.toDomain()?.path,
                 commentSize = countComments.invoke(e.id),
                 threadImages = ImageType.THREAD.filter(e.images).map { it.toDomain() },
+                type = ThreadType.valueOf(e.type),
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )

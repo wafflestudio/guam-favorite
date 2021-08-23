@@ -10,8 +10,8 @@ import waffle.guam.image.command.CreateImages
 import waffle.guam.image.command.DeleteImages
 import waffle.guam.image.model.ImageType
 import waffle.guam.task.TaskService
-import waffle.guam.task.command.SearchTask
 import waffle.guam.task.model.UserState
+import waffle.guam.task.query.SearchTask
 import waffle.guam.thread.ThreadRepository
 
 @Component
@@ -64,15 +64,20 @@ class ThreadEventHandler(
     fun handle(event: ThreadContentEdited) {
         logger.info("$event")
 
-        if (event.thread.content.isNotBlank()) return
+        if (event.editedContent.isNotBlank()) return
 
-        val threadImages = imageRepository.findByParentIdAndType(event.thread.id, ImageType.THREAD.name)
+        val threadImages = imageRepository.findByParentIdAndType(event.threadId, ImageType.THREAD.name)
 
         if (threadImages.isNotEmpty()) return
 
         if (!commentRepository.existsByThreadId(event.threadId)) {
-            threadRepository.delete(event.thread)
+            threadRepository.deleteById(event.threadId)
         }
+    }
+
+    @EventListener
+    fun handle(event: ThreadTypeEdited) {
+        logger.info("$event")
     }
 
     @EventListener

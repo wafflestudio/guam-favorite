@@ -8,6 +8,7 @@ data class ThreadInfo(
     val content: String?,
     val isEdited: Boolean,
     val creatorId: Long,
+    val type: ThreadType,
     val createdAt: Instant,
     val modifiedAt: Instant
 ) {
@@ -20,6 +21,7 @@ data class ThreadInfo(
                 content = e.content.ifBlank { null },
                 isEdited = e.createdAt != e.modifiedAt,
                 creatorId = e.userId,
+                type = ThreadType.valueOf(e.type),
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt
             )
