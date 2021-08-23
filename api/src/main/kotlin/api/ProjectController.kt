@@ -7,7 +7,12 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.DeleteMapping
 import waffle.guam.api.request.CreateProjectRequest
+import waffle.guam.api.request.JoinProjectRequest
+import waffle.guam.api.request.SearchProjectRequest
+import waffle.guam.api.request.UpdateProjectRequest
 import waffle.guam.api.response.PageableResponse
 import waffle.guam.api.response.ProjectResponse
 import waffle.guam.api.response.SuccessResponse
@@ -43,6 +48,14 @@ class ProjectController(
      * (6) insert tasks
      */
 
+    @GetMapping("/project/{projectId}")
+    fun getProject(
+        @PathVariable projectId: Long
+    ): SuccessResponse<ProjectResponse> =
+        SuccessResponse(
+            data = ProjectResponse.of(projectService.getProject(projectId))
+        )
+
     @GetMapping("/project/list")
     fun getAllProjects(
         @RequestParam(required = true, defaultValue = "0") page: Int,
@@ -52,11 +65,96 @@ class ProjectController(
             PageRequest.of(page, size, Sort.by("modifiedAt").descending())
         ).let {
             PageableResponse(
-                data = it.content.map { ProjectResponse.of(it) },
+                data = it.content.map { prj -> ProjectResponse.of(prj) },
                 size = it.content.size,
                 offset = page * size,
                 totalCount = it.totalElements.toInt(),
                 hasNext = page * size + it.size < it.totalElements
             )
         }
+
+    @GetMapping("/project/search")
+    fun searchProjects(
+        @RequestParam(required = true, defaultValue = "0") page: Int,
+        @RequestParam(required = false, defaultValue = "20") size: Int,
+        searchProjectRequest: SearchProjectRequest,
+    ): PageableResponse<ProjectResponse> =
+        projectService.getSearchResults(
+            PageRequest.of(page, size, Sort.by("modifiedAt").descending()),
+            searchProjectRequest.toCommand()
+        ).let {
+            PageableResponse(
+                data = it.content.map { prj ->ProjectResponse.of(prj) },
+                size = it.content.size,
+                offset = page * size,
+                totalCount = it.totalElements.toInt(),
+                hasNext = page * size + it.size < it.totalElements
+            )
+        }
+
+    @GetMapping("/project/tab")
+    fun getTabProjects(
+        @RequestParam(required = true, defaultValue = "0") page: Int,
+        @RequestParam(required = false, defaultValue = "20") size: Int
+    ): PageableResponse<ProjectResponse> =
+        projectService.getTabProjects(
+            PageRequest.of(page, size, Sort.by("modifiedAt").descending())
+        ).let {
+            PageableResponse(
+                data = it.content.map { prj ->ProjectResponse.of(prj) },
+                size = it.content.size,
+                offset = page * size,
+                totalCount = it.totalElements.toInt(),
+                hasNext = page * size + it.size < it.totalElements
+            )
+        }
+
+    @PostMapping("/project/{projectId}")
+    fun joinProject(
+        @PathVariable projectId: Long,
+        joinProject: JoinProjectRequest,
+        userContext: UserContext
+    ): SuccessResponse<Unit> =
+        projectService.joinRequestValidation(
+            command = joinProject.toCommand(),
+            projectId = projectId,
+            userId = userContext.id
+        ).run {
+            SuccessResponse(Unit)
+        }
+
+    @DeleteMapping("/project/{projectId}")
+    fun deleteProject(
+        @PathVariable projectId: Long,
+        userContext: UserContext
+    ): SuccessResponse<Unit> =
+        projectService.deleteProject(projectId, userContext.id).run {
+            SuccessResponse(Unit)
+        }
+
+    @PostMapping("/project/{projectId}/{userId}")
+    fun acceptJoinOrNot(
+        @PathVariable projectId: Long,
+        @PathVariable userId: Long,
+        userContext: UserContext
+    ): SuccessResponse<Unit> =
+        SuccessResponse(Unit)
+        // TODO("승인 / 반려")
+
+    @PostMapping("/project/edit/{projectId}")
+    fun updateProject(
+        @PathVariable projectId: Long,
+        updateRequest: UpdateProjectRequest,
+        userContext: UserContext
+    ): SuccessResponse<Unit> =
+        projectService.updateProject(updateRequest.toCommand(), projectId, userContext.id).run {
+            SuccessResponse(Unit)
+        }
+
+    @PostMapping("/project/quit/{projectId}")
+    fun quitProject(
+        @PathVariable projectId: Long
+    ): SuccessResponse<Unit> =
+        SuccessResponse(Unit)
+        //TODO("나가기")
 }
