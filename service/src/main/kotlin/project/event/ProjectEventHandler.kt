@@ -13,6 +13,7 @@ import waffle.guam.task.command.ApplyTask
 import waffle.guam.task.command.CancelTask
 import waffle.guam.task.command.CompleteTask
 import waffle.guam.task.command.CreateProjectTasks
+import waffle.guam.task.command.IncOrDecProjectTasks
 
 @Component
 class ProjectEventHandler(
@@ -71,6 +72,14 @@ class ProjectEventHandler(
                 )
             )
         }
+
+        taskService.handle(
+            command = IncOrDecProjectTasks(
+                projectId = event.projectId,
+                userId = event.userId,
+                quotas = event.positionQuotas
+            )
+        )
     }
 
     @EventListener

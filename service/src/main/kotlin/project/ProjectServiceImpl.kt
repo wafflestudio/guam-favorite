@@ -138,9 +138,15 @@ class ProjectServiceImpl(
 
         return ProjectUpdated(
             projectId = prj.id,
+            userId = userId,
             projectTitle = prj.title,
             stackIdList = StackIdList(command.frontStackId, command.backStackId, command.designStackId),
-            imageFiles = command.imageFiles
+            imageFiles = command.imageFiles,
+            positionQuotas = listOf(
+                PositionQuota(Position.FRONTEND, command.frontHeadCnt),
+                PositionQuota(Position.BACKEND, command.backHeadCnt),
+                PositionQuota(Position.DESIGNER, command.designHeadCnt)
+            )
         )
     }
 
