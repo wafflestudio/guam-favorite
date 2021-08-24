@@ -9,6 +9,7 @@ import waffle.guam.task.command.CancelTask
 import waffle.guam.task.command.CompleteTask
 import waffle.guam.task.command.CreateProjectTasks
 import waffle.guam.task.command.DeclineTask
+import waffle.guam.task.command.IncOrDecProjectTasks
 import waffle.guam.task.command.LeaveTask
 import waffle.guam.task.command.TaskCommand
 import waffle.guam.task.event.TaskAccepted
@@ -33,6 +34,7 @@ class TaskHandler(
     fun handle(command: TaskCommand): TaskEvent =
         when (command) {
             is CreateProjectTasks -> createProjectTasks(command)
+            is IncOrDecProjectTasks -> incOrDecProjectTasks(command)
             is ApplyTask -> apply(command)
             is AcceptTask -> accept(command)
             is DeclineTask -> decline(command)
@@ -62,6 +64,10 @@ class TaskHandler(
         taskToAssign.userState = UserState.LEADER.name
 
         return TaskCreated(projectId = projectId)
+    }
+
+    private fun incOrDecProjectTasks(command: IncOrDecProjectTasks): TaskEvent {
+        TODO()
     }
 
     private fun apply(command: ApplyTask): TaskApplied {
