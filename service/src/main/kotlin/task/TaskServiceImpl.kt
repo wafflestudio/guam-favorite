@@ -7,6 +7,7 @@ import waffle.guam.task.command.TaskCommand
 import waffle.guam.task.event.TaskEvent
 import waffle.guam.task.model.Task
 import waffle.guam.task.model.Task.Companion.toDomain
+import waffle.guam.task.model.UserState
 import waffle.guam.task.query.SearchTask
 import waffle.guam.task.query.TaskExtraFieldParams
 
@@ -31,7 +32,22 @@ class TaskServiceImpl(
         getTasks(command, extraFieldParams).firstOrNull() ?: throw DataNotFoundException("해당 태스크를 찾을 수 없습니다.")
 
     override fun isMemberOrLeader(projectId: Long, userId: Long): Boolean =
-        taskRepository.findByProjectIdAndUserId(projectId = projectId, userId = userId) != null
+        taskRepository.findByProjectIdAndUserId(
+            projectId = projectId,
+            userId = userId
+        ) != null
+
+    override fun isMember(projectId: Long, userId: Long): Boolean =
+        taskRepository.findByProjectIdAndUserId(
+            projectId = projectId,
+            userId = userId
+        )?.userState == UserState.MEMBER.name
+
+    override fun isLeader(projectId: Long, userId: Long): Boolean =
+        taskRepository.findByProjectIdAndUserId(
+            projectId = projectId,
+            userId = userId
+        )?.userState == UserState.LEADER.name
 
     override fun isGuest(projectId: Long, userId: Long): Boolean =
         taskCandidateRepository.findByProjectIdAndUserId(projectId = projectId, userId = userId) != null
