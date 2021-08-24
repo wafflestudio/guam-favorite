@@ -5,11 +5,13 @@ import org.springframework.transaction.annotation.Transactional
 import waffle.guam.DataNotFoundException
 import waffle.guam.task.command.TaskCommand
 import waffle.guam.task.event.TaskEvent
+import waffle.guam.task.model.Position
 import waffle.guam.task.model.Task
 import waffle.guam.task.model.Task.Companion.toDomain
 import waffle.guam.task.model.UserState
 import waffle.guam.task.query.SearchTask
 import waffle.guam.task.query.TaskExtraFieldParams
+import waffle.guam.user.model.User
 
 @Service
 class TaskServiceImpl(
@@ -30,6 +32,20 @@ class TaskServiceImpl(
 
     override fun getTask(command: SearchTask, extraFieldParams: TaskExtraFieldParams): Task =
         getTasks(command, extraFieldParams).firstOrNull() ?: throw DataNotFoundException("해당 태스크를 찾을 수 없습니다.")
+
+    override fun getTaskCandidates(projectId: Long): List<Task> =
+        taskCandidateRepository.findAllByProjectId(projectId).map {
+            Task(
+                id = 444,
+                position = Position.valueOf(it.position),
+                projectId = it.project.id,
+                user = User.of(it.user),
+                userState = UserState.GUEST,
+                taskMsgs = listOf(),
+                createdAt = it.createdAt,
+                modifiedAt = it.createdAt
+            )
+        }
 
     override fun isMemberOrLeader(projectId: Long, userId: Long): Boolean =
         taskRepository.findByProjectIdAndUserId(

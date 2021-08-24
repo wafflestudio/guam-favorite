@@ -27,7 +27,7 @@ class UserController(
 
     @GetMapping("/me")
     fun getUser(
-        userContext: UserContext
+        userContext: UserContext,
     ): SuccessResponse<UserResponse> =
         // TODO: 프로젝트 상태에 따른 필터
         SuccessResponse(
@@ -43,7 +43,7 @@ class UserController(
 
     @GetMapping("/{id}")
     fun getUser(
-        @PathVariable id: Long
+        @PathVariable id: Long,
     ): SuccessResponse<UserResponse> =
         // TODO: 프로젝트 상태에 따른 필터
         SuccessResponse(
@@ -61,7 +61,7 @@ class UserController(
     fun updateUser(
         @RequestParam("command") request: String,
         @RequestParam("imageFiles", required = false) file: MultipartFile?,
-        userContext: UserContext
+        userContext: UserContext,
     ): SuccessResponse<Unit> =
         // FIXME: readValue deserialize 실패시 에러 핸들링
         userService.updateUser(
@@ -92,7 +92,7 @@ class UserController(
     @PostMapping("/fcm")
     fun updateUser(
         @RequestBody request: UpdateFcmTokenRequest,
-        userContext: UserContext
+        userContext: UserContext,
     ): SuccessResponse<Unit> =
         userService.updateDeviceToken(
             userId = userContext.id,
@@ -107,15 +107,12 @@ class UserController(
 
     @GetMapping("project/ids")
     fun getProjectIds(
-        userContext: UserContext
+        userContext: UserContext,
     ): SuccessResponse<List<Long>> =
         // TODO: 프로젝트 상태에 따른 필터
-        userService.getUser(userId = userContext.id, extraInfo = UserExtraInfo(projects = true)).projects!!.run {
-            SuccessResponse(
-                data = map { it.projectId }
-            )
+        userService.getProjectIds(userId = userContext.id, includeGuest = true).let {
+            SuccessResponse(data = it)
         }
-
     /**
      * (1) select u, t, p from task t inner join user u outer join image i inner join project p outer join image i
      */

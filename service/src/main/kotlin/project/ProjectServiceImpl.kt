@@ -43,6 +43,7 @@ class ProjectServiceImpl(
                 entity = e,
                 techStacks = projectStackService.getProjectStacks(projectId).map { it.stack },
                 tasks = taskService.getTasks(taskQuery().projectIds(projectId))
+                    .plus(taskService.getTaskCandidates(projectId))
             )
         }
 
