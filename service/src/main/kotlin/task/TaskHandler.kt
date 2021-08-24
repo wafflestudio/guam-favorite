@@ -5,6 +5,7 @@ import waffle.guam.project.ProjectRepository
 import waffle.guam.project.model.ProjectState
 import waffle.guam.task.command.AcceptTask
 import waffle.guam.task.command.ApplyTask
+import waffle.guam.task.command.CancelApplyTask
 import waffle.guam.task.command.CancelTask
 import waffle.guam.task.command.CompleteTask
 import waffle.guam.task.command.CreateProjectTasks
@@ -14,6 +15,7 @@ import waffle.guam.task.command.LeaveTask
 import waffle.guam.task.command.TaskCommand
 import waffle.guam.task.event.TaskAccepted
 import waffle.guam.task.event.TaskApplied
+import waffle.guam.task.event.TaskApplyCanceled
 import waffle.guam.task.event.TaskCanceled
 import waffle.guam.task.event.TaskCompleted
 import waffle.guam.task.event.TaskCreated
@@ -36,6 +38,7 @@ class TaskHandler(
             is CreateProjectTasks -> createProjectTasks(command)
             is IncOrDecProjectTasks -> incOrDecProjectTasks(command)
             is ApplyTask -> apply(command)
+            is CancelApplyTask -> cancelApply(command)
             is AcceptTask -> accept(command)
             is DeclineTask -> decline(command)
             is LeaveTask -> leave(command)
@@ -77,6 +80,14 @@ class TaskHandler(
 
         verifyProjectState(projectId)
 
+        taskCandidateRepository.findByProjectIdAndUserId(projectId = projectId, userId = userId)?.let {
+            throw RuntimeException("이미 지원한 상태입니다.")
+        }
+
+        taskRepository.findByProjectIdAndUserId(projectId = projectId, userId = userId)?.let {
+            throw RuntimeException("이미 멤버입니다.")
+        }
+
         getUnClaimedTaskOrNull(projectId = projectId, position = position.name)
             ?: throw RuntimeException("해당 포지션에 더 이상 자리가 없습니다.")
 
@@ -89,6 +100,17 @@ class TaskHandler(
         )
 
         return TaskApplied(projectId = projectId, userId = userId)
+    }
+
+    private fun cancelApply(command: CancelApplyTask): TaskApplyCanceled {
+        val (projectId, userId) = command
+
+        val candidate = taskCandidateRepository.findByProjectIdAndUserId(projectId = projectId, userId = userId)
+            ?: throw RuntimeException("지원한 프로젝트가 아닙니다.")
+
+        taskCandidateRepository.delete(candidate)
+
+        return TaskApplyCanceled(projectId = projectId, userId = userId)
     }
 
     private fun accept(command: AcceptTask): TaskAccepted {
@@ -126,11 +148,12 @@ class TaskHandler(
 
     private fun leave(command: LeaveTask): TaskLeft {
         val targetTask = taskRepository.findByProjectIdAndUserId(projectId = command.projectId, userId = command.userId)
-            ?: throw RuntimeException("해당 프로젝트에 참여하고 있지 않니다.")
-
-        taskRepository.delete(targetTask)
+            ?: throw RuntimeException("해당 프로젝트에 참여하고 있지 않습니다.")
 
         taskHistoryRepository.save(targetTask.toHistory("QUIT"))
+
+        targetTask.user = null
+        targetTask.userState = null
 
         return TaskLeft(userId = command.userId, projectId = command.projectId)
     }
@@ -189,7 +212,7 @@ class TaskHandler(
 
     private fun getUnClaimedTaskOrNull(projectId: Long, position: String): TaskEntity? =
         taskRepository.findAllByProjectIdAndPosition(projectId = projectId, position = position)
-            .firstOrNull { it.user != null }
+            .firstOrNull { it.user == null }
 
     private fun TaskEntity.toHistory(description: String): TaskHistoryEntity =
         TaskHistoryEntity(

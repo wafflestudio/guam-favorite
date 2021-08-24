@@ -1,6 +1,6 @@
 package waffle.guam.task.command
 
-data class LeaveTask(
+data class CancelApplyTask(
     val projectId: Long,
-    val userId: Long,
+    val userId: Long
 ) : TaskCommand

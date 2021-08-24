@@ -21,8 +21,11 @@ import waffle.guam.project.ProjectService
 import waffle.guam.task.TaskService
 import waffle.guam.task.command.AcceptTask
 import waffle.guam.task.command.ApplyTask
+import waffle.guam.task.command.CancelApplyTask
+import waffle.guam.task.command.CancelTask
 import waffle.guam.task.command.DeclineTask
 import waffle.guam.task.command.LeaveTask
+import waffle.guam.task.command.TaskCommand
 
 @RestController
 @RequestMapping
@@ -156,7 +159,18 @@ class ProjectController(
         @PathVariable projectId: Long,
         userContext: UserContext,
     ): SuccessResponse<Unit> =
-        taskService.handle(LeaveTask(userId = userContext.id, projectId = projectId)).run {
+        taskService.handle(
+            command = getQuitCommand(projectId = projectId, userId = userContext.id)
+        ).run {
             SuccessResponse(Unit)
+        }
+
+    private fun getQuitCommand(projectId: Long, userId: Long): TaskCommand =
+        if (taskService.isLeader(projectId = projectId, userId = userId)) {
+            CancelTask(projectId = projectId, leaderId = userId)
+        } else if (taskService.isMember(projectId = projectId, userId = userId)) {
+            LeaveTask(projectId = projectId, userId = userId)
+        } else {
+            CancelApplyTask(projectId = projectId, userId = userId)
         }
 }

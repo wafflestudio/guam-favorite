@@ -11,5 +11,7 @@ interface TaskService {
     fun getTasks(command: SearchTask, extraFieldParams: TaskExtraFieldParams = TaskExtraFieldParams()): List<Task>
     fun getTask(command: SearchTask, extraFieldParams: TaskExtraFieldParams = TaskExtraFieldParams()): Task
     fun isMemberOrLeader(projectId: Long, userId: Long): Boolean
+    fun isLeader(projectId: Long, userId: Long): Boolean
+    fun isMember(projectId: Long, userId: Long): Boolean
     fun isGuest(projectId: Long, userId: Long): Boolean
 }
