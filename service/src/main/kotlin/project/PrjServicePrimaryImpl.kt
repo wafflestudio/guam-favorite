@@ -6,19 +6,15 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.ConflictException
-import waffle.guam.JoinException
 import waffle.guam.NotAllowedException
 import waffle.guam.project.command.CreateProject
-import waffle.guam.project.command.JoinProject
 import waffle.guam.project.command.SearchProject
 import waffle.guam.project.command.UpdateProject
 import waffle.guam.project.event.ProjectCompleted
 import waffle.guam.project.event.ProjectCreated
 import waffle.guam.project.event.ProjectDeleted
-import waffle.guam.project.event.ProjectJoinRequested
 import waffle.guam.project.event.ProjectUpdated
 import waffle.guam.project.model.Project
-import waffle.guam.project.model.ProjectState
 import waffle.guam.task.TaskService
 import waffle.guam.task.model.Position
 import waffle.guam.task.model.UserState
@@ -107,35 +103,5 @@ class PrjServicePrimaryImpl(
             throw NotAllowedException("리더만 프로젝트를 완료할 수 있어요.")
 
         return prjService.completeProject(projectId, userId)
-    }
-
-    @Transactional
-    override fun joinRequestValidation(command: JoinProject, projectId: Long, userId: Long): ProjectJoinRequested {
-
-        val prj = prjService.getProject(projectId)
-
-        if (prj.state != ProjectState.RECRUITING)
-            throw JoinException("이 프로젝트는 현재 팀원을 모집하고 있지 않아요.")
-
-        val headCnt =
-            when (command.position) {
-                Position.FRONTEND -> prj.frontHeadCnt
-                Position.BACKEND -> prj.backHeadCnt
-                Position.DESIGNER -> prj.designHeadCnt
-                Position.WHATEVER -> throw JoinException("포지션을 입력해주세요.")
-            }
-
-        // TODO tasks fetch 잘 해와야 함
-        val currCnt = prj.tasks!!
-            .filter {
-                it.userState == UserState.MEMBER || it.userState == UserState.LEADER
-            }.filter {
-                it.position == command.position
-            }.size
-
-        if (currCnt >= headCnt)
-            throw ConflictException("해당 포지션에는 남은 정원이 없어요.")
-
-        return prjService.joinRequestValidation(command, projectId, userId)
     }
 }

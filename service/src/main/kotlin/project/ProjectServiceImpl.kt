@@ -7,13 +7,11 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.DataNotFoundException
 import waffle.guam.project.command.CreateProject
-import waffle.guam.project.command.JoinProject
 import waffle.guam.project.command.SearchProject
 import waffle.guam.project.command.UpdateProject
 import waffle.guam.project.event.ProjectCompleted
 import waffle.guam.project.event.ProjectCreated
 import waffle.guam.project.event.ProjectDeleted
-import waffle.guam.project.event.ProjectJoinRequested
 import waffle.guam.project.event.ProjectUpdated
 import waffle.guam.project.model.Project
 import waffle.guam.project.model.ProjectState
@@ -173,18 +171,6 @@ class ProjectServiceImpl(
         return ProjectCompleted(
             projectId = prj.id,
             projectTitle = prj.title
-        )
-    }
-
-    @Transactional
-    override fun joinRequestValidation(command: JoinProject, projectId: Long, userId: Long): ProjectJoinRequested {
-
-        // 괜히 호출을 두번 하는 느낌이 있다.
-        return ProjectJoinRequested(
-            projectId = projectId,
-            userId = userId,
-            position = command.position,
-            introduction = command.introduction
         )
     }
 
