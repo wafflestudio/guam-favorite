@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -110,7 +111,7 @@ class ProjectController(
     @PostMapping("/project/{projectId}")
     fun joinProject(
         @PathVariable projectId: Long,
-        joinProject: JoinProjectRequest,
+        @RequestBody joinProject: JoinProjectRequest,
         userContext: UserContext,
     ): SuccessResponse<Unit> =
         taskService.handle(
@@ -167,10 +168,13 @@ class ProjectController(
 
     private fun getQuitCommand(projectId: Long, userId: Long): TaskCommand =
         if (taskService.isLeader(projectId = projectId, userId = userId)) {
-            CancelTask(projectId = projectId, leaderId = userId)
+            println("is Leader")
+            CancelTask(projectId = projectId)
         } else if (taskService.isMember(projectId = projectId, userId = userId)) {
+            println("is Member")
             LeaveTask(projectId = projectId, userId = userId)
         } else {
+            println("is Guest or Nothing")
             CancelApplyTask(projectId = projectId, userId = userId)
         }
 }
