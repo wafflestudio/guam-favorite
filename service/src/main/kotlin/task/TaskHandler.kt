@@ -1,299 +1,196 @@
 package waffle.guam.task
 
-import waffle.guam.ConflictException
-import waffle.guam.DataNotFoundException
+import org.springframework.stereotype.Service
+import waffle.guam.project.ProjectRepository
+import waffle.guam.project.model.ProjectState
 import waffle.guam.task.command.AcceptTask
+import waffle.guam.task.command.ApplyTask
 import waffle.guam.task.command.CancelTask
 import waffle.guam.task.command.CompleteTask
-import waffle.guam.task.command.CreateTask
+import waffle.guam.task.command.CreateProjectTasks
 import waffle.guam.task.command.DeclineTask
-import waffle.guam.task.command.JoinTask
 import waffle.guam.task.command.LeaveTask
+import waffle.guam.task.command.TaskCommand
 import waffle.guam.task.event.TaskAccepted
+import waffle.guam.task.event.TaskApplied
 import waffle.guam.task.event.TaskCanceled
 import waffle.guam.task.event.TaskCompleted
 import waffle.guam.task.event.TaskCreated
 import waffle.guam.task.event.TaskDeclined
-import waffle.guam.task.event.TaskJoined
+import waffle.guam.task.event.TaskEvent
 import waffle.guam.task.event.TaskLeft
-import waffle.guam.task.model.Position
 import waffle.guam.task.model.UserState
+import waffle.guam.user.UserRepository
 
-object TaskHandler {
-    fun create(
-        command: CreateTask,
-        getPositionHeadCnt: (projectId: Long, position: Position) -> Int,
-        countPositionOfficialTask: (projectId: Long, position: Position) -> Int,
-        countUserValidTask: (Long) -> Int,
-        getUserOffset: (Long) -> Int,
-        insertIntoDb: (userId: Long, projectId: Long, position: Position, userState: UserState, userOffset: Int, projectOffset: Int) -> Long,
-    ): TaskCreated {
+@Service
+class TaskHandler(
+    private val taskRepository: TaskRepository,
+    private val taskCandidateRepository: TaskCandidateRepository,
+    private val taskHistoryRepository: TaskHistoryRepository,
+    private val userRepository: UserRepository,
+    private val projectRepository: ProjectRepository,
+) {
+    fun handle(command: TaskCommand): TaskEvent =
+        when (command) {
+            is CreateProjectTasks -> createProjectTasks(command)
+            is ApplyTask -> apply(command)
+            is AcceptTask -> accept(command)
+            is DeclineTask -> decline(command)
+            is LeaveTask -> leave(command)
+            is CancelTask -> cancel(command)
+            is CompleteTask -> complete(command)
+            else -> throw Exception()
+        }
+
+    private fun createProjectTasks(command: CreateProjectTasks): TaskCreated {
+        val (projectId, leaderId, leaderPosition, quotas) = command
+
+        val project = projectRepository.findById(projectId).orElseThrow {
+            throw RuntimeException("해당 프로젝트를 찾을 수 없습니다.")
+        }
+
+        verifyUserQuota(leaderId)
+
+        taskRepository.saveAll(
+            quotas.map { it.toEntities(project) }.flatten()
+        )
+
+        val taskToAssign = getUnClaimedTaskOrNull(projectId, leaderPosition.name)
+            ?: throw RuntimeException("해당 포지션에 더 이상 자리가 없습니다.")
+
+        taskToAssign.user = userRepository.findById(leaderId).get()
+        taskToAssign.userState = UserState.LEADER.name
+
+        return TaskCreated(projectId = projectId)
+    }
+
+    private fun apply(command: ApplyTask): TaskApplied {
         val (userId, projectId, position) = command
 
-        /**
-         * Official-tasks is a set of tasks of which state is either MEMBER or LEADER.
-         * The count of (official task - position) cannot exceed the headcount of the position.
-         */
-        val officialTaskCnt = countPositionOfficialTask(projectId, position)
-        val maximumTaskCnt = getPositionHeadCnt(projectId, position)
+        verifyUserQuota(userId)
 
-        if (officialTaskCnt >= maximumTaskCnt) {
-            throw Exception("포지션 정원 초과")
-        }
+        verifyProjectState(projectId)
 
-        /**
-         * Count of valid task per user cannot exceed 3.
-         */
-        val userValidTaskCnt = countUserValidTask(userId)
+        getUnClaimedTaskOrNull(projectId = projectId, position = position.name)
+            ?: throw RuntimeException("해당 포지션에 더 이상 자리가 없습니다.")
 
-        if (userValidTaskCnt >= 3) {
-            throw Exception("인당 태스크 개수 초과")
-        }
-
-        val currentUserOffset = getUserOffset(userId)
-
-        val newTaskId = insertIntoDb(userId, projectId, position, UserState.LEADER, currentUserOffset + 1, 1)
-
-        return TaskCreated(
-            taskId = newTaskId
+        taskCandidateRepository.save(
+            TaskCandidateEntity(
+                project = projectRepository.findById(projectId).get(),
+                user = userRepository.findById(userId).get(),
+                position = position.name
+            )
         )
+
+        return TaskApplied(projectId = projectId, userId = userId)
     }
 
-    fun join(
-        command: JoinTask,
-        getPositionHeadCnt: (projectId: Long, position: Position) -> Int,
-        countPositionOfficialTask: (projectId: Long, position: Position) -> Int,
-        countUserValidTask: (Long) -> Int,
-        getTargetIdAndUserState: (userId: Long, projectId: Long) -> Pair<Long, UserState>?,
-        getUserOffset: (Long) -> Int,
-        insertIntoDb: (userId: Long, projectId: Long, position: Position, userState: UserState, userOffset: Int) -> Long,
-    ): TaskJoined {
-        val (userId, projectId, position) = command
-
-        /**
-         * Official-tasks is a set of tasks of which state is either MEMBER or LEADER.
-         * The count of (official task - position) cannot exceed the headcount of the position.
-         */
-        val officialTaskCnt = countPositionOfficialTask(projectId, position)
-        val maximumTaskCnt = getPositionHeadCnt(projectId, position)
-
-        if (officialTaskCnt >= maximumTaskCnt) {
-            throw Exception("포지션 정원 초과")
-        }
-
-        /**
-         * Count of valid task per user cannot exceed 3.
-         */
-        val userValidTaskCnt = countUserValidTask(userId)
-
-        if (userValidTaskCnt >= 3) {
-            throw Exception("인당 태스크 개수 초과")
-        }
-
-        /**
-         * User cannot have multiple tasks in a project
-         */
-        getTargetIdAndUserState(userId, projectId)?.second?.run {
-            when (this) {
-                UserState.GUEST, UserState.LEADER, UserState.MEMBER -> throw Exception("이미 참여 중")
-                UserState.CANCELED, UserState.CONTRIBUTED, UserState.LEFT -> throw Exception("참여할 수 없는 플젝")
-                UserState.DECLINED -> throw Exception("이미 거절 당함.")
-            }
-        }
-
-        val currentUserOffset = getUserOffset(userId)
-
-        val newTaskId = insertIntoDb(userId, projectId, position, UserState.GUEST, currentUserOffset + 1)
-
-        return TaskJoined(
-            taskId = newTaskId
-        )
-    }
-
-    fun leave(
-        command: LeaveTask,
-        getTargetIdAndUserState: (userId: Long, projectId: Long) -> Pair<Long, UserState>?,
-        deleteFromDb: (Long) -> Unit,
-        updateInDb: (Long, UserState) -> Unit,
-    ): TaskLeft {
-        val (userId, projectId) = command
-
-        val (targetId, userState) = getTargetIdAndUserState(userId, projectId) ?: throw Exception()
-
-        /**
-         * Only valid task can leave the project.
-         */
-        if (!userState.isValidState()) {
-            throw Exception()
-        }
-
-        /**
-         * If target is guest, it is removed or else turn into LEFT state.
-         */
-        if (userState == UserState.GUEST) {
-            deleteFromDb(targetId)
-        } else {
-            updateInDb(targetId, UserState.LEFT)
-        }
-
-        return TaskLeft(userId = userId, projectId = projectId)
-    }
-
-    fun accept(
-        command: AcceptTask,
-        isValidLeaderId: (userId: Long, projectId: Long) -> Boolean,
-        getTargetIdAndPosition: (userId: Long, projectId: Long) -> Triple<Long, UserState, Position>?,
-        getPositionHeadCnt: (projectId: Long, position: Position) -> Int,
-        countPositionOfficialTask: (projectId: Long, position: Position) -> Int,
-        getPositionOffset: (projectId: Long, position: Position) -> Int,
-        updateInDb: (taskId: Long, userState: UserState, positionOffset: Int) -> Unit,
-    ): TaskAccepted {
+    private fun accept(command: AcceptTask): TaskAccepted {
         val (leaderId, guestId, projectId) = command
 
-        /**
-         * Only the leader of the project can decline guests.
-         */
-        if (!isValidLeaderId(leaderId, projectId)) {
-            throw Exception("리더가 아님..")
-        }
+        verifyProjectLeader(projectId = projectId, leaderId = leaderId)
 
-        val (targetId, userState, position) = getTargetIdAndPosition(guestId, projectId)
-            ?: throw DataNotFoundException()
+        verifyProjectState(projectId)
 
-        /**
-         * Only guest can be accepted.
-         */
-        if (userState != UserState.GUEST) {
-            throw Exception("게스트가 아닌 사람을 accept")
-        }
+        val candidate = taskCandidateRepository.findByProjectIdAndUserId(projectId = projectId, userId = guestId)
+            ?: throw RuntimeException("지원한 적이 없는 사용자입니다.")
 
-        /**
-         * Official-tasks is a set of tasks of which state is either MEMBER or LEADER.
-         * The count of (official task - position) cannot exceed the headcount of the position.
-         */
+        val taskToAssign = getUnClaimedTaskOrNull(projectId, candidate.position)
+            ?: throw RuntimeException("해당 포지션에 더 이상 자리가 없습니다.")
 
-        val officialTaskCnt = countPositionOfficialTask(projectId, position)
-        val maximumTaskCnt = getPositionHeadCnt(projectId, position)
+        verifyUserQuota(guestId)
 
-        if (officialTaskCnt >= maximumTaskCnt) {
-            throw ConflictException("해당 포지션에는 남은 정원이 없어요.")
-        }
+        taskCandidateRepository.delete(candidate)
 
-        val positionOffset = getPositionOffset(projectId, position)
+        taskToAssign.user = userRepository.findById(guestId).get()
+        taskToAssign.userState = UserState.MEMBER.name
 
-        updateInDb(targetId, UserState.MEMBER, positionOffset + 1)
-
-        return TaskAccepted(taskId = targetId)
+        return TaskAccepted(projectId = projectId, userId = guestId)
     }
 
-    fun decline(
-        command: DeclineTask,
-        isValidLeaderId: (userId: Long, projectId: Long) -> Boolean,
-        getTargetIdAndUserState: (userId: Long, projectId: Long) -> Pair<Long, UserState>?,
-        updateInDb: (taskId: Long, userState: UserState) -> Unit,
-    ): TaskDeclined {
+    private fun decline(command: DeclineTask): TaskDeclined {
         val (leaderId, guestId, projectId) = command
 
-        /**
-         * Only the leader of the project can decline guests.
-         */
-        if (!isValidLeaderId(leaderId, projectId)) {
-            throw Exception("리더가 아님..")
-        }
+        verifyProjectLeader(projectId = projectId, leaderId = leaderId)
 
-        val (targetId, userState) = getTargetIdAndUserState(guestId, projectId) ?: throw DataNotFoundException()
+        taskCandidateRepository.deleteByProjectIdAndUserId(projectId = projectId, userId = guestId)
 
-        /**
-         * Only guest can be declined.
-         */
-        if (userState != UserState.GUEST) {
-            throw Exception("유저 상태가 그 사이에 업데이트 된 경우")
-        }
-
-        updateInDb(targetId, UserState.DECLINED)
-
-        return TaskDeclined(taskId = targetId)
+        return TaskDeclined(projectId = projectId, userId = guestId)
     }
 
-    fun cancel(
-        command: CancelTask,
-        getTaskIdsAndUserState: (projectId: Long) -> List<Pair<Long, UserState>>,
-        deleteFromDb: (List<Long>) -> Int,
-        updateInDb: (List<Long>, UserState) -> Int,
-    ): TaskCanceled {
-        /**
-         * When a project is canceled, only valid tasks in the project should be affected.
-         */
-        val (guestIds, memberOrLeaderIds) = getTaskIdsAndUserState(command.projectId)
-            .filter { it.second.isValidState() }
-            .partition { it.second == UserState.GUEST }
-            .let { it.first.map { it.first } to it.second.map { it.first } }
+    private fun leave(command: LeaveTask): TaskLeft {
+        val targetTask = taskRepository.findByProjectIdAndUserId(projectId = command.projectId, userId = command.userId)
+            ?: throw RuntimeException("해당 프로젝트에 참여하고 있지 않니다.")
 
-        /**
-         * Guest tasks are removed from Database
-         */
-        val affectedGuestCnt = deleteFromDb(guestIds)
+        taskRepository.delete(targetTask)
 
-        /**
-         * The count of affected row should be equal to guests' count.
-         */
-        if (affectedGuestCnt != guestIds.size) {
-            throw Exception()
-        }
+        taskHistoryRepository.save(targetTask.toHistory("QUIT"))
 
-        /**
-         * Official tasks turn into CANCELED state.
-         */
-        val affectedMemberOrLeaderCnt = updateInDb(memberOrLeaderIds, UserState.CANCELED)
+        return TaskLeft(userId = command.userId, projectId = command.projectId)
+    }
 
-        /**
-         * The count of affected row should be equal to official members' count.
-         */
-        if (affectedMemberOrLeaderCnt != memberOrLeaderIds.size) {
-            throw Exception()
-        }
+    private fun cancel(command: CancelTask): TaskCanceled {
+        val tasks = taskRepository.findAllByProjectId(command.projectId)
+
+        taskRepository.deleteAllInBatch(tasks)
+
+        val activeTasks = tasks.filter { it.user != null }
+
+        taskHistoryRepository.saveAll(
+            activeTasks.map { it.toHistory("CANCELED") }
+        )
 
         return TaskCanceled(projectId = command.projectId)
     }
 
-    fun complete(
-        command: CompleteTask,
-        getTaskIdsAndUserState: (projectId: Long) -> List<Pair<Long, UserState>>,
-        deleteFromDb: (List<Long>) -> Int,
-        updateInDb: (List<Long>, UserState) -> Int,
-    ): TaskCompleted {
-        /**
-         * When a project is completed, only valid tasks in the project should be affected
-         */
-        val (guestIds, memberOrLeaderIds) = getTaskIdsAndUserState(command.projectId)
-            .filter { it.second.isValidState() }
-            .partition { it.second == UserState.GUEST }
-            .let { it.first.map { it.first } to it.second.map { it.first } }
+    private fun complete(command: CompleteTask): TaskCompleted {
+        val tasks = taskRepository.findAllByProjectId(command.projectId)
 
-        /**
-         * Guest tasks are removed from Database
-         */
-        val affectedGuestCnt = deleteFromDb(guestIds)
+        taskRepository.deleteAllInBatch(tasks)
 
-        /**
-         * The count of affected row should be equal to guests' count.
-         */
-        if (affectedGuestCnt != guestIds.size) {
-            throw Exception()
-        }
+        val activeTasks = tasks.filter { it.user != null }
 
-        /**
-         * Official tasks turn into CONTRIBUTED state.
-         */
-        val affectedMemberOrLeaderCnt = updateInDb(memberOrLeaderIds, UserState.CONTRIBUTED)
-
-        /**
-         * The count of affected row should be equal to official members' count.
-         */
-        if (affectedMemberOrLeaderCnt != memberOrLeaderIds.size) {
-            throw Exception()
-        }
+        taskHistoryRepository.saveAll(
+            activeTasks.map { it.toHistory("COMPLETED") }
+        )
 
         return TaskCompleted(projectId = command.projectId)
     }
+
+    private fun verifyProjectState(projectId: Long) {
+        val project = projectRepository.findById(projectId)
+            .orElseThrow { throw RuntimeException("해당 프로젝트를 찾을 수 없습니다.") }
+
+        if (project.state != ProjectState.RECRUITING.name) {
+            throw RuntimeException("해당 프로젝트의 인원 모집이 마감되었습니다.")
+        }
+    }
+
+    private fun verifyProjectLeader(projectId: Long, leaderId: Long) {
+        val leader = taskRepository.findByProjectIdAndUserId(projectId = projectId, userId = leaderId)
+            ?: throw RuntimeException("해당 유저를 찾을 수 없습니다.")
+
+        if (leader.userState!! != UserState.LEADER.name) {
+            throw RuntimeException("리더만 해당 작업을 수행할 수 있습니다.")
+        }
+    }
+
+    private fun verifyUserQuota(userId: Long) {
+        if (taskRepository.findAllByUserId(userId).size >= 3) {
+            throw RuntimeException("프로젝트를 더 이상 참여할 수 없습니다.")
+        }
+    }
+
+    private fun getUnClaimedTaskOrNull(projectId: Long, position: String): TaskEntity? =
+        taskRepository.findAllByProjectIdAndPosition(projectId = projectId, position = position)
+            .firstOrNull { it.user != null }
+
+    private fun TaskEntity.toHistory(description: String): TaskHistoryEntity =
+        TaskHistoryEntity(
+            project = project,
+            user = user!!,
+            userState = userState!!,
+            position = position,
+            description = description,
+        )
 }

@@ -20,7 +20,7 @@ class TaskEventHandler(
     }
 
     @EventListener
-    fun handle(event: TaskJoined) {
+    fun handle(event: TaskApplied) {
         logger.info("$event")
 //        taskRepository.findAll().forEach {
 //            println(it)

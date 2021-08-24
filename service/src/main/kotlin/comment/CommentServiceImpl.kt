@@ -13,8 +13,6 @@ import waffle.guam.comment.event.CommentCreated
 import waffle.guam.comment.event.CommentDeleted
 import waffle.guam.comment.model.Comment
 import waffle.guam.task.TaskService
-import waffle.guam.task.model.UserState
-import waffle.guam.task.query.SearchTask.Companion.taskQuery
 import waffle.guam.thread.ThreadRepository
 import waffle.guam.user.UserRepository
 import java.time.Instant
@@ -24,7 +22,7 @@ class CommentServiceImpl(
     private val commentRepository: CommentRepository,
     private val threadRepository: ThreadRepository,
     private val taskService: TaskService,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
 ) : CommentService {
 
     override fun getComment(commentId: Long): Comment =
@@ -55,7 +53,8 @@ class CommentServiceImpl(
                 throw InvalidRequestException("수정 전과 동일한 내용입니다.")
             }
 
-            val editedComment = commentRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
+            val editedComment =
+                commentRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
 
             return CommentContentEdited(it.id, editedComment.content, it.images, it.threadId)
         }
@@ -72,17 +71,20 @@ class CommentServiceImpl(
         }
 
     protected fun validateCommentCreator(command: CreateComment, projectId: Long) {
-        val task = taskService.getTask(taskQuery().userIds(command.userId).projectIds(projectId))
-
-        if (task.userState == UserState.GUEST) {
-            val joinRequestThread = threadRepository.findByUserIdAndProjectId(command.userId, projectId)
-                .orElseThrow(::DataNotFoundException)
-            if (joinRequestThread.id != command.threadId) {
-                throw NotAllowedException("아직 다른 쓰레드에 댓글을 생성할 권한이 없습니다.")
-            }
+        if (taskService.isMemberOrLeader(projectId = projectId, userId = command.userId)) {
+            return
         }
-        if (task.userState !in UserState.validStates) {
+
+        if (!taskService.isGuest(projectId = projectId, userId = command.userId)) {
             throw NotAllowedException("해당 프로젝트에 댓글을 생성할 권한이 없습니다.")
+        }
+
+        val joinRequestThread =
+            threadRepository.findByUserIdAndProjectId(userId = command.userId, projectId = projectId)
+                .orElseThrow(::DataNotFoundException)
+
+        if (joinRequestThread.id != command.threadId) {
+            throw NotAllowedException("아직 다른 쓰레드에 댓글을 생성할 권한이 없습니다.")
         }
     }
 }

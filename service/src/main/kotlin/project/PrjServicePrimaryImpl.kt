@@ -57,9 +57,7 @@ class PrjServicePrimaryImpl(
         /**
          * Leader, Member, Guest인 프로젝트가 3개 이상일 경우, 프로젝트 참여 불가능
          */
-        val checkUserTasks = taskService.getTasks(
-            command = taskQuery().userIds(userId).userStates(UserState.MEMBER, UserState.LEADER, UserState.GUEST)
-        )
+        val checkUserTasks = taskService.getTasks(command = taskQuery().userIds(userId))
 
         // TODO : 한번 반려되었어도 다시 요청을 보낼 수 있도록 수정
         if (checkUserTasks.size >= 3)

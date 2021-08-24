@@ -10,7 +10,7 @@ import waffle.guam.NotAllowedException
 import waffle.guam.comment.CommentRepository
 import waffle.guam.project.ProjectRepository
 import waffle.guam.task.TaskService
-import waffle.guam.task.query.SearchTask.Companion.taskQuery
+import waffle.guam.task.query.SearchTask
 import waffle.guam.thread.command.CreateJoinRequestThread
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
@@ -54,9 +54,7 @@ class ThreadServiceImpl(
     override fun setNoticeThread(command: SetNoticeThread): NoticeThreadSet {
         val project = projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
 
-        val task = taskService.getTask(taskQuery().userIds(command.userId).projectIds(project.id))
-
-        if (!task.userState.isOfficialState()) {
+        if (!taskService.isMemberOrLeader(projectId = command.projectId, userId = command.userId)) {
             throw NotAllowedException("해당 프로젝트의 공지 쓰레드를 설정할 권한이 없습니다.")
         }
 
@@ -74,11 +72,8 @@ class ThreadServiceImpl(
     @Transactional
     override fun createThread(command: CreateThread): ThreadCreated {
         val parentProject = projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
-        val task = taskService.getTask(taskQuery().userIds(command.userId).projectIds(parentProject.id))
 
-        if (!task.userState.isOfficialState()) {
-            throw NotAllowedException("해당 프로젝트에 쓰레드를 생성할 권한이 없습니다.")
-        }
+        val task = taskService.getTask(SearchTask.taskQuery().userIds(command.userId).projectIds(command.projectId))
 
         threadRepository.save(command.copy(content = command.content?.trim()).toEntity()).let {
             return ThreadCreated.of(project = parentProject, threadId = it.id, command = command, task = task)
@@ -101,7 +96,8 @@ class ThreadServiceImpl(
                 throw InvalidRequestException("수정 전과 동일한 내용입니다.")
             }
 
-            val editedThread = threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
+            val editedThread =
+                threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
             return ThreadContentEdited(it.id, editedThread)
         }
 
@@ -111,9 +107,8 @@ class ThreadServiceImpl(
             if (it.userId != command.userId) {
                 throw NotAllowedException("타인이 작성한 쓰레드를 삭제할 수는 없습니다.")
             }
-            val task = taskService.getTask(taskQuery().userIds(command.userId).projectIds(it.projectId))
 
-            if (!task.userState.isOfficialState()) {
+            if (!taskService.isMemberOrLeader(projectId = it.projectId, userId = command.userId)) {
                 throw NotAllowedException("해당 프로젝트의 쓰레드를 삭제할 권한이 없습니다.")
             }
 
