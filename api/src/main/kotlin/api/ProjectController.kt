@@ -20,6 +20,7 @@ import waffle.guam.common.UserContext
 import waffle.guam.project.ProjectService
 import waffle.guam.task.TaskService
 import waffle.guam.task.command.AcceptTask
+import waffle.guam.task.command.ApplyTask
 import waffle.guam.task.command.DeclineTask
 import waffle.guam.task.command.LeaveTask
 
@@ -42,18 +43,9 @@ class ProjectController(
             SuccessResponse(Unit)
         }
 
-    /***
-     * (1) select task t from tasks t inner join users u outer join images i
-     * (2) insert project
-     * (3) select stack X 1
-     * (4) insert project_stacks X 3 (front, back, designer) <- batch insert 해야할지 고민
-     * (5) select project outer join images
-     * (6) insert tasks
-     */
-
     @GetMapping("/project/{projectId}")
     fun getProject(
-        @PathVariable projectId: Long
+        @PathVariable projectId: Long,
     ): SuccessResponse<ProjectResponse> =
         SuccessResponse(
             data = ProjectResponse.of(projectService.getProject(projectId))
@@ -98,7 +90,7 @@ class ProjectController(
     @GetMapping("/project/tab")
     fun getTabProjects(
         @RequestParam(required = true, defaultValue = "0") page: Int,
-        @RequestParam(required = false, defaultValue = "20") size: Int
+        @RequestParam(required = false, defaultValue = "20") size: Int,
     ): PageableResponse<ProjectResponse> =
         projectService.getTabProjects(
             PageRequest.of(page, size, Sort.by("modifiedAt").descending())
@@ -116,12 +108,10 @@ class ProjectController(
     fun joinProject(
         @PathVariable projectId: Long,
         joinProject: JoinProjectRequest,
-        userContext: UserContext
+        userContext: UserContext,
     ): SuccessResponse<Unit> =
-        projectService.joinRequestValidation(
-            command = joinProject.toCommand(),
-            projectId = projectId,
-            userId = userContext.id
+        taskService.handle(
+            command = ApplyTask(userId = userContext.id, projectId = projectId, position = joinProject.position)
         ).run {
             SuccessResponse(Unit)
         }
@@ -129,7 +119,7 @@ class ProjectController(
     @DeleteMapping("/project/{projectId}")
     fun deleteProject(
         @PathVariable projectId: Long,
-        userContext: UserContext
+        userContext: UserContext,
     ): SuccessResponse<Unit> =
         projectService.deleteProject(projectId, userContext.id).run {
             SuccessResponse(Unit)
@@ -140,7 +130,7 @@ class ProjectController(
         @PathVariable projectId: Long,
         @PathVariable userId: Long,
         @RequestParam accept: Boolean,
-        userContext: UserContext
+        userContext: UserContext,
     ): SuccessResponse<Unit> =
         taskService.handle(
             if (accept)
@@ -155,7 +145,7 @@ class ProjectController(
     fun updateProject(
         @PathVariable projectId: Long,
         updateRequest: UpdateProjectRequest,
-        userContext: UserContext
+        userContext: UserContext,
     ): SuccessResponse<Unit> =
         projectService.updateProject(updateRequest.toCommand(), projectId, userContext.id).run {
             SuccessResponse(Unit)
@@ -164,7 +154,7 @@ class ProjectController(
     @PostMapping("/project/quit/{projectId}")
     fun quitProject(
         @PathVariable projectId: Long,
-        userContext: UserContext
+        userContext: UserContext,
     ): SuccessResponse<Unit> =
         taskService.handle(LeaveTask(userId = userContext.id, projectId = projectId)).run {
             SuccessResponse(Unit)
