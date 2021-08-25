@@ -16,6 +16,7 @@ data class ThreadDetail(
     val creatorNickname: String,
     val creatorImageUrl: String?,
     val threadImages: List<Image>,
+    val type: ThreadType,
     val comments: List<Comment>,
     val createdAt: Instant,
     val modifiedAt: Instant,
@@ -32,6 +33,7 @@ data class ThreadDetail(
                 creatorNickname = e.user.nickname,
                 creatorImageUrl = e.user.image?.toDomain()?.path,
                 threadImages = ImageType.THREAD.filter(e.images).map { it.toDomain() },
+                type = ThreadType.valueOf(e.type),
                 comments = e.comments.map { Comment.of(it) },
                 createdAt = e.createdAt,
                 modifiedAt = e.modifiedAt

@@ -15,12 +15,14 @@ import waffle.guam.thread.command.CreateJoinRequestThread
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
 import waffle.guam.thread.command.EditThreadContent
+import waffle.guam.thread.command.EditThreadType
 import waffle.guam.thread.command.SetNoticeThread
 import waffle.guam.thread.event.JoinRequestThreadCreated
 import waffle.guam.thread.event.NoticeThreadSet
 import waffle.guam.thread.event.ThreadContentEdited
 import waffle.guam.thread.event.ThreadCreated
 import waffle.guam.thread.event.ThreadDeleted
+import waffle.guam.thread.event.ThreadTypeEdited
 import waffle.guam.thread.model.ThreadDetail
 import waffle.guam.thread.model.ThreadInfo
 import waffle.guam.thread.model.ThreadOverView
@@ -96,9 +98,15 @@ class ThreadServiceImpl(
                 throw InvalidRequestException("수정 전과 동일한 내용입니다.")
             }
 
-            val editedThread =
-                threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
-            return ThreadContentEdited(it.id, editedThread)
+            val editedThread = threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
+            return ThreadContentEdited(it.id, editedThread.content)
+        }
+
+    @Transactional
+    override fun editThreadType(command: EditThreadType): ThreadTypeEdited =
+        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
+            threadRepository.save(it.copy(type = command.type.name, modifiedAt = Instant.now()))
+            return ThreadTypeEdited(command.threadId, command.type)
         }
 
     @Transactional

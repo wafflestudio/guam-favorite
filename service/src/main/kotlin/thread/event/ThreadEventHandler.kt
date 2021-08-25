@@ -62,15 +62,20 @@ class ThreadEventHandler(
     fun handle(event: ThreadContentEdited) {
         logger.info("$event")
 
-        if (event.thread.content.isNotBlank()) return
+        if (event.editedContent.isNotBlank()) return
 
-        val threadImages = imageRepository.findByParentIdAndType(event.thread.id, ImageType.THREAD.name)
+        val threadImages = imageRepository.findByParentIdAndType(event.threadId, ImageType.THREAD.name)
 
         if (threadImages.isNotEmpty()) return
 
         if (!commentRepository.existsByThreadId(event.threadId)) {
-            threadRepository.delete(event.thread)
+            threadRepository.deleteById(event.threadId)
         }
+    }
+
+    @EventListener
+    fun handle(event: ThreadTypeEdited) {
+        logger.info("$event")
     }
 
     @EventListener

@@ -4,6 +4,7 @@ import waffle.guam.comment.model.Comment
 import waffle.guam.image.model.Image
 import waffle.guam.thread.model.ThreadDetail
 import waffle.guam.thread.model.ThreadOverView
+import waffle.guam.thread.model.ThreadType
 import java.time.Instant
 
 data class ThreadOverViewResponse(
@@ -15,6 +16,7 @@ data class ThreadOverViewResponse(
     val creatorImageUrl: String?,
     val commentSize: Long,
     val threadImages: List<Image>,
+    val type: ThreadType,
     val createdAt: Instant,
     val modifiedAt: Instant
 ) {
@@ -28,6 +30,7 @@ data class ThreadOverViewResponse(
             creatorImageUrl = e.creatorImageUrl,
             commentSize = e.commentSize,
             threadImages = e.threadImages,
+            type = e.type,
             createdAt = e.createdAt,
             modifiedAt = e.modifiedAt
         )
@@ -42,6 +45,7 @@ data class ThreadDetailResponse(
     val creatorNickname: String,
     val creatorImageUrl: String?,
     val threadImages: List<Image>,
+    val type: ThreadType,
     val comments: List<Comment>,
     val createdAt: Instant,
     val modifiedAt: Instant,
@@ -55,6 +59,7 @@ data class ThreadDetailResponse(
             creatorNickname = e.creatorNickname,
             creatorImageUrl = e.creatorImageUrl,
             threadImages = e.threadImages,
+            type = e.type,
             comments = e.comments,
             createdAt = e.createdAt,
             modifiedAt = e.modifiedAt

@@ -29,6 +29,8 @@ data class ThreadEntity(
 
     val content: String,
 
+    val type: String,
+
     val createdAt: Instant = Instant.now(),
 
     val modifiedAt: Instant = createdAt,
@@ -54,6 +56,8 @@ data class ThreadView(
     val images: List<ImageEntity>,
 
     val content: String,
+
+    val type: String,
 
     val createdAt: Instant = Instant.now(),
 
