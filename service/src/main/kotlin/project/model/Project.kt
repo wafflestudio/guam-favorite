@@ -50,7 +50,7 @@ data class Project(
                 // thumbnail = TODO("entity.thumbnail?.let { it.toDomain() }"),
                 thumbnail = null,
                 techStacks = techStacks,
-                tasks = tasks,
+                tasks = tasks.filter { it.user != null },
                 frontLeftCnt = tasksByPosition[Position.FRONTEND]?.filter { it.user == null }?.size ?: 0,
                 backLeftCnt = tasksByPosition[Position.BACKEND]?.filter { it.user == null }?.size ?: 0,
                 designLeftCnt = tasksByPosition[Position.DESIGNER]?.filter { it.user == null }?.size ?: 0,
