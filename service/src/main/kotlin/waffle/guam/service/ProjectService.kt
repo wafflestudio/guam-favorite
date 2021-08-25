@@ -41,6 +41,7 @@ import waffle.guam.model.ThreadOverView
 import waffle.guam.service.command.CreateProject
 import waffle.guam.service.command.CreateThread
 import waffle.guam.service.command.UpdateProject
+import java.lang.RuntimeException
 import java.time.LocalDateTime
 
 @Service
@@ -167,9 +168,15 @@ class ProjectService(
                 }.filter { prj ->
                     prj.tasks?.groupBy { task ->
                         task.position
-                    }?.filter { (_, v) ->
-                        v.size < 2
-                    }?.isNotEmpty() ?: false
+                    }?.filter { (k, v) ->
+                        val specificCount = when (k) {
+                            Position.FRONTEND.name -> prj.frontHeadCnt
+                            Position.BACKEND.name -> prj.backHeadCnt
+                            Position.DESIGNER.name -> prj.designHeadCnt
+                            else -> throw RuntimeException("Unreachable Code")
+                        }
+                        specificCount - v.size < 2
+                    }?.isNotEmpty() ?: throw RuntimeException("task 0개")
                 }
                 PageImpl(
                     res,
