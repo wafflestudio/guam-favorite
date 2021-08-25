@@ -3,7 +3,7 @@ package waffle.guam.thread.command
 import waffle.guam.thread.ThreadEntity
 import waffle.guam.thread.model.ThreadType
 
-data class CreateJoinRequestThread(
+data class CreateJoinThread(
     val projectId: Long,
     val userId: Long,
     val content: String

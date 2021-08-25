@@ -5,7 +5,8 @@ import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 import waffle.guam.task.TaskRepository
 import waffle.guam.thread.ThreadService
-import waffle.guam.thread.command.CreateJoinRequestThread
+import waffle.guam.thread.command.CreateJoinThread
+import waffle.guam.thread.command.EditJoinThreadType
 
 @Component
 class TaskEventHandler(
@@ -25,8 +26,8 @@ class TaskEventHandler(
     @EventListener
     fun handle(event: TaskApplied) {
         logger.info("$event")
-        threadService.createJoinRequestThread(
-            command = CreateJoinRequestThread(
+        threadService.createJoinThread(
+            command = CreateJoinThread(
                 projectId = event.projectId,
                 userId = event.userId,
                 content = event.introduction
@@ -40,6 +41,12 @@ class TaskEventHandler(
     @EventListener
     fun handle(event: TaskLeft) {
         logger.info("$event")
+        threadService.editJoinThreadType(
+            command = EditJoinThreadType.toNormal(
+                projectId = event.projectId,
+                userId = event.userId
+            )
+        )
 //        taskRepository.findAll().forEach {
 //            println(it)
 //        }
@@ -48,6 +55,12 @@ class TaskEventHandler(
     @EventListener
     fun handle(event: TaskAccepted) {
         logger.info("$event")
+        threadService.editJoinThreadType(
+            command = EditJoinThreadType.toNormal(
+                projectId = event.projectId,
+                userId = event.userId
+            )
+        )
 //        taskRepository.findAll().forEach {
 //            println(it)
 //        }
@@ -56,6 +69,12 @@ class TaskEventHandler(
     @EventListener
     fun handle(event: TaskDeclined) {
         logger.info("$event")
+        threadService.editJoinThreadType(
+            command = EditJoinThreadType.toNormal(
+                projectId = event.projectId,
+                userId = event.userId
+            )
+        )
 //        taskRepository.findAll().forEach {
 //            println(it)
 //        }

@@ -11,18 +11,18 @@ import waffle.guam.comment.CommentRepository
 import waffle.guam.project.ProjectRepository
 import waffle.guam.task.TaskService
 import waffle.guam.task.query.SearchTask
-import waffle.guam.thread.command.CreateJoinRequestThread
+import waffle.guam.thread.command.CreateJoinThread
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
+import waffle.guam.thread.command.EditJoinThreadType
 import waffle.guam.thread.command.EditThreadContent
-import waffle.guam.thread.command.EditThreadType
 import waffle.guam.thread.command.SetNoticeThread
-import waffle.guam.thread.event.JoinRequestThreadCreated
+import waffle.guam.thread.event.JoinThreadCreated
+import waffle.guam.thread.event.JoinThreadTypeEdited
 import waffle.guam.thread.event.NoticeThreadSet
 import waffle.guam.thread.event.ThreadContentEdited
 import waffle.guam.thread.event.ThreadCreated
 import waffle.guam.thread.event.ThreadDeleted
-import waffle.guam.thread.event.ThreadTypeEdited
 import waffle.guam.thread.model.ThreadDetail
 import waffle.guam.thread.model.ThreadInfo
 import waffle.guam.thread.model.ThreadOverView
@@ -83,9 +83,9 @@ class ThreadServiceImpl(
     }
 
     @Transactional
-    override fun createJoinRequestThread(command: CreateJoinRequestThread): JoinRequestThreadCreated =
+    override fun createJoinThread(command: CreateJoinThread): JoinThreadCreated =
         threadRepository.save(command.copy(content = command.content).toEntity()).let {
-            return JoinRequestThreadCreated(it.id)
+            return JoinThreadCreated(it.id)
         }
 
     @Transactional
@@ -102,11 +102,18 @@ class ThreadServiceImpl(
             return ThreadContentEdited(it.id, editedThread.content)
         }
 
+    //    @Transactional
+    //    override fun editThreadType(command: EditThreadType): ThreadTypeEdited =
+    //        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
+    //            threadRepository.save(it.copy(type = command.type.name, modifiedAt = Instant.now()))
+    //            return ThreadTypeEdited(command.threadId, command.type)
+    //        }
+
     @Transactional
-    override fun editThreadType(command: EditThreadType): ThreadTypeEdited =
-        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
+    override fun editJoinThreadType(command: EditJoinThreadType): JoinThreadTypeEdited =
+        threadRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::DataNotFoundException).let {
             threadRepository.save(it.copy(type = command.type.name, modifiedAt = Instant.now()))
-            return ThreadTypeEdited(command.threadId, command.type)
+            return JoinThreadTypeEdited(it.id, command.type)
         }
 
     @Transactional
