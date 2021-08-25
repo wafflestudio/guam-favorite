@@ -392,7 +392,7 @@ class ProjectService(
     fun completeProject(id: Long, userId: Long): String {
         taskRepository.findByUserIdAndProjectId(userId, id)
             .orElseThrow(::DataNotFoundException).let {
-                if (it.userState != UserState.LEADER) throw NotAllowedException("프로젝트 삭제 권한이 없습니다.")
+                if (it.userState != UserState.LEADER) throw NotAllowedException("프로젝트 완료 권한이 없습니다.")
                 projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).let { project ->
                     project.state = ProjectState.COMPLETED
                     project.tasks.filter { task ->
