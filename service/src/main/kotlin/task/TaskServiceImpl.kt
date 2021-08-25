@@ -27,7 +27,7 @@ class TaskServiceImpl(
     override fun getTasks(command: SearchTask, extraFieldParams: TaskExtraFieldParams): List<Task> {
         val spec = command.specWithFetch(extraFieldParams)
 
-        return taskRepository.findAll(spec).filter { it.user != null }.map { it.toDomain(extraFieldParams) }
+        return taskRepository.findAll(spec).map { it.toDomain(extraFieldParams) }
     }
 
     override fun getTask(taskId: Long): Task =

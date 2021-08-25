@@ -52,7 +52,7 @@ class PrjServicePrimaryImpl(
         /**
          * Leader, Member, Guest인 프로젝트가 3개 이상일 경우, 프로젝트 참여 불가능
          */
-        val checkUserTasks = taskService.getTasks(command = taskQuery().userIds(userId))
+        val checkUserTasks = taskService.getTasks(command = taskQuery().userIds(userId)).filter { it.user != null }
 
         // TODO : 한번 반려되었어도 다시 요청을 보낼 수 있도록 수정
         if (checkUserTasks.size >= 3)
@@ -67,7 +67,7 @@ class PrjServicePrimaryImpl(
         val checkPrjTasks =
             taskService.getTasks(taskQuery().projectIds(projectId).userStates(UserState.LEADER, UserState.MEMBER))
 
-        if (checkPrjTasks.none { it.user.id == userId && it.userState == UserState.LEADER })
+        if (checkPrjTasks.none { it.user?.id == userId && it.userState == UserState.LEADER })
             throw NotAllowedException("리더만 프로젝트를 수정할 수 있어요.")
 
         return prjService.updateProject(command, projectId, userId)
@@ -78,7 +78,7 @@ class PrjServicePrimaryImpl(
 
         val checkPrjTasks = taskService.getTasks(taskQuery().projectIds(projectId))
 
-        if (checkPrjTasks.none { it.user.id == userId && it.userState == UserState.LEADER })
+        if (checkPrjTasks.none { it.user?.id == userId && it.userState == UserState.LEADER })
             throw NotAllowedException("리더만 프로젝트를 종료할 수 있어요.")
 
         return prjService.deleteProject(projectId, userId)
@@ -89,7 +89,7 @@ class PrjServicePrimaryImpl(
 
         val checkPrjTasks = taskService.getTasks(taskQuery().projectIds(projectId))
 
-        if (checkPrjTasks.none { it.user.id == userId && it.userState == UserState.LEADER })
+        if (checkPrjTasks.none { it.user?.id == userId && it.userState == UserState.LEADER })
             throw NotAllowedException("리더만 프로젝트를 완료할 수 있어요.")
 
         return prjService.completeProject(projectId, userId)
