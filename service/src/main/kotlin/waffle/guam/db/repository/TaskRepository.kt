@@ -20,7 +20,7 @@ interface TaskRepository : JpaRepository<TaskEntity, Long> {
 
     fun countByUserIdAndUserStateNotIn(
         userId: Long,
-        userState: Array<UserState> = arrayOf(UserState.DECLINED, UserState.QUIT)
+        userState: Array<UserState> = arrayOf(UserState.DECLINED, UserState.QUIT, UserState.CONTRIBUTED)
     ): Int
 
     fun countByProjectIdAndPosition(projectId: Long, position: Position): Int
