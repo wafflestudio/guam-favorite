@@ -13,7 +13,7 @@ data class Task(
     val projectId: Long,
     val user: User?,
     val userState: UserState?,
-    val taskMsgs: List<TaskMessage>? = null,
+    val taskMessages: List<TaskMessage>? = null,
     val createdAt: Instant,
     val modifiedAt: Instant,
 ) {
@@ -25,7 +25,7 @@ data class Task(
                 projectId = project.id,
                 user = user?.let { User.of(it) },
                 userState = userState?.let { UserState.valueOf(it) },
-                taskMsgs = when (extraFieldParams.withTaskMsgs) {
+                taskMessages = when (extraFieldParams.withTaskMsgs) {
                     true -> taskMessages.map { it.toDomain() }
                     false -> null
                 },
