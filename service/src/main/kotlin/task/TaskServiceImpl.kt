@@ -45,7 +45,7 @@ class TaskServiceImpl(
                 projectId = it.project.id,
                 user = User.of(it.user),
                 userState = UserState.GUEST,
-                taskMsgs = listOf(),
+                taskMessages = listOf(),
                 createdAt = it.createdAt,
                 modifiedAt = it.createdAt
             )
