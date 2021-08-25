@@ -18,6 +18,7 @@ import waffle.guam.task.event.TaskApplied
 import waffle.guam.task.event.TaskApplyCanceled
 import waffle.guam.task.event.TaskCanceled
 import waffle.guam.task.event.TaskCompleted
+import waffle.guam.task.event.TaskCountManipulated
 import waffle.guam.task.event.TaskCreated
 import waffle.guam.task.event.TaskDeclined
 import waffle.guam.task.event.TaskEvent
@@ -69,8 +70,41 @@ class TaskHandler(
         return TaskCreated(projectId = projectId)
     }
 
-    private fun incOrDecProjectTasks(command: IncOrDecProjectTasks): TaskEvent {
-        TODO()
+    private fun incOrDecProjectTasks(command: IncOrDecProjectTasks): TaskCountManipulated {
+        val (projectId, userId, quotas) = command
+
+        verifyProjectLeader(projectId = projectId, leaderId = userId)
+
+        quotas.forEach { quota ->
+            val (position, cnt) = quota
+
+            val tasks = taskRepository.findAllByProjectIdAndPosition(projectId, position.name)
+
+            val diff = cnt - tasks.size
+
+            if (diff == 0) {
+                return@forEach
+            }
+
+            if (diff > 0) {
+                val project = projectRepository.findById(projectId).orElseThrow { RuntimeException("") }
+                val newTasks = (1..diff).map { TaskEntity(project = project, position = position.name) }
+
+                taskRepository.saveAll(newTasks)
+
+                return@forEach
+            }
+
+            val unclaimedTasks = tasks.filter { it.user == null }
+
+            if (-diff > unclaimedTasks.size) {
+                throw RuntimeException("현재 참여 중인 인원보다 적은 수로 조정할 수 없습니다.")
+            }
+
+            taskRepository.deleteAllInBatch(unclaimedTasks.take(-diff))
+        }
+
+        return TaskCountManipulated(projectId = projectId)
     }
 
     private fun apply(command: ApplyTask): TaskApplied {
