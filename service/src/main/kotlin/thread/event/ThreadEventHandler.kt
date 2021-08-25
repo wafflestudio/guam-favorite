@@ -44,7 +44,7 @@ class ThreadEventHandler(
         logger.info("$event")
 
         val targetIds = taskService.getTasks(taskQuery().projectIds(event.projectId))
-            .map { it.user.id }
+            .mapNotNull { it.user?.id }
             .filter { event.creatorId != it }
         //    messageService.sendMessage(
         //        ids = targetIds,
