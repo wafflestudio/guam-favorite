@@ -16,7 +16,8 @@ data class UserResponse(
     val introduction: String?,
     val projects: List<UserProject>?,
     val createdAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
+    val isProfileSet: Boolean
 ) {
     companion object {
         fun of(d: User) = UserResponse(
@@ -30,7 +31,8 @@ data class UserResponse(
             introduction = d.introduction,
             projects = d.projects,
             createdAt = d.createdAt,
-            updatedAt = d.modifiedAt
+            updatedAt = d.modifiedAt,
+            isProfileSet = (d.createdAt != d.modifiedAt)
         )
     }
 }

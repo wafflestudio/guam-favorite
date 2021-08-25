@@ -30,6 +30,10 @@ class TaskServiceImpl(
         return taskRepository.findAll(spec).filter { it.user != null }.map { it.toDomain(extraFieldParams) }
     }
 
+    override fun getTask(taskId: Long): Task =
+        taskRepository.findById(taskId).orElseThrow { DataNotFoundException() }
+            .toDomain(TaskExtraFieldParams(withTaskMsgs = true))
+
     override fun getTask(command: SearchTask, extraFieldParams: TaskExtraFieldParams): Task =
         getTasks(command, extraFieldParams).firstOrNull() ?: throw DataNotFoundException("해당 태스크를 찾을 수 없습니다.")
 

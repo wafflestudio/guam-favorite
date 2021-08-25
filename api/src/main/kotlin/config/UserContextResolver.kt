@@ -1,5 +1,6 @@
 package waffle.guam.config
 
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import org.slf4j.LoggerFactory
 import org.springframework.core.MethodParameter
@@ -59,11 +60,10 @@ class SessionServiceImpl(
 ) : SessionService {
 
     override fun takeUserId(token: String): UserContext =
-        UserContext(userService.getUserId(firebaseUid = token))
+        userService.getUserId(firebaseUid = getFirebaseUid(token)).let {
+            UserContext(it)
+        }
 
-    // TODO: impl real authentication
-
-    private fun getFirebaseUid(token: String): String {
-        TODO()
-    }
+    private fun getFirebaseUid(token: String): String =
+        FirebaseAuth.getInstance().verifyIdToken(token).uid
 }
