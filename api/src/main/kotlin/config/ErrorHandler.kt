@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import waffle.guam.ConflictException
 import waffle.guam.DataNotFoundException
 import waffle.guam.InvalidRequestException
-import waffle.guam.JoinException
 import waffle.guam.NotAllowedException
 import waffle.guam.common.InvalidFirebaseTokenException
 
@@ -32,13 +31,13 @@ class ErrorHandler {
     fun conflict(e: RuntimeException) =
         ResponseEntity(ErrorResponse(e.message ?: "409 conflict"), HttpStatus.CONFLICT)
 
-    @ExceptionHandler(value = [JoinException::class])
-    fun joinExceptionOccurred(e: JoinException) =
-        ResponseEntity(ErrorResponse(e.message ?: "join exception occurred"), e.code)
+    //  @ExceptionHandler(value = [JoinException::class])
+    //  fun joinExceptionOccurred(e: JoinException) =
+    //      ResponseEntity(ErrorResponse(e.message ?: "참가 과정에서 문제가 발생하였습니다."), HttpStatus.BAD_REQUEST)
 
-    @ExceptionHandler(value = [RuntimeException::class])
-    fun internalError(e: RuntimeException) =
-        ResponseEntity(ErrorResponse(e.message ?: "알 수 없는 에러입니다."), HttpStatus.INTERNAL_SERVER_ERROR).also {
+    @ExceptionHandler(value = [Exception::class])
+    fun internalError(e: Exception) =
+        ResponseEntity(ErrorResponse(e.message ?: "알 수 없는 문제가 발생하였습니다."), HttpStatus.INTERNAL_SERVER_ERROR).also {
             logger.error("", e)
         }
 }
