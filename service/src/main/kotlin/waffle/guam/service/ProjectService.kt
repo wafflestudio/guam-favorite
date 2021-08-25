@@ -119,7 +119,7 @@ class ProjectService(
     }
 
     fun getAllProjects(pageable: Pageable): Page<Project> =
-        projectRepository.findByStateIsNotIn(states = listOf(ProjectState.CLOSED), pageable = pageable)
+        projectRepository.findByStateIsNotIn(states = listOf(ProjectState.CLOSED, ProjectState.COMPLETED), pageable = pageable)
             .map { it.id }
             .let {
                 PageImpl(
@@ -344,6 +344,7 @@ class ProjectService(
                         UserState.LEADER -> throw NotAllowedException("리더를 승인할 수 없습니다.")
                         UserState.QUIT -> throw NotAllowedException("이미 프로젝트를 나간 멤버입니다.")
                         UserState.DECLINED -> throw NotAllowedException("이미 승인이 거절된 멤버입니다.")
+                        else -> throw NotAllowedException("unreachable code; 이미 완료된 플젝에 기여한 유저를 승인")
                     }
                 }
             }
@@ -373,6 +374,23 @@ class ProjectService(
                     project.state = ProjectState.CLOSED
                     project.tasks.map {
                         it.userState = UserState.QUIT
+                    }
+                }
+                return "프로젝트가 정상적으로 종료되었습니다."
+            }
+    }
+
+    @Transactional
+    fun completeProject(id: Long, userId: Long): String {
+        taskRepository.findByUserIdAndProjectId(userId, id)
+            .orElseThrow(::DataNotFoundException).let {
+                if (it.userState != UserState.LEADER) throw NotAllowedException("프로젝트 삭제 권한이 없습니다.")
+                projectViewRepository.findById(id).orElseThrow(::DataNotFoundException).let { project ->
+                    project.state = ProjectState.COMPLETED
+                    project.tasks.filter { task ->
+                        task.userState == UserState.MEMBER || task.userState == UserState.LEADER
+                    }.map { task ->
+                        task.userState = UserState.CONTRIBUTED
                     }
                 }
                 return "프로젝트가 정상적으로 종료되었습니다."

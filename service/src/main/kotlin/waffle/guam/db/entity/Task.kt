@@ -122,7 +122,7 @@ enum class Position {
 }
 
 enum class UserState {
-    GUEST, MEMBER, LEADER, QUIT, DECLINED;
+    GUEST, MEMBER, LEADER, QUIT, DECLINED, CONTRIBUTED;
 
     fun isValidMember(filterGuest: Boolean): Boolean = (this == MEMBER || this == LEADER) || (!filterGuest && this == GUEST)
 }

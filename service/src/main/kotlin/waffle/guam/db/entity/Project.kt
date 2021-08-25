@@ -130,5 +130,5 @@ enum class Due {
 }
 
 enum class ProjectState {
-    RECRUITING, ONGOING, PENDING, CLOSED
+    RECRUITING, ONGOING, PENDING, CLOSED, COMPLETED
 }
