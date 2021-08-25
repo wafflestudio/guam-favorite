@@ -38,7 +38,7 @@ class DataInitializer(
         frontStackId = null,
         designStackId = null,
         due = Due.UNDEFINED,
-        myPosition = Position.values().random()
+        myPosition = Position.values().filter { it != Position.WHATEVER }.random()
     )
 
     suspend fun init() = runBlocking {

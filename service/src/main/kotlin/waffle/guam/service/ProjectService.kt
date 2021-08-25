@@ -160,14 +160,21 @@ class ProjectService(
         projectRepository.findAll(ProjectSpecs.fetchJoinImminent(), pageable)
             .map { it.id }
             .let {
+                val res = projectViewRepository.findAll(
+                    ProjectSpecs.fetchJoinList(it.toList()), pageable.sort
+                ).map { project ->
+                    ProjectList.of(project, true)
+                }.filter { prj ->
+                    prj.tasks?.groupBy { task ->
+                        task.position
+                    }?.filter { (_, v) ->
+                        v.size < 2
+                    }?.isNotEmpty() ?: false
+                }
                 PageImpl(
-                    projectViewRepository.findAll(
-                        ProjectSpecs.fetchJoinList(it.toList()), pageable.sort
-                    ).map { project ->
-                        ProjectList.of(project, true)
-                    },
+                    res,
                     pageable,
-                    it.totalElements
+                    res.size.toLong()
                 )
             }
 
@@ -291,6 +298,7 @@ class ProjectService(
                         TaskEntity(projectId = id, userId = userId, position = position, userState = UserState.GUEST)
                     )
                 }
+                else -> throw NotAllowedException("Unreachable Code")
             }
         }
 
@@ -376,7 +384,7 @@ class ProjectService(
                         it.userState = UserState.QUIT
                     }
                 }
-                return "프로젝트가 정상적으로 종료되었습니다."
+                return "프로젝트가 정상적으로 삭제되었습니다."
             }
     }
 
@@ -393,7 +401,7 @@ class ProjectService(
                         task.userState = UserState.CONTRIBUTED
                     }
                 }
-                return "프로젝트가 정상적으로 종료되었습니다."
+                return "프로젝트가 정상적으로 완료되었습니다."
             }
     }
 

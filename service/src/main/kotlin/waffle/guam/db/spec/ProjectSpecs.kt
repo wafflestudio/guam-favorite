@@ -76,14 +76,7 @@ object ProjectSpecs {
     fun fetchJoinImminent(): Specification<ProjectEntity> =
         Specification { root, _, builder: CriteriaBuilder ->
             builder.and(
-                builder.equal(root.get<Any>("state"), ProjectState.RECRUITING),
-                builder.or(
-                    builder.or(
-                        builder.lessThan(root.get<Long>("frontHeadcount"), 2),
-                        builder.lessThan(root.get<Long>("backHeadcount"), 2)
-                    ),
-                    builder.lessThan(root.get<Long>("designerHeadcount"), 2)
-                )
+                builder.equal(root.get<Any>("state"), ProjectState.RECRUITING)
             )
         }
 }

@@ -47,7 +47,8 @@ data class CreateProject(
             frontHeadcount = frontHeadCnt,
             backHeadcount = backHeadCnt,
             designerHeadcount = designHeadCnt,
-            state = ProjectState.RECRUITING,
+            state = if (frontHeadCnt + backHeadCnt + designHeadCnt == 1) ProjectState.ONGOING
+            else ProjectState.RECRUITING,
             due = due ?: Due.SIX
         )
 }
