@@ -13,6 +13,7 @@ import waffle.guam.project.event.ProjectCompleted
 import waffle.guam.project.event.ProjectCreated
 import waffle.guam.project.event.ProjectDeleted
 import waffle.guam.project.event.ProjectUpdated
+import waffle.guam.project.model.Due
 import waffle.guam.project.model.Project
 import waffle.guam.project.model.ProjectState
 import waffle.guam.projectstack.ProjectStackService
@@ -21,6 +22,7 @@ import waffle.guam.projectstack.util.SearchEngine
 import waffle.guam.task.TaskService
 import waffle.guam.task.model.Position
 import waffle.guam.task.model.PositionQuota
+import waffle.guam.task.model.Task.Companion.toDomain
 import waffle.guam.task.query.SearchTask.Companion.taskQuery
 import waffle.guam.task.query.TaskExtraFieldParams
 import java.time.Instant
@@ -63,8 +65,14 @@ class ProjectServiceImpl(
 
     override fun getTabProjects(pageable: Pageable): Page<Project> =
 
-        projectRepository.findAll(ProjectSpec.fetchImminent(), pageable).run {
-            buildProjectOf(this)
+        projectRepository.imminent().run {
+            buildProjectOf(
+                PageImpl(
+                    this,
+                    pageable,
+                    this.size.toLong()
+                )
+            )
         }
 
     /**
@@ -73,42 +81,44 @@ class ProjectServiceImpl(
      */
     override fun getSearchResults(pageable: Pageable, command: SearchProject): Page<Project> =
 
-        projectRepository.findAll(
-            ProjectSpec.search(due = command.due?.name, position = command.position?.name),
-            pageable
-        ).run {
+        buildSearch(command.due, command.position, pageable)
+            .run {
 
-            val ids = this.map { it.id }.toList()
+                val ids = this.map { it.id }.toList()
 
-            val prjStacks = projectStackService.getAllProjectStacks(ids)
-                .groupBy { it.projectId }
+                val prjStacks = projectStackService.getAllProjectStacks(ids)
+                    .groupBy { it.projectId }
 
-            val tasks = taskService.getTasks(taskQuery().projectIds(ids))
-                .groupBy { it.projectId }
+                val filteredProjects =
+                    this.asSequence().filter { project ->
+                        command.stackId == null ||
+                            prjStacks[project.id]!!.map { it.stack.id }.contains(command.stackId)
+                    }
+                        .map { it to searchEngine.search(dic = listOf(it.title, it.description), q = command.query) }
+                        .filter { it.second > 0 }
+                        .sortedBy { -it.second }
+                        .map { it.first }.toList()
 
-            val filteredProjects =
-                this.filter { project ->
-                    command.stackId == null ||
-                        prjStacks[project.id]!!.map { it.stack.id }.contains(command.stackId)
-                }
-                    .map { it to searchEngine.search(dic = listOf(it.title, it.description), q = command.query) }
-                    .filter { it.second > 0 }
-                    .sortedBy { -it.second }
-                    .map { it.first }
+                return PageImpl(
+                    filteredProjects.map { prj ->
+                        Project.of(
+                            prj,
+                            techStacks =
+                            prjStacks[prj.id]!!
+                                .map { prjStack -> prjStack.stack },
+                            tasks =
+                            prj.tasks.map { it.toDomain() }
+                        )
+                    }
+                )
+            }
 
-            return PageImpl(
-                filteredProjects.map {
-                    Project.of(
-                        it,
-                        techStacks =
-                        prjStacks[it.id]!!
-                            .map { prjStack -> prjStack.stack },
-                        tasks =
-                        tasks[it.id]!!
-                    )
-                }
-            )
+    fun buildSearch(due: Due?, position: Position?, pageable: Pageable) =
+
+        position?.let {
+            due?.let { projectRepository.search(due.name, position.name) } ?: projectRepository.search(position.name)
         }
+            ?: due?.let { projectRepository.findAll(ProjectSpec.search(it.name), pageable) } ?: projectRepository.findAll(pageable)
 
     @Transactional
     override fun createProject(command: CreateProject, userId: Long): ProjectCreated {

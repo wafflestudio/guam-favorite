@@ -15,7 +15,7 @@ class PrjRepositoryTest @Autowired constructor(
     fun fetchNothing() {
         println("******************************")
         projectRepository.findAll().forEach {
-            println(it)
+            println(it.id)
         }
         println("*******************************")
     }
@@ -27,10 +27,10 @@ class PrjRepositoryTest @Autowired constructor(
     @Test
     fun search() {
         println("******************************")
-        projectRepository.findAll(
-            ProjectSpec.search(due = "ONE", position = "FRONTEND")
+        projectRepository.search(
+            due = "ONE", position = "FRONTEND"
         ).forEach {
-            println(it.due)
+            println(it.id)
         }
         println("******************************")
     }
@@ -45,12 +45,28 @@ class PrjRepositoryTest @Autowired constructor(
         println("******************************")
         projectRepository.findById(
             1
-        ).let {
-            println(it)
+        ).orElseThrow(::Exception).let {
+            println(it.id)
         }
         println("******************************")
     }
     /**
      *  should fetch Image at once
+     */
+
+    @Transactional
+    @Test
+    fun imminent() {
+        println("******************************")
+        projectRepository.imminent().map {
+            println(it.frontHeadcount)
+            println(it.backHeadcount)
+            println(it.designerHeadcount)
+            println(it.tasks)
+        }
+        println("******************************")
+    }
+    /**
+     *  제발 돼라
      */
 }
