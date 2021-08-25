@@ -155,7 +155,7 @@ class ProjectController(
             SuccessResponse(Unit)
         }
 
-    @PostMapping("/project/quit/{projectId}")
+    @PostMapping("/project/{projectId}/quit/")
     fun quitProject(
         @PathVariable projectId: Long,
         userContext: UserContext,

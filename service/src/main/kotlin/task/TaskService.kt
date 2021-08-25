@@ -11,6 +11,7 @@ interface TaskService {
     fun getTasks(command: SearchTask, extraFieldParams: TaskExtraFieldParams = TaskExtraFieldParams()): List<Task>
     // FIXME:: Project의 tasks에 GUEST는 빠지고, JoinThread column으로 조인쓰레드를 구분하도록 바꿔야함.
     fun getTaskCandidates(projectId: Long): List<Task>
+    fun getTask(taskId: Long): Task
     fun getTask(command: SearchTask, extraFieldParams: TaskExtraFieldParams = TaskExtraFieldParams()): Task
     fun isMemberOrLeader(projectId: Long, userId: Long): Boolean
     fun isLeader(projectId: Long, userId: Long): Boolean
