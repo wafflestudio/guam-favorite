@@ -29,7 +29,6 @@ class UserController(
     fun getUser(
         userContext: UserContext,
     ): SuccessResponse<UserResponse> =
-        // TODO: 프로젝트 상태에 따른 필터
         SuccessResponse(
             UserResponse.of(
                 userService.getUser(userId = userContext.id, extraInfo = UserExtraInfo(projects = true))
@@ -45,7 +44,6 @@ class UserController(
     fun getUser(
         @PathVariable id: Long,
     ): SuccessResponse<UserResponse> =
-        // TODO: 프로젝트 상태에 따른 필터
         SuccessResponse(
             UserResponse.of(
                 userService.getUser(userId = id, extraInfo = UserExtraInfo(projects = true))
@@ -109,7 +107,6 @@ class UserController(
     fun getProjectIds(
         userContext: UserContext,
     ): SuccessResponse<List<Long>> =
-        // TODO: 프로젝트 상태에 따른 필터
         userService.getProjectIds(userId = userContext.id, includeGuest = true).let {
             SuccessResponse(data = it)
         }

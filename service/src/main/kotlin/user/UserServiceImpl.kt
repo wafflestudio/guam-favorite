@@ -3,6 +3,7 @@ package waffle.guam.user
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.DataNotFoundException
+import waffle.guam.project.model.ProjectState
 import waffle.guam.task.TaskCandidateRepository
 import waffle.guam.task.TaskRepository
 import waffle.guam.task.TaskSpec
@@ -36,13 +37,14 @@ class UserServiceImpl(
             }
 
     override fun getProjectIds(userId: Long, includeGuest: Boolean): List<Long> =
-        taskRepository.findAllByUserId(userId).map { it.project.id }.let {
-            if (includeGuest) {
-                it.plus(taskCandidateRepository.findAllByUserId(userId).map { it.project.id })
-            } else {
-                it
+        taskRepository.findUserProjectIds(userId = userId, projectStates = ProjectState.activeStates())
+            .let {
+                if (includeGuest) {
+                    it.plus(taskCandidateRepository.findAllByUserId(userId).map { it.project.id })
+                } else {
+                    it
+                }
             }
-        }
 
     override fun createUser(firebaseUid: String): UserCreated =
         userRepository.save(
@@ -78,7 +80,11 @@ class UserServiceImpl(
 
     private fun getProjectInfos(userId: Long): List<UserProject> =
         taskRepository.findAll(
-            TaskSpec.run { userIds(listOf(userId)).and(fetchUser()).and(fetchProject()) }
+            TaskSpec.run {
+                userIds(listOf(userId))
+                    .and(fetchUser())
+                    .and(fetchArchive(ProjectState.archiveStates()))
+            }
         ).map {
             UserProject.of(it)
         }

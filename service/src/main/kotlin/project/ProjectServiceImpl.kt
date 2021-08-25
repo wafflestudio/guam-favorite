@@ -52,7 +52,12 @@ class ProjectServiceImpl(
 
     override fun getAllProjects(pageable: Pageable): Page<Project> =
 
-        projectRepository.findAll(ProjectSpec.fetchImages(), pageable).run {
+        projectRepository.findAll(
+            ProjectSpec.list(
+                validStates = listOf(ProjectState.RECRUITING, ProjectState.ONGOING).map { it.name }
+            ),
+            pageable
+        ).run {
             buildProjectOf(this)
         }
 

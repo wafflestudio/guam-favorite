@@ -34,6 +34,10 @@ object TaskSpec {
         builder.conjunction()
     }
 
+    fun fetchArchive(archiveStates: List<String>): Specification<TaskEntity> = fetchProject().and { root, query, builder: CriteriaBuilder ->
+        root.get<ProjectEntity>("project").get<String>("state").`in`(archiveStates)
+    }
+
     fun userIds(userIds: List<Long>): Specification<TaskEntity> = Specification { root, _, builder ->
         root.get<UserEntity>("user").get<Long>("id").`in`(userIds)
     }

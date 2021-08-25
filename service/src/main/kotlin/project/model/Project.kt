@@ -29,6 +29,7 @@ data class Project(
     val leaderProfile: User?,
 ) {
     companion object {
+
         fun of(
             entity: ProjectEntity,
             techStacks: List<TechStack>,

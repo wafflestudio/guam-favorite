@@ -24,6 +24,11 @@ object ProjectSpec {
             builder.conjunction()
         }
 
+    fun list(validStates: List<String>): Specification<ProjectEntity> =
+        fetchImages().and { root, _, _: CriteriaBuilder ->
+            root.get<String>("state").`in`(validStates)
+        }
+
     fun dueLike(due: String): Specification<ProjectEntity> =
         Specification { root, _, _: CriteriaBuilder ->
             root.get<Any>("due").`in`(due)
