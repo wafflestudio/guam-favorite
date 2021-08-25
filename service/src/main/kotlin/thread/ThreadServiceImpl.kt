@@ -102,13 +102,6 @@ class ThreadServiceImpl(
             return ThreadContentEdited(it.id, editedThread.content)
         }
 
-    //    @Transactional
-    //    override fun editThreadType(command: EditThreadType): ThreadTypeEdited =
-    //        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
-    //            threadRepository.save(it.copy(type = command.type.name, modifiedAt = Instant.now()))
-    //            return ThreadTypeEdited(command.threadId, command.type)
-    //        }
-
     @Transactional
     override fun editJoinThreadType(command: EditJoinThreadType): JoinThreadTypeEdited =
         threadRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::DataNotFoundException).let {

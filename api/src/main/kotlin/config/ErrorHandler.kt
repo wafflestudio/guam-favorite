@@ -31,10 +31,6 @@ class ErrorHandler {
     fun conflict(e: RuntimeException) =
         ResponseEntity(ErrorResponse(e.message ?: "409 conflict"), HttpStatus.CONFLICT)
 
-    //  @ExceptionHandler(value = [JoinException::class])
-    //  fun joinExceptionOccurred(e: JoinException) =
-    //      ResponseEntity(ErrorResponse(e.message ?: "참가 과정에서 문제가 발생하였습니다."), HttpStatus.BAD_REQUEST)
-
     @ExceptionHandler(value = [Exception::class])
     fun internalError(e: Exception) =
         ResponseEntity(ErrorResponse(e.message ?: "알 수 없는 문제가 발생하였습니다."), HttpStatus.INTERNAL_SERVER_ERROR).also {

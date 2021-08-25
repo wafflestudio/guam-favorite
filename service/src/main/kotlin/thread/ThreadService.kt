@@ -26,7 +26,6 @@ interface ThreadService {
     fun createThread(command: CreateThread): ThreadCreated
     fun createJoinThread(command: CreateJoinThread): JoinThreadCreated
     fun editThreadContent(command: EditThreadContent): ThreadContentEdited
-    // fun editThreadType(command: EditThreadType): ThreadTypeEdited
     fun editJoinThreadType(command: EditJoinThreadType): JoinThreadTypeEdited
     fun deleteThread(command: DeleteThread): ThreadDeleted
 }
