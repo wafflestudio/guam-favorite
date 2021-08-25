@@ -22,6 +22,7 @@ import waffle.guam.task.TaskService
 import waffle.guam.task.model.Position
 import waffle.guam.task.model.PositionQuota
 import waffle.guam.task.query.SearchTask.Companion.taskQuery
+import waffle.guam.task.query.TaskExtraFieldParams
 import java.time.Instant
 
 /**
@@ -42,8 +43,10 @@ class ProjectServiceImpl(
             Project.of(
                 entity = e,
                 techStacks = projectStackService.getProjectStacks(projectId).map { it.stack },
-                tasks = taskService.getTasks(taskQuery().projectIds(projectId))
-                    .plus(taskService.getTaskCandidates(projectId))
+                tasks = taskService.getTasks(
+                    command = taskQuery().projectIds(projectId),
+                    extraFieldParams = TaskExtraFieldParams(withTaskMsgs = true)
+                ).plus(taskService.getTaskCandidates(projectId))
             )
         }
 
