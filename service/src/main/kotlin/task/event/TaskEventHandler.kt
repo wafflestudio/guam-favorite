@@ -29,7 +29,7 @@ class TaskEventHandler(
             command = CreateJoinRequestThread(
                 projectId = event.projectId,
                 userId = event.userId,
-                content = "TODO"
+                content = event.introduction
             )
         )
 //        taskRepository.findAll().forEach {

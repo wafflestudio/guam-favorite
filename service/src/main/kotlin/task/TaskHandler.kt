@@ -99,7 +99,7 @@ class TaskHandler(
             )
         )
 
-        return TaskApplied(projectId = projectId, userId = userId)
+        return TaskApplied(projectId = projectId, userId = userId, introduction = command.introduction)
     }
 
     private fun cancelApply(command: CancelApplyTask): TaskApplyCanceled {

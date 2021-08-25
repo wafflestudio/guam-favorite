@@ -115,7 +115,12 @@ class ProjectController(
         userContext: UserContext,
     ): SuccessResponse<Unit> =
         taskService.handle(
-            command = ApplyTask(userId = userContext.id, projectId = projectId, position = joinProject.position)
+            command = ApplyTask(
+                userId = userContext.id,
+                projectId = projectId,
+                position = joinProject.position,
+                introduction = joinProject.introduction
+            )
         ).run {
             SuccessResponse(Unit)
         }

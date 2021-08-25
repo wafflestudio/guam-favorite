@@ -6,4 +6,5 @@ data class ApplyTask(
     val userId: Long,
     val projectId: Long,
     val position: Position,
+    val introduction: String,
 ) : TaskCommand
