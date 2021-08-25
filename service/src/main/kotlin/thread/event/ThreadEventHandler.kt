@@ -54,7 +54,7 @@ class ThreadEventHandler(
     }
 
     @EventListener
-    fun handle(event: JoinRequestThreadCreated) {
+    fun handle(event: JoinThreadCreated) {
         logger.info("$event")
     }
 
@@ -75,6 +75,11 @@ class ThreadEventHandler(
 
     @EventListener
     fun handle(event: ThreadTypeEdited) {
+        logger.info("$event")
+    }
+
+    @EventListener
+    fun handle(event: JoinThreadTypeEdited) {
         logger.info("$event")
     }
 

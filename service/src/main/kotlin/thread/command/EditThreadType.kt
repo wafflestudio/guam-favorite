@@ -6,8 +6,10 @@ class EditThreadType(
     val threadId: Long,
     val type: ThreadType
 ) : ThreadCommand {
-    fun toNormal(threadId: Long) = EditThreadType(
-        threadId = threadId,
-        type = ThreadType.NORMAL
-    )
+    //    companion object {
+    //        fun toNormal(threadId: Long) = EditThreadType(
+    //            threadId = threadId,
+    //            type = ThreadType.NORMAL
+    //        )
+    //    }
 }

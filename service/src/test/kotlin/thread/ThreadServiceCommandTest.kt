@@ -14,7 +14,7 @@ import waffle.guam.annotation.DatabaseTest
 import waffle.guam.comment.CommentRepository
 import waffle.guam.project.ProjectRepository
 import waffle.guam.task.TaskService
-import waffle.guam.thread.command.CreateJoinRequestThread
+import waffle.guam.thread.command.CreateJoinThread
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
 import waffle.guam.thread.command.EditThreadContent
@@ -176,13 +176,13 @@ class ThreadServiceCommandTest @Autowired constructor(
     @Transactional
     @Test
     fun createJoinRequestThreadOK() {
-        val command = CreateJoinRequestThread(
+        val command = CreateJoinThread(
             projectId = 1,
             userId = 1,
             content = "참가 신청 쓰레드"
         )
 
-        val event = threadService.createJoinRequestThread(command)
+        val event = threadService.createJoinThread(command)
 
         event.threadId shouldBeGreaterThan 6
 
