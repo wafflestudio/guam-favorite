@@ -18,7 +18,7 @@ data class UserProject(
             projectTitle = e.project.title,
             projectThumbnail = e.project.thumbnail?.toDomain()?.path,
             position = Position.valueOf(e.position),
-            userState = UserState.valueOf(e.userState)
+            userState = UserState.valueOf(e.userState!!)
         )
     }
 }

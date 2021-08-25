@@ -1,8 +1,2 @@
 spring.config.import:
   - classpath:application-aws.yml
-
-spring:
-  jpa:
-    properties:
-      hibernate:
-        show_sql: true

@@ -3,6 +3,7 @@ package waffle.guam.user
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.DataNotFoundException
+import waffle.guam.task.TaskCandidateRepository
 import waffle.guam.task.TaskRepository
 import waffle.guam.task.TaskSpec
 import waffle.guam.user.command.UpdateUser
@@ -19,6 +20,7 @@ import java.time.Instant
 class UserServiceImpl(
     private val userRepository: UserRepository,
     private val taskRepository: TaskRepository,
+    private val taskCandidateRepository: TaskCandidateRepository,
 ) : UserService {
     override fun getUserId(firebaseUid: String): Long =
         userRepository.findByFirebaseUid(firebaseUid)?.id ?: createUser(firebaseUid).userId
@@ -32,6 +34,15 @@ class UserServiceImpl(
                     false -> this
                 }
             }
+
+    override fun getProjectIds(userId: Long, includeGuest: Boolean): List<Long> =
+        taskRepository.findAllByUserId(userId).map { it.project.id }.let {
+            if (includeGuest) {
+                it.plus(taskCandidateRepository.findAllByUserId(userId).map { it.project.id })
+            } else {
+                it
+            }
+        }
 
     override fun createUser(firebaseUid: String): UserCreated =
         userRepository.save(

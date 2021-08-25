@@ -10,6 +10,7 @@ import waffle.guam.user.model.User
 interface UserService {
     fun getUserId(firebaseUid: String): Long
     fun getUser(userId: Long, extraInfo: UserExtraInfo = UserExtraInfo()): User
+    fun getProjectIds(userId: Long, includeGuest: Boolean): List<Long>
     fun createUser(firebaseUid: String): UserCreated
     fun updateUser(userId: Long, command: UpdateUser): UserUpdated
     fun updateDeviceToken(userId: Long, fcmToken: String): DeviceUpdated

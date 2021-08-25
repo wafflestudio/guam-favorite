@@ -25,8 +25,8 @@ class StackServiceImpl(
             TechStack.of(it)
         }
 
-    override fun getAllStacks(stackIds: List<Long>): List<TechStack> =
-        stackRepository.findAllByIds(stackIds).map {
+    override fun getAllStacks(): List<TechStack> =
+        stackRepository.findAll().map {
             TechStack.of(it)
         }
 

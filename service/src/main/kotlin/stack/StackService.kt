@@ -16,7 +16,7 @@ interface StackService {
 
     // READ
     fun getStack(stackId: Long): TechStack
-    fun getAllStacks(stackIds: List<Long>): List<TechStack>
+    fun getAllStacks(): List<TechStack>
 
     // CREATE
     fun createStack(command: CreateStack, stackId: Long): StackCreated

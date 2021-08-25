@@ -7,13 +7,11 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.DataNotFoundException
 import waffle.guam.project.command.CreateProject
-import waffle.guam.project.command.JoinProject
 import waffle.guam.project.command.SearchProject
 import waffle.guam.project.command.UpdateProject
 import waffle.guam.project.event.ProjectCompleted
 import waffle.guam.project.event.ProjectCreated
 import waffle.guam.project.event.ProjectDeleted
-import waffle.guam.project.event.ProjectJoinRequested
 import waffle.guam.project.event.ProjectUpdated
 import waffle.guam.project.model.Project
 import waffle.guam.project.model.ProjectState
@@ -21,6 +19,8 @@ import waffle.guam.projectstack.ProjectStackService
 import waffle.guam.projectstack.command.StackIdList
 import waffle.guam.projectstack.util.SearchEngine
 import waffle.guam.task.TaskService
+import waffle.guam.task.model.Position
+import waffle.guam.task.model.PositionQuota
 import waffle.guam.task.query.SearchTask.Companion.taskQuery
 import java.time.Instant
 
@@ -43,6 +43,7 @@ class ProjectServiceImpl(
                 entity = e,
                 techStacks = projectStackService.getProjectStacks(projectId).map { it.stack },
                 tasks = taskService.getTasks(taskQuery().projectIds(projectId))
+                    .plus(taskService.getTaskCandidates(projectId))
             )
         }
 
@@ -72,13 +73,15 @@ class ProjectServiceImpl(
             val ids = this.map { it.id }.toList()
 
             val prjStacks = projectStackService.getAllProjectStacks(ids)
+                .groupBy { it.projectId }
 
             val tasks = taskService.getTasks(taskQuery().projectIds(ids))
+                .groupBy { it.projectId }
 
-            val filterProjects =
-                this.filter {
-                    command.stackId in prjStacks.filter { prjStacks -> prjStacks.projectId == it.id }
-                        .map { prjStacks -> prjStacks.id }
+            val filteredProjects =
+                this.filter { project ->
+                    command.stackId == null ||
+                        prjStacks[project.id]!!.map { it.stack.id }.contains(command.stackId)
                 }
                     .map { it to searchEngine.search(dic = listOf(it.title, it.description), q = command.query) }
                     .filter { it.second > 0 }
@@ -86,15 +89,14 @@ class ProjectServiceImpl(
                     .map { it.first }
 
             return PageImpl(
-                filterProjects.map {
+                filteredProjects.map {
                     Project.of(
                         it,
                         techStacks =
-                        prjStacks
-                            .filter { prjStack -> prjStack.projectId == it.id }
+                        prjStacks[it.id]!!
                             .map { prjStack -> prjStack.stack },
                         tasks =
-                        tasks.filter { task -> task.projectId == it.id }
+                        tasks[it.id]!!
                     )
                 }
             )
@@ -112,7 +114,12 @@ class ProjectServiceImpl(
                 stackIdList = StackIdList(command.frontStackId, command.backStackId, command.designStackId),
                 leaderId = userId,
                 leaderPosition = command.myPosition!!,
-                imageFiles = command.imageFiles
+                imageFiles = command.imageFiles,
+                positionQuotas = listOf(
+                    PositionQuota(Position.FRONTEND, frontHeadcount),
+                    PositionQuota(Position.BACKEND, backHeadcount),
+                    PositionQuota(Position.DESIGNER, designerHeadcount)
+                )
             )
         }
     }
@@ -132,9 +139,15 @@ class ProjectServiceImpl(
 
         return ProjectUpdated(
             projectId = prj.id,
+            userId = userId,
             projectTitle = prj.title,
             stackIdList = StackIdList(command.frontStackId, command.backStackId, command.designStackId),
-            imageFiles = command.imageFiles
+            imageFiles = command.imageFiles,
+            positionQuotas = listOf(
+                PositionQuota(Position.FRONTEND, command.frontHeadCnt),
+                PositionQuota(Position.BACKEND, command.backHeadCnt),
+                PositionQuota(Position.DESIGNER, command.designHeadCnt)
+            )
         )
     }
 
@@ -165,18 +178,6 @@ class ProjectServiceImpl(
         return ProjectCompleted(
             projectId = prj.id,
             projectTitle = prj.title
-        )
-    }
-
-    @Transactional
-    override fun joinRequestValidation(command: JoinProject, projectId: Long, userId: Long): ProjectJoinRequested {
-
-        // 괜히 호출을 두번 하는 느낌이 있다.
-        return ProjectJoinRequested(
-            projectId = projectId,
-            userId = userId,
-            position = command.position,
-            introduction = command.introduction
         )
     }
 

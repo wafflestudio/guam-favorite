@@ -10,8 +10,7 @@ import waffle.guam.image.command.CreateImages
 import waffle.guam.image.command.DeleteImages
 import waffle.guam.image.model.ImageType
 import waffle.guam.task.TaskService
-import waffle.guam.task.model.UserState
-import waffle.guam.task.query.SearchTask
+import waffle.guam.task.query.SearchTask.Companion.taskQuery
 import waffle.guam.thread.ThreadRepository
 
 @Component
@@ -23,7 +22,7 @@ class ThreadEventHandler(
     private val imageRepository: ImageRepository
     // private val messageService: MessageService,
 ) {
-    private val logger = LoggerFactory.getLogger(this::javaClass.name)
+    private val logger = LoggerFactory.getLogger(javaClass.name)
 
     @EventListener
     fun handle(event: NoticeThreadSet) {
@@ -44,8 +43,7 @@ class ThreadEventHandler(
 
         logger.info("$event")
 
-        val targetIds = taskService.getTasks(SearchTask.taskQuery().projectIds(event.projectId))
-            .filter { it.userState == UserState.MEMBER || it.userState == UserState.LEADER }
+        val targetIds = taskService.getTasks(taskQuery().projectIds(event.projectId))
             .map { it.user.id }
             .filter { event.creatorId != it }
         //    messageService.sendMessage(

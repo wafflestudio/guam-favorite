@@ -5,15 +5,17 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.annotation.DatabaseTest
+import waffle.guam.task.TaskCandidateRepository
 import waffle.guam.task.TaskRepository
 import waffle.guam.user.command.UpdateUser
 
 @DatabaseTest(["user/image.sql", "user/user.sql"])
 class UserServiceCommandTest @Autowired constructor(
     private val userRepository: UserRepository,
-    taskRepository: TaskRepository
+    taskRepository: TaskRepository,
+    taskCandidateRepository: TaskCandidateRepository,
 ) {
-    private val userService = UserServiceImpl(userRepository, taskRepository)
+    private val userService = UserServiceImpl(userRepository, taskRepository, taskCandidateRepository)
 
     @Transactional
     @Test
