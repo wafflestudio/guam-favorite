@@ -6,6 +6,7 @@ import waffle.guam.project.model.Project
 import waffle.guam.project.model.ProjectState
 import waffle.guam.stack.model.TechStack
 import waffle.guam.task.model.Task
+import waffle.guam.thread.model.ThreadOverView
 import java.time.Instant
 
 data class ProjectResponse(
@@ -26,6 +27,7 @@ data class ProjectResponse(
     val createdAt: Instant,
     val modifiedAt: Instant,
     val leaderProfile: UserResponse?,
+    val noticeThread: ThreadOverView?
 ) {
     companion object {
         fun of(d: Project) = ProjectResponse(
@@ -45,7 +47,8 @@ data class ProjectResponse(
             designLeftCnt = d.designLeftCnt,
             createdAt = d.createdAt,
             modifiedAt = d.modifiedAt,
-            leaderProfile = d.leaderProfile?.let { UserResponse.of(it) }
+            leaderProfile = d.leaderProfile?.let { UserResponse.of(it) },
+            noticeThread = d.noticeThread
         )
     }
 }
