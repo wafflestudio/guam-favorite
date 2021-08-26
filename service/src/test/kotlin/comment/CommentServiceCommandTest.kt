@@ -24,7 +24,7 @@ import waffle.guam.thread.ThreadRepository
 import waffle.guam.user.UserRepository
 import java.util.Optional
 
-@DatabaseTest(["comment/image.sql", "comment/user.sql", "comment/project.sql", "comment/task.sql", "comment/thread.sql", "comment/comment.sql"])
+@DatabaseTest(["comment/image.sql", "comment/user.sql", "comment/project.sql", "comment/task_candidate.sql", "comment/task.sql", "comment/task_history.sql", "comment/thread.sql", "comment/comment.sql"])
 class CommentServiceCommandTest @Autowired constructor(
     private val commentRepository: CommentRepository,
     threadRepository: ThreadRepository,
@@ -131,6 +131,22 @@ class CommentServiceCommandTest @Autowired constructor(
                 command = CreateComment(
                     threadId = 5,
                     userId = 2,
+                    content = "탈퇴한 사용자가 자신의 조인 쓰레드에 댓글 달아보기",
+                    imageFiles = null
+                )
+            )
+        }
+    }
+
+    @DisplayName("댓글 생성 예외 : QUIT한 사용자가 쓰레드에 댓글을 생성 시도시 예외가 발생한다.")
+    @Transactional
+    @Test
+    fun createCommentQuitNotAllowedException() {
+        shouldThrowExactly<NotAllowedException> {
+            commentService.createComment(
+                command = CreateComment(
+                    threadId = 1,
+                    userId = 4,
                     content = "탈퇴한 사용자가 자신의 조인 쓰레드에 댓글 달아보기",
                     imageFiles = null
                 )
