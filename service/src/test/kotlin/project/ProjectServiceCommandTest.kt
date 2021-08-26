@@ -15,34 +15,19 @@ import waffle.guam.task.command.DeclineTask
 import waffle.guam.task.command.LeaveTask
 import waffle.guam.task.model.UserState
 import waffle.guam.task.query.SearchTask
+import waffle.guam.thread.ThreadServiceImpl
 
 @DatabaseTest(["project/image.sql", "project/project.sql", "project/user.sql", "project/task.sql", "project/projectStack.sql"])
 class ProjectServiceCommandTest @Autowired constructor(
     private val projectStackService: ProjectStackService,
     private val taskService: TaskService,
+    private val threadService: ThreadServiceImpl,
     private val projectRepository: ProjectRepository
 ) {
 
     val projectService: ProjectService = ProjectServiceImpl(
-        projectStackService, taskService, projectRepository
+        projectStackService, taskService, threadService, projectRepository
     )
-
-// FIXME
-//    @DisplayName("프로젝트 참여 신청")
-//    @Transactional
-//    @Test
-//    fun joinProject() {
-//
-//        val event = projectService.joinRequestValidation(
-//            command = JoinProject(
-//                Position.FRONTEND, "introduction"
-//            ),
-//            projectId = 2,
-//            userId = 3
-//        )
-//
-//        event.introduction shouldBe "introduction"
-//    }
 
     @DisplayName("프로젝트 나가기")
     @Transactional

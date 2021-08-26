@@ -25,6 +25,7 @@ import waffle.guam.task.model.PositionQuota
 import waffle.guam.task.model.Task.Companion.toDomain
 import waffle.guam.task.query.SearchTask.Companion.taskQuery
 import waffle.guam.task.query.TaskExtraFieldParams
+import waffle.guam.thread.ThreadServiceImpl
 import java.time.Instant
 
 /**
@@ -34,7 +35,8 @@ import java.time.Instant
 class ProjectServiceImpl(
     private val projectStackService: ProjectStackService,
     private val taskService: TaskService,
-    private val projectRepository: ProjectRepository,
+    private val threadService: ThreadServiceImpl,
+    private val projectRepository: ProjectRepository
 ) : ProjectService {
 
     private val searchEngine = SearchEngine()
@@ -48,7 +50,8 @@ class ProjectServiceImpl(
                 tasks = taskService.getTasks(
                     command = taskQuery().projectIds(projectId),
                     extraFieldParams = TaskExtraFieldParams(withTaskMsgs = true)
-                ).plus(taskService.getTaskCandidates(projectId))
+                ).plus(taskService.getTaskCandidates(projectId)),
+                noticeThread = e.noticeThreadId?.let { threadService.getThreadOverView(it) }
             )
         }
 

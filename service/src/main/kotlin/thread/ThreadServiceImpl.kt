@@ -52,6 +52,11 @@ class ThreadServiceImpl(
             ThreadDetail.of(it)
         }
 
+    fun getThreadOverView(threadId: Long): ThreadOverView =
+        threadViewRepository.findById(threadId).orElseThrow(::DataNotFoundException).let {
+            ThreadOverView.of(it) { threadId -> commentRepository.countByThreadId(threadId) }
+        }
+
     @Transactional
     override fun setNoticeThread(command: SetNoticeThread): NoticeThreadSet {
         val project = projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
