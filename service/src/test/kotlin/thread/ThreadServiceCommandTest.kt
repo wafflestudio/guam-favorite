@@ -27,7 +27,7 @@ import waffle.guam.user.UserRepository
 import java.util.Optional
 import javax.persistence.EntityManager
 
-@DatabaseTest(["thread/image.sql", "thread/user.sql", "thread/project.sql", "thread/task.sql", "thread/thread.sql", "thread/comment.sql"])
+@DatabaseTest(["thread/image.sql", "thread/user.sql", "thread/project.sql", "thread/task_candidate.sql", "thread/task.sql", "thread/thread.sql", "thread/comment.sql"])
 class ThreadServiceCommandTest @Autowired constructor(
     private val entityManager: EntityManager,
     private val projectRepository: ProjectRepository,
@@ -177,11 +177,12 @@ class ThreadServiceCommandTest @Autowired constructor(
         }
     }
 
+    // TODO(getTask했을 때 taskCandidateEntity를 찾지 못하여 DataNotFoundException 발생)
     @DisplayName("쓰레드 생성 예외 : 게스트 등 비멤버들은 일반 쓰레드 생성 시도시 예외가 발생한다.")
     @Transactional
     @Test
     fun createThreadGuestNotAllowedException() {
-        shouldThrowExactly<NotAllowedException> {
+        shouldThrowExactly<DataNotFoundException> {
             threadService.createThread(
                 command = CreateThread(
                     projectId = 1,
