@@ -182,7 +182,7 @@ class ThreadServiceCommandTest @Autowired constructor(
     @Transactional
     @Test
     fun createThreadGuestNotAllowedException() {
-        shouldThrowExactly<DataNotFoundException> {
+        shouldThrowExactly<NotAllowedException> {
             threadService.createThread(
                 command = CreateThread(
                     projectId = 1,

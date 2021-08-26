@@ -75,6 +75,10 @@ class ThreadServiceImpl(
     override fun createThread(command: CreateThread): ThreadCreated {
         val parentProject = projectRepository.findById(command.projectId).orElseThrow(::DataNotFoundException)
 
+        if (!taskService.isMemberOrLeader(command.projectId, command.userId)) {
+            throw NotAllowedException("해당 프로젝트에 쓰레드를 생성할 권한이 없습니다.")
+        }
+
         val task = taskService.getTask(SearchTask.taskQuery().userIds(command.userId).projectIds(command.projectId))
 
         threadRepository.save(command.copy(content = command.content?.trim()).toEntity()).let {
