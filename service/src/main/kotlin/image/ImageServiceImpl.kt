@@ -58,7 +58,7 @@ class ImageServiceImpl(
             ImagesDeleted(imageIds = it.map { it.id })
         }
 
-    private fun ImageEntity.getPath() = "$type/$id"
+    private fun ImageEntity.getPath() = "REFACTOR/$type/$id"
 
     private fun MultipartFile.getFile(): File = inputStream.use { inputStream ->
         imageLocation.resolve(originalFilename).let {
