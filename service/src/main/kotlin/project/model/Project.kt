@@ -6,6 +6,7 @@ import waffle.guam.stack.model.TechStack
 import waffle.guam.task.model.Position
 import waffle.guam.task.model.Task
 import waffle.guam.task.model.UserState
+import waffle.guam.thread.model.ThreadOverView
 import waffle.guam.user.model.User
 import java.time.Instant
 
@@ -27,12 +28,14 @@ data class Project(
     val createdAt: Instant,
     val modifiedAt: Instant,
     val leaderProfile: User?,
+    val noticeThread: ThreadOverView?
 ) {
     companion object {
         fun of(
             entity: ProjectEntity,
             techStacks: List<TechStack>,
             tasks: List<Task>,
+            noticeThread: ThreadOverView? = null
         ): Project {
             val tasksByPosition = Position.values().associateWith { position ->
                 tasks.filter { it.position == position }
@@ -56,7 +59,8 @@ data class Project(
                 designLeftCnt = tasksByPosition[Position.DESIGNER]?.filter { it.user == null }?.size ?: 0,
                 createdAt = entity.createdAt,
                 modifiedAt = entity.modifiedAt,
-                leaderProfile = tasks.singleOrNull { it.userState == UserState.LEADER }?.user
+                leaderProfile = tasks.singleOrNull { it.userState == UserState.LEADER }?.user,
+                noticeThread = noticeThread
             )
         }
     }
