@@ -14,7 +14,12 @@ import waffle.guam.annotation.DatabaseTest
 import waffle.guam.comment.command.CreateComment
 import waffle.guam.comment.command.DeleteComment
 import waffle.guam.comment.command.EditCommentContent
-import waffle.guam.task.TaskService
+import waffle.guam.project.ProjectRepository
+import waffle.guam.task.TaskCandidateRepository
+import waffle.guam.task.TaskHandler
+import waffle.guam.task.TaskHistoryRepository
+import waffle.guam.task.TaskRepository
+import waffle.guam.task.TaskServiceImpl
 import waffle.guam.thread.ThreadRepository
 import waffle.guam.user.UserRepository
 import java.util.Optional
@@ -23,9 +28,25 @@ import java.util.Optional
 class CommentServiceCommandTest @Autowired constructor(
     private val commentRepository: CommentRepository,
     threadRepository: ThreadRepository,
-    taskService: TaskService,
-    userRepository: UserRepository
+    userRepository: UserRepository,
+    projectRepository: ProjectRepository,
+    taskRepository: TaskRepository,
+    taskCandidateRepository: TaskCandidateRepository,
+    taskHistoryRepository: TaskHistoryRepository,
 ) {
+    private val taskHandler = TaskHandler(
+        taskRepository,
+        taskCandidateRepository,
+        taskHistoryRepository,
+        userRepository,
+        projectRepository,
+    )
+
+    private val taskService = TaskServiceImpl(
+        taskRepository,
+        taskCandidateRepository,
+        taskHandler,
+    )
 
     private val commentService = CommentServiceImpl(
         commentRepository,

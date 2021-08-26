@@ -13,12 +13,17 @@ import waffle.guam.NotAllowedException
 import waffle.guam.annotation.DatabaseTest
 import waffle.guam.comment.CommentRepository
 import waffle.guam.project.ProjectRepository
-import waffle.guam.task.TaskService
+import waffle.guam.task.TaskCandidateRepository
+import waffle.guam.task.TaskHandler
+import waffle.guam.task.TaskHistoryRepository
+import waffle.guam.task.TaskRepository
+import waffle.guam.task.TaskServiceImpl
 import waffle.guam.thread.command.CreateJoinThread
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
 import waffle.guam.thread.command.EditThreadContent
 import waffle.guam.thread.command.SetNoticeThread
+import waffle.guam.user.UserRepository
 import java.util.Optional
 import javax.persistence.EntityManager
 
@@ -28,9 +33,25 @@ class ThreadServiceCommandTest @Autowired constructor(
     private val projectRepository: ProjectRepository,
     private val threadRepository: ThreadRepository,
     threadViewRepository: ThreadViewRepository,
-    taskService: TaskService,
     commentRepository: CommentRepository,
+    taskRepository: TaskRepository,
+    taskCandidateRepository: TaskCandidateRepository,
+    taskHistoryRepository: TaskHistoryRepository,
+    userRepository: UserRepository,
 ) {
+    private val taskHandler = TaskHandler(
+        taskRepository,
+        taskCandidateRepository,
+        taskHistoryRepository,
+        userRepository,
+        projectRepository,
+    )
+
+    private val taskService = TaskServiceImpl(
+        taskRepository,
+        taskCandidateRepository,
+        taskHandler,
+    )
 
     private val threadService = ThreadServiceImpl(
         threadRepository,

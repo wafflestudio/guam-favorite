@@ -105,6 +105,7 @@ class ProjectEventHandler(
                 userId = event.userId,
                 projectId = event.projectId,
                 position = event.position,
+                introduction = event.introduction
             )
         )
     }
