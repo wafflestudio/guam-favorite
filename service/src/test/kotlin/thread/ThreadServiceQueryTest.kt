@@ -12,16 +12,37 @@ import org.springframework.transaction.annotation.Transactional
 import waffle.guam.annotation.DatabaseTest
 import waffle.guam.comment.CommentRepository
 import waffle.guam.project.ProjectRepository
-import waffle.guam.task.TaskService
+import waffle.guam.task.TaskCandidateRepository
+import waffle.guam.task.TaskHandler
+import waffle.guam.task.TaskHistoryRepository
+import waffle.guam.task.TaskRepository
+import waffle.guam.task.TaskServiceImpl
+import waffle.guam.user.UserRepository
 
 @DatabaseTest(["thread/image.sql", "thread/user.sql", "thread/project.sql", "thread/thread.sql", "thread/comment.sql"])
 class ThreadServiceQueryTest @Autowired constructor(
     threadRepository: ThreadRepository,
     threadViewRepository: ThreadViewRepository,
     projectRepository: ProjectRepository,
-    taskService: TaskService,
     commentRepository: CommentRepository,
+    taskRepository: TaskRepository,
+    taskCandidateRepository: TaskCandidateRepository,
+    taskHistoryRepository: TaskHistoryRepository,
+    userRepository: UserRepository,
 ) {
+    private val taskHandler = TaskHandler(
+        taskRepository,
+        taskCandidateRepository,
+        taskHistoryRepository,
+        userRepository,
+        projectRepository,
+    )
+
+    private val taskService = TaskServiceImpl(
+        taskRepository,
+        taskCandidateRepository,
+        taskHandler,
+    )
 
     private val threadService = ThreadServiceImpl(
         threadRepository,

@@ -13,7 +13,9 @@ import waffle.guam.comment.event.CommentCreated
 import waffle.guam.comment.event.CommentDeleted
 import waffle.guam.comment.model.Comment
 import waffle.guam.task.TaskService
+import waffle.guam.thread.ThreadEntity
 import waffle.guam.thread.ThreadRepository
+import waffle.guam.thread.model.ThreadType
 import waffle.guam.user.UserRepository
 import java.time.Instant
 
@@ -34,7 +36,7 @@ class CommentServiceImpl(
     override fun createComment(command: CreateComment): CommentCreated {
         val parentThread = threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException)
 
-        validateCommentCreator(command, parentThread.projectId)
+        validateCommentCreator(command, parentThread)
 
         val user = userRepository.findById(command.userId).orElseThrow(::DataNotFoundException)
 
@@ -70,20 +72,16 @@ class CommentServiceImpl(
             return CommentDeleted(commentId = command.commentId, threadId = it.threadId)
         }
 
-    protected fun validateCommentCreator(command: CreateComment, projectId: Long) {
-        if (taskService.isMemberOrLeader(projectId = projectId, userId = command.userId)) {
+    protected fun validateCommentCreator(command: CreateComment, parentThread: ThreadEntity) {
+        if (taskService.isMemberOrLeader(projectId = parentThread.projectId, userId = command.userId)) {
             return
         }
 
-        if (!taskService.isGuest(projectId = projectId, userId = command.userId)) {
+        if (!taskService.isGuest(projectId = parentThread.projectId, userId = command.userId)) {
             throw NotAllowedException("해당 프로젝트에 댓글을 생성할 권한이 없습니다.")
         }
 
-        val joinRequestThread =
-            threadRepository.findByUserIdAndProjectId(userId = command.userId, projectId = projectId)
-                .orElseThrow(::DataNotFoundException)
-
-        if (joinRequestThread.id != command.threadId) {
+        if (parentThread.type != ThreadType.JOIN.name || parentThread.userId != command.userId) {
             throw NotAllowedException("아직 다른 쓰레드에 댓글을 생성할 권한이 없습니다.")
         }
     }

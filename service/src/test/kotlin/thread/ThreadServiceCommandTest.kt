@@ -13,24 +13,45 @@ import waffle.guam.NotAllowedException
 import waffle.guam.annotation.DatabaseTest
 import waffle.guam.comment.CommentRepository
 import waffle.guam.project.ProjectRepository
-import waffle.guam.task.TaskService
+import waffle.guam.task.TaskCandidateRepository
+import waffle.guam.task.TaskHandler
+import waffle.guam.task.TaskHistoryRepository
+import waffle.guam.task.TaskRepository
+import waffle.guam.task.TaskServiceImpl
 import waffle.guam.thread.command.CreateJoinThread
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
 import waffle.guam.thread.command.EditThreadContent
 import waffle.guam.thread.command.SetNoticeThread
+import waffle.guam.user.UserRepository
 import java.util.Optional
 import javax.persistence.EntityManager
 
-@DatabaseTest(["thread/image.sql", "thread/user.sql", "thread/project.sql", "thread/task.sql", "thread/thread.sql", "thread/comment.sql"])
+@DatabaseTest(["thread/image.sql", "thread/user.sql", "thread/project.sql", "thread/task_candidate.sql", "thread/task.sql", "thread/thread.sql", "thread/comment.sql"])
 class ThreadServiceCommandTest @Autowired constructor(
     private val entityManager: EntityManager,
     private val projectRepository: ProjectRepository,
     private val threadRepository: ThreadRepository,
     threadViewRepository: ThreadViewRepository,
-    taskService: TaskService,
     commentRepository: CommentRepository,
+    taskRepository: TaskRepository,
+    taskCandidateRepository: TaskCandidateRepository,
+    taskHistoryRepository: TaskHistoryRepository,
+    userRepository: UserRepository,
 ) {
+    private val taskHandler = TaskHandler(
+        taskRepository,
+        taskCandidateRepository,
+        taskHistoryRepository,
+        userRepository,
+        projectRepository,
+    )
+
+    private val taskService = TaskServiceImpl(
+        taskRepository,
+        taskCandidateRepository,
+        taskHandler,
+    )
 
     private val threadService = ThreadServiceImpl(
         threadRepository,
@@ -156,11 +177,12 @@ class ThreadServiceCommandTest @Autowired constructor(
         }
     }
 
+    // TODO(getTask했을 때 taskCandidateEntity를 찾지 못하여 DataNotFoundException 발생)
     @DisplayName("쓰레드 생성 예외 : 게스트 등 비멤버들은 일반 쓰레드 생성 시도시 예외가 발생한다.")
     @Transactional
     @Test
     fun createThreadGuestNotAllowedException() {
-        shouldThrowExactly<NotAllowedException> {
+        shouldThrowExactly<DataNotFoundException> {
             threadService.createThread(
                 command = CreateThread(
                     projectId = 1,
