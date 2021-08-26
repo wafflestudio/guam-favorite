@@ -3,8 +3,8 @@ package waffle.guam.user
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.DataNotFoundException
-import waffle.guam.project.model.ProjectState
 import waffle.guam.task.TaskCandidateRepository
+import waffle.guam.task.TaskHistoryRepository
 import waffle.guam.task.TaskRepository
 import waffle.guam.task.TaskSpec
 import waffle.guam.user.command.UpdateUser
@@ -21,6 +21,7 @@ import java.time.Instant
 class UserServiceImpl(
     private val userRepository: UserRepository,
     private val taskRepository: TaskRepository,
+    private val taskHistoryRepository: TaskHistoryRepository,
     private val taskCandidateRepository: TaskCandidateRepository,
 ) : UserService {
     override fun getUserId(firebaseUid: String): Long =
@@ -37,7 +38,8 @@ class UserServiceImpl(
             }
 
     override fun getProjectIds(userId: Long, includeGuest: Boolean): List<Long> =
-        taskRepository.findUserProjectIds(userId = userId, projectStates = ProjectState.activeStates())
+        taskRepository.findAllByUserId(userId = userId)
+            .map { it.project.id }
             .let {
                 if (includeGuest) {
                     it.plus(taskCandidateRepository.findAllByUserId(userId).map { it.project.id })
@@ -78,14 +80,19 @@ class UserServiceImpl(
             DeviceUpdated(userId = userId, fcmToken = fcmToken)
         }
 
-    private fun getProjectInfos(userId: Long): List<UserProject> =
-        taskRepository.findAll(
+    private fun getProjectInfos(userId: Long): List<UserProject> {
+        val userProjects = taskRepository.findAll(
             TaskSpec.run {
                 userIds(listOf(userId))
                     .and(fetchUser())
-                    .and(fetchArchive(ProjectState.archiveStates()))
             }
         ).map {
             UserProject.of(it)
         }
+
+        val userHistoryProjects = taskHistoryRepository.findAllByUserId(userId)
+            .map { UserProject.of(it) }
+
+        return userProjects.plus(userHistoryProjects)
+    }
 }
