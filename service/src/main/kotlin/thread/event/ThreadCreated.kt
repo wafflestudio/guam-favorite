@@ -21,7 +21,7 @@ data class ThreadCreated(
                 projectId = project.id,
                 threadId = threadId,
                 creatorId = command.userId,
-                creatorName = task.user.nickname,
+                creatorName = task.user!!.nickname,
                 content = command.content ?: "이미지 등록",
                 imageFiles = command.imageFiles,
             )

@@ -20,7 +20,7 @@ object TaskSpec {
     }
 
     fun fetchUser(): Specification<TaskEntity> = Specification { root, query, builder: CriteriaBuilder ->
-        root.fetch<TaskEntity, UserEntity>("user", JoinType.INNER).run {
+        root.fetch<TaskEntity, UserEntity>("user", JoinType.LEFT).run {
             fetch<UserEntity, ImageEntity>("image", JoinType.LEFT)
         }
         query.distinct(true)
@@ -32,6 +32,10 @@ object TaskSpec {
             fetch<ProjectEntity, ImageEntity>("thumbnail", JoinType.LEFT)
         }
         builder.conjunction()
+    }
+
+    fun fetchArchive(archiveStates: List<String>): Specification<TaskEntity> = fetchProject().and { root, query, builder: CriteriaBuilder ->
+        root.get<ProjectEntity>("project").get<String>("state").`in`(archiveStates)
     }
 
     fun userIds(userIds: List<Long>): Specification<TaskEntity> = Specification { root, _, builder ->

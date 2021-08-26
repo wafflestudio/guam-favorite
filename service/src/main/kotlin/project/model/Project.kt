@@ -26,61 +26,38 @@ data class Project(
     val designLeftCnt: Int?,
     val createdAt: Instant,
     val modifiedAt: Instant,
-    val leaderProfile: User?
+    val leaderProfile: User?,
 ) {
     companion object {
-
         fun of(
             entity: ProjectEntity,
-            techStacks: List<TechStack>? = null,
-            tasks: List<Task>? = null
+            techStacks: List<TechStack>,
+            tasks: List<Task>,
         ): Project {
-
-            val currLeftCntOf = currLeftCntOf(tasks, entity)
+            val tasksByPosition = Position.values().associateWith { position ->
+                tasks.filter { it.position == position }
+            }
 
             return Project(
                 id = entity.id,
                 title = entity.title,
                 description = entity.description,
-                frontHeadCnt = entity.frontHeadcount,
-                backHeadCnt = entity.backHeadcount,
-                designHeadCnt = entity.designerHeadcount,
+                frontHeadCnt = tasksByPosition[Position.FRONTEND]?.size ?: 0,
+                backHeadCnt = tasksByPosition[Position.BACKEND]?.size ?: 0,
+                designHeadCnt = tasksByPosition[Position.DESIGNER]?.size ?: 0,
                 state = ProjectState.valueOf(entity.state),
                 due = Due.valueOf(entity.due),
                 // thumbnail = TODO("entity.thumbnail?.let { it.toDomain() }"),
                 thumbnail = null,
                 techStacks = techStacks,
-                tasks = tasks,
-                frontLeftCnt = currLeftCntOf?.get(Position.FRONTEND),
-                backLeftCnt = currLeftCntOf?.get(Position.BACKEND),
-                designLeftCnt = currLeftCntOf?.get(Position.DESIGNER),
+                tasks = tasks.filter { it.user != null },
+                frontLeftCnt = tasksByPosition[Position.FRONTEND]?.filter { it.user == null }?.size ?: 0,
+                backLeftCnt = tasksByPosition[Position.BACKEND]?.filter { it.user == null }?.size ?: 0,
+                designLeftCnt = tasksByPosition[Position.DESIGNER]?.filter { it.user == null }?.size ?: 0,
                 createdAt = entity.createdAt,
                 modifiedAt = entity.modifiedAt,
-                leaderProfile = tasks?.singleOrNull {
-                    it.userState == UserState.LEADER
-                }?.user
+                leaderProfile = tasks.singleOrNull { it.userState == UserState.LEADER }?.user
             )
-        }
-
-        private fun currLeftCntOf(tasks: List<Task>?, prj: ProjectEntity): Map<Position, Int>? {
-
-            if (tasks == null) return null
-
-            val res = mutableMapOf(
-                Pair(Position.FRONTEND, prj.frontHeadcount), Pair(Position.BACKEND, prj.backHeadcount), Pair(Position.DESIGNER, prj.designerHeadcount)
-            )
-
-            tasks.filter {
-                it.userState in listOf(UserState.LEADER, UserState.MEMBER)
-            }.map {
-                when (it.position) {
-                    Position.WHATEVER -> 0
-                    Position.DESIGNER -> res[Position.DESIGNER]!!.minus(1)
-                    Position.BACKEND -> res[Position.BACKEND]!!.minus(1)
-                    Position.FRONTEND -> res[Position.FRONTEND]!!.minus(1)
-                }
-            }
-            return res
         }
     }
 }

@@ -150,7 +150,7 @@ class ProjectController(
             SuccessResponse(Unit)
         }
 
-    @PostMapping("/project/edit/{projectId}")
+    @PostMapping("/project/{projectId}/edit")
     fun updateProject(
         @PathVariable projectId: Long,
         updateRequest: UpdateProjectRequest,

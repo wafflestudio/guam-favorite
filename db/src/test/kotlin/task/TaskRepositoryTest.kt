@@ -83,6 +83,37 @@ class TaskRepositoryTest @Autowired constructor(
 
     @Transactional
     @Test
+    fun fetchUserProjectIds() {
+        val result = taskRepository.findUserProjectIds(1, listOf("ONGOING", "RECRUITING"))
+
+        result.size shouldBe 3
+
+        /**
+         * 아이디 목록만 직접 가져오는 한 줄 쿼리
+         */
+    }
+
+    @Transactional
+    @Test
+    fun fetchArchives() {
+        val result = taskRepository.findAll(
+            TaskSpec.run {
+                fetchUser().and(
+                    fetchArchive(listOf("RECRUITING", "ONGOING", "COMPLETED", "PENDING"))
+                )
+            }
+        )
+
+        result.size shouldBe 3
+
+        /**
+         *  fetch prj with state conditions
+         *  한 줄
+         */
+    }
+
+    @Transactional
+    @Test
     fun findByCondition() {
         val result = taskRepository.findAll(TaskSpec.userStates(listOf("MEMBER")))
 

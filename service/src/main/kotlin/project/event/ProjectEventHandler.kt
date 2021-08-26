@@ -9,7 +9,6 @@ import waffle.guam.image.command.DeleteImages
 import waffle.guam.image.model.ImageType
 import waffle.guam.projectstack.ProjectStackService
 import waffle.guam.task.TaskService
-import waffle.guam.task.command.ApplyTask
 import waffle.guam.task.command.CancelTask
 import waffle.guam.task.command.CompleteTask
 import waffle.guam.task.command.CreateProjectTasks
@@ -94,19 +93,5 @@ class ProjectEventHandler(
         logger.info("$event")
 
         taskService.handle(CompleteTask(projectId = event.projectId))
-    }
-
-    @EventListener
-    fun prjJoinRequested(event: ProjectJoinRequested) {
-        logger.info("$event")
-
-        taskService.handle(
-            ApplyTask(
-                userId = event.userId,
-                projectId = event.projectId,
-                position = event.position,
-                introduction = event.introduction
-            )
-        )
     }
 }

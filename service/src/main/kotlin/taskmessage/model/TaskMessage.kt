@@ -12,8 +12,14 @@ data class TaskMessage(
     val modifiedAt: Instant
 ) {
     companion object {
-        fun TaskMessageEntity.toDomain(): TaskMessage {
-            TODO()
-        }
+        fun TaskMessageEntity.toDomain(): TaskMessage =
+            TaskMessage(
+                id = id,
+                msg = msg,
+                status = TaskStatus.valueOf(status),
+                taskId = taskId,
+                createdAt = createdAt,
+                modifiedAt = modifiedAt
+            )
     }
 }
