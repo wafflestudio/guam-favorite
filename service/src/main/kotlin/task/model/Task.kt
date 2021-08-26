@@ -4,6 +4,7 @@ import waffle.guam.task.TaskEntity
 import waffle.guam.task.query.TaskExtraFieldParams
 import waffle.guam.taskmessage.model.TaskMessage
 import waffle.guam.taskmessage.model.TaskMessage.Companion.toDomain
+import waffle.guam.taskmessage.model.TaskStatus
 import waffle.guam.user.model.User
 import java.time.Instant
 
@@ -26,7 +27,7 @@ data class Task(
                 user = user?.let { User.of(it) },
                 userState = userState?.let { UserState.valueOf(it) },
                 taskMessages = when (extraFieldParams.withTaskMsgs) {
-                    true -> taskMessages.map { it.toDomain() }
+                    true -> taskMessages.map { it.toDomain() }.filter { it.status != TaskStatus.DELETED }
                     false -> null
                 },
                 createdAt = createdAt,
