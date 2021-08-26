@@ -14,7 +14,8 @@ interface ProjectRepository : JpaRepository<ProjectEntity, Long>, JpaSpecificati
         "select distinct p from ProjectEntity p left join fetch p.thumbnail i where p.state = 'RECRUITING' and ( " +
             "  p.frontHeadcount - ( select count(*) from TaskEntity t where t.project.id = p.id and t.position = 'FRONTEND' and t.userState in ('MEMBER', 'LEADER') ) = 1 or " +
             "  p.backHeadcount - ( select count(*) from TaskEntity t where t.project.id = p.id and t.position = 'BACKEND' and t.userState in ('MEMBER', 'LEADER') ) = 1 or " +
-            "  p.designerHeadcount - ( select count(*) from TaskEntity t where t.project.id = p.id and t.position = 'DESIGNER' and t.userState in ('MEMBER', 'LEADER') ) = 1  )"
+            "  p.designerHeadcount - ( select count(*) from TaskEntity t where t.project.id = p.id and t.position = 'DESIGNER' and t.userState in ('MEMBER', 'LEADER') ) = 1  )" +
+            "order by p.modifiedAt desc"
     )
     fun imminent(): List<ProjectEntity>
 
