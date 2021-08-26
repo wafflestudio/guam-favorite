@@ -1,6 +1,7 @@
 package waffle.guam.image
 
 import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.services.s3.model.PutObjectRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -23,14 +24,18 @@ class ImageServiceImpl(
         private val imageLocation = Paths.get("image")
     }
 
+    init {
+        Files.createDirectories(imageLocation)
+    }
+
     @Transactional
     override fun createImages(command: CreateImages): ImagesCreated = command.run {
         val images = imageRepository.saveAll(files.indices.map { ImageEntity(type = type.name, parentId = parentId) })
 
         // FIXME: 테스트를 위해 주석처리
-//        images.forEachIndexed { i, image ->
-//            client.putObject(PutObjectRequest(BUCKET_NAME, image.getPath(), files[i].getFile()))
-//        }
+        images.forEachIndexed { i, image ->
+            client.putObject(PutObjectRequest(BUCKET_NAME, image.getPath(), files[i].getFile()))
+        }
 
         ImagesCreated(
             imageIds = images.map { it.id },
