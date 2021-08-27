@@ -1,13 +1,11 @@
 spring.config.import:
   - classpath:application-aws.yml
+  - classpath:application-db.yml
 
 spring:
-#  jpa:
-#    properties:
-#      hibernate:
-#        show_sql: true
+  profiles:
+    active: test
   servlet:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
-

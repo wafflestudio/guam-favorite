@@ -75,7 +75,7 @@ class UserServiceImpl(
     @Transactional
     override fun updateDeviceToken(userId: Long, fcmToken: String): DeviceUpdated =
         userRepository.findById(userId).orElseThrow(::DataNotFoundException).run {
-            this.fcmToken = fcmToken
+            this.device_token = fcmToken
 
             DeviceUpdated(userId = userId, fcmToken = fcmToken)
         }
