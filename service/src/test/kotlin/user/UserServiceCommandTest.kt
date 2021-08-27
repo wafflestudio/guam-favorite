@@ -47,6 +47,6 @@ class UserServiceCommandTest @Autowired constructor(
         event.userId shouldBe 2L
         event.fcmToken shouldBe token
 
-        userRepository.findById(2L).get().fcmToken shouldBe token
+        userRepository.findById(2L).get().device_token shouldBe token
     }
 }
