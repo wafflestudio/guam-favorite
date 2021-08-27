@@ -18,7 +18,7 @@ import javax.persistence.UniqueConstraint
 
 @Table(
     name = "tasks",
-    uniqueConstraints = [UniqueConstraint(name = "task_unique_key", columnNames = ["user_id", "project_id"])]
+    uniqueConstraints = [UniqueConstraint(name = "tasks_unique_key", columnNames = ["user_id", "project_id"])]
 )
 @Entity
 data class TaskEntity(

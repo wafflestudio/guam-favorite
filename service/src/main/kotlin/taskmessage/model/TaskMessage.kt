@@ -15,7 +15,7 @@ data class TaskMessage(
         fun TaskMessageEntity.toDomain(): TaskMessage =
             TaskMessage(
                 id = id,
-                msg = msg,
+                msg = content,
                 status = TaskStatus.valueOf(status),
                 taskId = taskId,
                 createdAt = createdAt,

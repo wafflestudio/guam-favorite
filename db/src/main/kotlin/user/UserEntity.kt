@@ -23,8 +23,7 @@ data class UserEntity(
     @Column
     val firebaseUid: String,
 
-    @Column(name = "device_token")
-    var fcmToken: String? = null,
+    var device_token: String? = null,
 
     var nickname: String = "",
 

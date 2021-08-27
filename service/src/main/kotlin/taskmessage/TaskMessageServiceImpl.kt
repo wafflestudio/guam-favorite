@@ -38,7 +38,7 @@ class TaskMessageServiceImpl(
         taskMessageRepository.findById(command.taskMessageId).orElseThrow(::DataNotFoundException).let {
             taskMessageRepository.save(
                 it.copy(
-                    msg = command.messageContent ?: it.msg,
+                    content = command.messageContent ?: it.content,
                     status = command.status?.name ?: it.status
                 )
             )

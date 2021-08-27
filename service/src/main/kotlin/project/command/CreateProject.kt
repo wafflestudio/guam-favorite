@@ -25,7 +25,7 @@ data class CreateProject(
             throw InvalidRequestException("TODO")
         }
 
-        if (myPosition == null || myPosition == Position.WHATEVER)
+        if (myPosition == null)
             throw InvalidRequestException("포지션을 입력해주세요")
     }
 
