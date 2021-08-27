@@ -11,7 +11,7 @@ data class CreateTaskMessage(
 ) : TaskMessageCommand {
     fun toEntity(): TaskMessageEntity =
         TaskMessageEntity(
-            msg = messageContent,
+            content = messageContent,
             status = status.name,
             taskId = taskId
         )

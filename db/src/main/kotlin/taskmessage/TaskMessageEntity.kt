@@ -7,7 +7,7 @@ import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.Table
 
-@Table(name = "task_msg")
+@Table(name = "task_messages")
 @Entity
 data class TaskMessageEntity(
     @Id
@@ -16,7 +16,7 @@ data class TaskMessageEntity(
 
     val taskId: Long,
 
-    val msg: String = "New task msg",
+    val content: String = "New task msg",
 
     var status: String,
 

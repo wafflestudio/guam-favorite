@@ -45,5 +45,4 @@ data class ProjectEntity(
 
     @OneToMany
     val tasks: Set<TaskEntity> = emptySet()
-
 )
