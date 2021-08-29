@@ -31,17 +31,14 @@ class UserEventHandler(
 
         when (e.image == null) {
             true -> {
-                userRepository.findById(e.userId).get().image = null
                 imageService.deleteImages(
                     command = DeleteImages.ByParentId(parentId = e.userId, imageType = ImageType.PROFILE)
                 )
             }
             false -> {
-                val event = imageService.createImages(
+                imageService.createImages(
                     command = CreateImages(files = listOf(e.image), type = ImageType.PROFILE, parentId = e.userId)
                 )
-                userRepository.findById(e.userId).get().image =
-                    imageRepository.findById(event.imageIds.first()).get()
             }
         }
     }
