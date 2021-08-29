@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.annotation.DatabaseTest
 import waffle.guam.task.TaskCandidateRepository
+import waffle.guam.task.TaskHistoryRepository
 import waffle.guam.task.TaskRepository
 import waffle.guam.user.command.UpdateUser
 
@@ -14,8 +15,9 @@ class UserServiceCommandTest @Autowired constructor(
     private val userRepository: UserRepository,
     taskRepository: TaskRepository,
     taskCandidateRepository: TaskCandidateRepository,
+    taskHistoryRepository: TaskHistoryRepository
 ) {
-    private val userService = UserServiceImpl(userRepository, taskRepository, taskCandidateRepository)
+    private val userService = UserServiceImpl(userRepository, taskRepository, taskHistoryRepository, taskCandidateRepository)
 
     @Transactional
     @Test

@@ -6,84 +6,75 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.annotation.DatabaseTest
+import waffle.guam.comment.CommentRepository
 import waffle.guam.project.command.UpdateProject
 import waffle.guam.project.model.ProjectState
-import waffle.guam.projectstack.ProjectStackService
-import waffle.guam.task.TaskService
-import waffle.guam.task.command.AcceptTask
-import waffle.guam.task.command.DeclineTask
-import waffle.guam.task.command.LeaveTask
-import waffle.guam.task.model.UserState
-import waffle.guam.task.query.SearchTask
+import waffle.guam.projectstack.PrjStackServiceImpl
+import waffle.guam.projectstack.ProjectStackRepository
+import waffle.guam.stack.StackRepository
+import waffle.guam.task.TaskCandidateRepository
+import waffle.guam.task.TaskHandler
+import waffle.guam.task.TaskHistoryRepository
+import waffle.guam.task.TaskRepository
+import waffle.guam.task.TaskServiceImpl
+import waffle.guam.thread.ThreadRepository
 import waffle.guam.thread.ThreadServiceImpl
+import waffle.guam.thread.ThreadViewRepository
+import waffle.guam.user.UserRepository
 
-@DatabaseTest(["project/image.sql", "project/project.sql", "project/user.sql", "project/task.sql", "project/projectStack.sql"])
+@DatabaseTest(["project/image.sql", "project/project.sql", "project/stack.sql", "project/user.sql", "project/task.sql", "project/projectStack.sql"])
 class ProjectServiceCommandTest @Autowired constructor(
-    private val projectStackService: ProjectStackService,
-    private val taskService: TaskService,
-    private val threadService: ThreadServiceImpl,
-    private val projectRepository: ProjectRepository
+    private val taskRepository: TaskRepository,
+    private val taskCandidateRepository: TaskCandidateRepository,
+    private val taskHistoryRepository: TaskHistoryRepository,
+    private val userRepository: UserRepository,
+    private val projectRepository: ProjectRepository,
+    private val threadRepository: ThreadRepository,
+    private val threadViewRepository: ThreadViewRepository,
+    private val commentRepository: CommentRepository,
+    private val projectStackRepository: ProjectStackRepository,
+    private val stackRepository: StackRepository
 ) {
 
-    val projectService: ProjectService = ProjectServiceImpl(
+    private val taskHandler = TaskHandler(
+        taskRepository,
+        taskCandidateRepository,
+        taskHistoryRepository,
+        userRepository,
+        projectRepository,
+    )
+
+    private val taskService = TaskServiceImpl(
+        taskRepository,
+        taskCandidateRepository,
+        taskHandler,
+    )
+
+    private val threadService = ThreadServiceImpl(
+        threadRepository,
+        threadViewRepository,
+        projectRepository,
+        taskService,
+        commentRepository
+    )
+
+    private val projectStackService = PrjStackServiceImpl(
+        projectStackRepository,
+        stackRepository
+    )
+
+    private val projectService: ProjectService = ProjectServiceImpl(
         projectStackService, taskService, threadService, projectRepository
     )
 
-    @DisplayName("프로젝트 나가기")
-    @Transactional
-    @Test
-    fun leaveProject() {
-
-        val event = taskService.handle(
-            command = LeaveTask(
-                2, 1
-            )
-        )
-
-        val tasks = taskService.getTasks(
-            command = SearchTask.taskQuery().projectIds(1)
-        )
-
-        tasks.size shouldBe 2
-    }
-
-    @DisplayName("프로젝트 승인")
-    @Transactional
-    @Test
-    fun acceptOrNot() {
-
-        val event = taskService.handle(
-            command = AcceptTask(
-                1, 2, 1
-            )
-        )
-
-        val task = taskService.getTask(
-            command = SearchTask.taskQuery().userIds(2)
-        )
-
-        task.userState shouldBe UserState.MEMBER
-        // TODO offset 이해가 아직 안됨..ㅜ
-    }
-
-    @DisplayName("프로젝트 반려")
-    @Transactional
-    @Test
-    fun accept_Not() {
-
-        val event = taskService.handle(
-            command = DeclineTask(
-                1, 2, 1
-            )
-        )
-
-        val task = taskService.getTask(
-            command = SearchTask.taskQuery().projectIds(1).userIds(2)
-        )
-
-        // FIXME
-        //  task.userState shouldBe UserState.DECLINED
-    }
+    /**
+     * Note
+     * 대수술 이후
+     * 승인 및 반려, 나가기 등  작업은 task 도메인으로 움직인 듯 보입니다.
+     * 그런고로,, prj 도메인에서는 테스트를 포기하겠습니다..
+     * 믿습니다.
+     * (머지 승인 후 삭제 요망)
+     */
 
     @DisplayName("프로젝트 업데이트")
     @Transactional
