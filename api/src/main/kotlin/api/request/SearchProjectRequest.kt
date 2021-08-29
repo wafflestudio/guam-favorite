@@ -5,13 +5,13 @@ import waffle.guam.project.model.Due
 import waffle.guam.task.model.Position
 
 data class SearchProjectRequest(
-    val query: String,
+    val keyword: String,
     val due: Due?,
     val stackId: Long?,
     val position: Position?
 ) {
     fun toCommand(): SearchProject =
         SearchProject(
-            query, due, stackId, position
+            keyword, due, stackId, position
         )
 }
