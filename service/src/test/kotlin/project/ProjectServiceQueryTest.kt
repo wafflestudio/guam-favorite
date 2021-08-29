@@ -9,20 +9,65 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.annotation.DatabaseTest
+import waffle.guam.comment.CommentRepository
 import waffle.guam.project.command.SearchProject
 import waffle.guam.project.model.Due
-import waffle.guam.projectstack.ProjectStackService
-import waffle.guam.task.TaskService
+import waffle.guam.projectstack.PrjStackServiceImpl
+import waffle.guam.projectstack.ProjectStackRepository
+import waffle.guam.stack.StackRepository
+import waffle.guam.task.TaskCandidateRepository
+import waffle.guam.task.TaskHandler
+import waffle.guam.task.TaskHistoryRepository
+import waffle.guam.task.TaskRepository
+import waffle.guam.task.TaskServiceImpl
+import waffle.guam.thread.ThreadRepository
+import waffle.guam.thread.ThreadServiceImpl
+import waffle.guam.thread.ThreadViewRepository
+import waffle.guam.user.UserRepository
 
-@DatabaseTest(["project/image.sql", "project/project.sql", "project/user.sql", "project/task.sql", "project/projectStack.sql"])
+@DatabaseTest(["project/image.sql", "project/project.sql", "project/stack.sql", "project/user.sql", "project/task.sql", "project/projectStack.sql"])
 class ProjectServiceQueryTest @Autowired constructor(
-    private val projectStackService: ProjectStackService,
-    private val taskService: TaskService,
-    private val projectRepository: ProjectRepository
+    private val taskRepository: TaskRepository,
+    private val taskCandidateRepository: TaskCandidateRepository,
+    private val taskHistoryRepository: TaskHistoryRepository,
+    private val userRepository: UserRepository,
+    private val projectRepository: ProjectRepository,
+    private val threadRepository: ThreadRepository,
+    private val threadViewRepository: ThreadViewRepository,
+    private val commentRepository: CommentRepository,
+    private val projectStackRepository: ProjectStackRepository,
+    private val stackRepository: StackRepository
 ) {
 
-    val projectService: ProjectService = ProjectServiceImpl(
-        projectStackService, taskService, projectRepository
+    private val taskHandler = TaskHandler(
+        taskRepository,
+        taskCandidateRepository,
+        taskHistoryRepository,
+        userRepository,
+        projectRepository,
+    )
+
+    private val taskService = TaskServiceImpl(
+        taskRepository,
+        taskCandidateRepository,
+        taskHandler,
+    )
+
+    private val threadService = ThreadServiceImpl(
+        threadRepository,
+        threadViewRepository,
+        projectRepository,
+        taskService,
+        commentRepository
+    )
+
+    private val projectStackService = PrjStackServiceImpl(
+        projectStackRepository,
+        stackRepository
+    )
+
+    private val projectService: ProjectService = ProjectServiceImpl(
+        projectStackService, taskService, threadService, projectRepository
     )
 
     @DisplayName("프로젝트 단순 조회")
@@ -114,6 +159,6 @@ class ProjectServiceQueryTest @Autowired constructor(
             PageRequest.of(0, 20, Sort.by("modifiedAt").descending())
         )
 
-        result.toList()[0].id shouldBe 3L
+        result.toList()[0].id shouldBe 2L
     }
 }

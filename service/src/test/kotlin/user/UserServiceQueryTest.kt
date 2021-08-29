@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.FeatureSpec
 import io.kotest.matchers.shouldBe
 import waffle.guam.annotation.DatabaseTest
 import waffle.guam.task.TaskCandidateRepository
+import waffle.guam.task.TaskHistoryRepository
 import waffle.guam.task.TaskRepository
 import waffle.guam.user.command.UserExtraInfo
 
@@ -12,8 +13,9 @@ class UserServiceQueryTest(
     userRepository: UserRepository,
     taskRepository: TaskRepository,
     taskCandidateRepository: TaskCandidateRepository,
+    taskHistoryRepository: TaskHistoryRepository
 ) : FeatureSpec() {
-    private val userService = UserServiceImpl(userRepository, taskRepository, taskCandidateRepository)
+    private val userService = UserServiceImpl(userRepository, taskRepository, taskHistoryRepository, taskCandidateRepository)
 
     init {
         feature("유저 조회") {

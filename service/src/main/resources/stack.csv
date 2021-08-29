@@ -19,7 +19,7 @@ Ionic;"Ionic, 아이오닉, 모바일";FRONTEND
 Xamarin;"Xamarin, 자마린, 모바일";FRONTEND
 Django;"Django, 장고";BACKEND
 Spring;"Spring, 스프링, 스프링부트, java, kotlin";BACKEND
-NET Core;".NET, Core, ASP, 닷넷, 코어, C#";BACKEND
+.NET Core;".NET, Core, ASP, 닷넷, 코어, C#";BACKEND
 Ruby on Rails;"Ruby on Rails, ROR, Ruby, 루비, 레일즈";BACKEND
 Express;"Express, Express.js, 익스프레스";BACKEND
 Nest;"Nest, Nest.js, NestJS, js, 네스트";BACKEND
