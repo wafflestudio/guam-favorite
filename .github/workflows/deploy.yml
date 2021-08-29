@@ -1,0 +1,39 @@
+# This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
+
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+          cache: gradle
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Build Docker image with Gradle
+        run: ./gradlew :api:buildDocker
+      - name: Push Docker image with Gradle
+        run: ./gradlew :api:pushDocker
+
+
+  deploy:
+
+    runs-on: [ self-hosted, guam ]
+
+    steps:
+      - name: Docker run
+        run: |
+          docker pull pfcjeong/waffle-guam-server:latest
+          ~/deploy.sh
