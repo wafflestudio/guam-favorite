@@ -1,6 +1,7 @@
 package waffle.guam.project.model
 
 import waffle.guam.image.model.Image
+import waffle.guam.image.model.Image.Companion.toDomain
 import waffle.guam.project.ProjectEntity
 import waffle.guam.stack.model.TechStack
 import waffle.guam.task.model.Position
@@ -51,7 +52,7 @@ data class Project(
                 state = ProjectState.valueOf(entity.state),
                 due = Due.valueOf(entity.due),
                 // thumbnail = TODO("entity.thumbnail?.let { it.toDomain() }"),
-                thumbnail = null,
+                thumbnail = entity.thumbnail?.toDomain(),
                 techStacks = techStacks,
                 tasks = tasks.filter { it.user != null },
                 frontLeftCnt = tasksByPosition[Position.FRONTEND]?.filter { it.user == null }?.size ?: 0,
