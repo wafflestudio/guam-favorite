@@ -81,7 +81,7 @@ class ProjectServiceCommandTest @Autowired constructor(
     @Test
     fun update() {
 
-        val event = projectService.updateProject(
+        projectService.updateProject(
             command = UpdateProject(
                 title = "엄",
                 description = "기본값 설정 해둘걸",
@@ -108,7 +108,7 @@ class ProjectServiceCommandTest @Autowired constructor(
     @Test
     fun delete() {
 
-        val event = projectService.deleteProject(1, 1)
+        projectService.deleteProject(1, 1)
 
         val res = projectService.getProject(1)
 
