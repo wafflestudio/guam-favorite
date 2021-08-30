@@ -24,6 +24,11 @@ jobs:
         run: chmod +x gradlew
       - name: Build Docker image with Gradle
         run: ./gradlew :api:buildDocker
+      - name: Login to Docker registry first
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Push Docker image with Gradle
         run: ./gradlew :api:pushDocker
 
