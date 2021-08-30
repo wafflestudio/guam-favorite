@@ -1,6 +1,7 @@
 package waffle.guam.image
 
 import com.amazonaws.services.s3.AmazonS3Client
+import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -39,7 +40,10 @@ class ImageServiceImpl(
 
         // FIXME: 테스트를 위해 주석처리
         images.forEachIndexed { i, image ->
-            client.putObject(PutObjectRequest(BUCKET_NAME, image.getPath(), files[i].getFile()))
+            client.putObject(
+                PutObjectRequest(BUCKET_NAME, image.getPath(), files[i].getFile())
+                    .withCannedAcl(CannedAccessControlList.PublicRead)
+            )
         }
 
         images.forEach {
@@ -86,7 +90,7 @@ class ImageServiceImpl(
             ImagesDeleted(imageIds = images.map { it.id })
         }
 
-    private fun ImageEntity.getPath() = "REFACTOR/$type/$id"
+    private fun ImageEntity.getPath() = "$type/$id"
 
     private fun MultipartFile.getFile(): File = inputStream.use { inputStream ->
         imageLocation.resolve(originalFilename).let {

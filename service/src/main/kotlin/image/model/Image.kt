@@ -10,7 +10,7 @@ data class Image(
         fun ImageEntity.toDomain(): Image =
             Image(
                 id = id,
-                path = "REFACTOR/$type/$id"
+                path = "$type/$id"
             )
     }
 }
