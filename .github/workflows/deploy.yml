@@ -39,6 +39,7 @@ jobs:
 
     steps:
       - name: Docker run
-        run: docker pull pfcjeong/waffle-guam-server:latest
+        run: |
+            docker pull pfcjeong/waffle-guam-server:latest
             ./deploy.sh
         working-directory: /~
