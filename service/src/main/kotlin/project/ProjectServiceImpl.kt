@@ -22,7 +22,6 @@ import waffle.guam.projectstack.util.SearchEngine
 import waffle.guam.task.TaskService
 import waffle.guam.task.model.Position
 import waffle.guam.task.model.PositionQuota
-import waffle.guam.task.model.Task.Companion.toDomain
 import waffle.guam.task.query.SearchTask.Companion.taskQuery
 import waffle.guam.task.query.TaskExtraFieldParams
 import waffle.guam.thread.ThreadServiceImpl
@@ -102,6 +101,10 @@ class ProjectServiceImpl(
                         .sortedBy { -it.second }
                         .map { it.first }.toList()
 
+                val filteredTasks =
+                    taskService.getTasks(taskQuery().projectIds(filteredProjects.map { it.id }))
+                        .groupBy { it.projectId }
+
                 return PageImpl(
                     filteredProjects.map { prj ->
                         Project.of(
@@ -110,7 +113,7 @@ class ProjectServiceImpl(
                             prjStacks[prj.id]!!
                                 .map { prjStack -> prjStack.stack },
                             tasks =
-                            prj.tasks.map { it.toDomain() }
+                            filteredTasks[prj.id]!!
                         )
                     }
                 )
@@ -119,9 +122,30 @@ class ProjectServiceImpl(
     fun buildSearch(due: Due?, position: Position?, pageable: Pageable) =
 
         position?.let {
-            due?.let { projectRepository.search(due.name, position.name) } ?: projectRepository.search(position.name)
+            due?.let {
+                /**
+                 *  due & position both are used
+                 */
+                projectRepository.search(due.name, position.name)
+            }
+
+                /**
+                 *  only position is used
+                 */
+                ?: projectRepository.search(position.name)
         }
-            ?: due?.let { projectRepository.findAll(ProjectSpec.search(it.name), pageable) } ?: projectRepository.findAll(pageable)
+            ?: due?.let {
+
+                /**
+                 *  only due is are used
+                 */
+                projectRepository.findAll(ProjectSpec.search(it.name), pageable)
+            }
+
+            /**
+             *  nothing is used
+             */
+            ?: projectRepository.findAll(pageable)
 
     @Transactional
     override fun createProject(command: CreateProject, userId: Long): ProjectCreated {

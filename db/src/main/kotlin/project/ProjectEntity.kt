@@ -1,14 +1,12 @@
 package waffle.guam.project
 
 import waffle.guam.image.ImageEntity
-import waffle.guam.task.TaskEntity
 import java.time.Instant
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
 import javax.persistence.JoinColumn
-import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
 
@@ -43,6 +41,4 @@ data class ProjectEntity(
     @JoinColumn(name = "thumbnail_id")
     var thumbnail: ImageEntity? = null,
 
-    @OneToMany
-    val tasks: Set<TaskEntity> = emptySet()
 )
