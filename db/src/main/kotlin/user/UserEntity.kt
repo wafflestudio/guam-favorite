@@ -4,6 +4,7 @@ import waffle.guam.image.ImageEntity
 import java.time.Instant
 import javax.persistence.Column
 import javax.persistence.Entity
+import javax.persistence.ForeignKey
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
@@ -36,7 +37,7 @@ data class UserEntity(
     var introduction: String? = null,
 
     @OneToOne
-    @JoinColumn(name = "image_id")
+    @JoinColumn(name = "image_id", foreignKey = ForeignKey(name = "none"))
     var image: ImageEntity? = null,
 
     var status: String,
