@@ -62,7 +62,6 @@ class PrjRepositoryTest @Autowired constructor(
             println(it.frontHeadcount)
             println(it.backHeadcount)
             println(it.designerHeadcount)
-            println(it.tasks)
         }
         println("******************************")
     }
