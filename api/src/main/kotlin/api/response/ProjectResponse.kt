@@ -1,12 +1,10 @@
 package waffle.guam.api.response
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import waffle.guam.image.model.Image
 import waffle.guam.project.model.Due
 import waffle.guam.project.model.Project
 import waffle.guam.project.model.ProjectState
-import waffle.guam.stack.model.TechStack
-import waffle.guam.task.model.Task
-import waffle.guam.thread.model.ThreadOverView
 import java.time.Instant
 
 data class ProjectResponse(
@@ -19,15 +17,17 @@ data class ProjectResponse(
     val state: ProjectState,
     val due: Due,
     val thumbnail: Image?,
-    val techStacks: List<TechStack>?,
-    val tasks: List<Task>?,
+    val techStacks: List<TechStackResponse>?,
+    val tasks: List<TaskResponse>?,
     val frontLeftCnt: Int?,
     val backLeftCnt: Int?,
     val designLeftCnt: Int?,
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "Asia/Seoul")
     val createdAt: Instant,
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "Asia/Seoul")
     val modifiedAt: Instant,
     val leaderProfile: UserResponse?,
-    val noticeThread: ThreadOverView?
+    val noticeThread: ThreadOverViewResponse?,
 ) {
     companion object {
         fun of(d: Project) = ProjectResponse(
@@ -40,15 +40,15 @@ data class ProjectResponse(
             state = d.state,
             due = d.due,
             thumbnail = d.thumbnail,
-            techStacks = d.techStacks,
-            tasks = d.tasks,
+            techStacks = d.techStacks?.map { TechStackResponse.of(it) },
+            tasks = d.tasks?.map { TaskResponse.of(it) },
             frontLeftCnt = d.frontLeftCnt,
             backLeftCnt = d.backLeftCnt,
             designLeftCnt = d.designLeftCnt,
             createdAt = d.createdAt,
             modifiedAt = d.modifiedAt,
             leaderProfile = d.leaderProfile?.let { UserResponse.of(it) },
-            noticeThread = d.noticeThread
+            noticeThread = d.noticeThread?.let { ThreadOverViewResponse.of(it) }
         )
     }
 }

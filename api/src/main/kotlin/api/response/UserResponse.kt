@@ -1,5 +1,6 @@
 package waffle.guam.api.response
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import waffle.guam.user.model.User
 import waffle.guam.user.model.UserProject
 import waffle.guam.user.model.UserStatus
@@ -15,7 +16,9 @@ data class UserResponse(
     val blogUrl: String?,
     val introduction: String?,
     val projects: List<UserProject>?,
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "Asia/Seoul")
     val createdAt: Instant,
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "Asia/Seoul")
     val updatedAt: Instant,
     val isProfileSet: Boolean
 ) {
