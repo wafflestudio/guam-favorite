@@ -26,6 +26,7 @@ import waffle.guam.thread.event.ThreadDeleted
 import waffle.guam.thread.model.ThreadDetail
 import waffle.guam.thread.model.ThreadInfo
 import waffle.guam.thread.model.ThreadOverView
+import waffle.guam.thread.model.ThreadType
 import java.time.Instant
 
 @Service
@@ -105,6 +106,9 @@ class ThreadServiceImpl(
             }
             if (it.content == command.content) {
                 throw InvalidRequestException("수정 전과 동일한 내용입니다.")
+            }
+            if (command.content.isEmpty() && it.type == ThreadType.JOIN.name) {
+                throw InvalidRequestException("참가 신청서는 내용이 비어있을 수 없습니다.")
             }
 
             val editedThread = threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))

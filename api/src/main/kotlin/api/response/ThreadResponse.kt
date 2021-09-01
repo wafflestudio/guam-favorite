@@ -1,6 +1,6 @@
 package waffle.guam.api.response
 
-import waffle.guam.comment.model.Comment
+import com.fasterxml.jackson.annotation.JsonFormat
 import waffle.guam.image.model.Image
 import waffle.guam.thread.model.ThreadDetail
 import waffle.guam.thread.model.ThreadOverView
@@ -17,8 +17,10 @@ data class ThreadOverViewResponse(
     val commentSize: Long,
     val threadImages: List<Image>,
     val type: ThreadType,
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "Asia/Seoul")
     val createdAt: Instant,
-    val modifiedAt: Instant
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "Asia/Seoul")
+    val modifiedAt: Instant,
 ) {
     companion object {
         fun of(e: ThreadOverView) = ThreadOverViewResponse(
@@ -46,8 +48,10 @@ data class ThreadDetailResponse(
     val creatorImageUrl: String?,
     val threadImages: List<Image>,
     val type: ThreadType,
-    val comments: List<Comment>,
+    val comments: List<CommentResponse>,
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "Asia/Seoul")
     val createdAt: Instant,
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ", timezone = "Asia/Seoul")
     val modifiedAt: Instant,
 ) {
     companion object {
@@ -60,7 +64,7 @@ data class ThreadDetailResponse(
             creatorImageUrl = e.creatorImageUrl,
             threadImages = e.threadImages,
             type = e.type,
-            comments = e.comments,
+            comments = e.comments.map { CommentResponse.of(it) },
             createdAt = e.createdAt,
             modifiedAt = e.modifiedAt
         )
