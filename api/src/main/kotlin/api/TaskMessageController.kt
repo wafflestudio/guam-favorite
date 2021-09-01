@@ -40,10 +40,12 @@ class TaskMessageController(
     @PutMapping("/taskMsg/{taskMessageId}")
     fun updateTaskMsg(
         @PathVariable taskMessageId: Long,
-        @RequestBody updateTaskMsgInput: UpdateTaskMessageInput
+        @RequestBody updateTaskMsgInput: UpdateTaskMessageInput,
+        userContext: UserContext
     ): SuccessResponse<Unit> =
         taskMessageService.updateTaskMessage(
             command = UpdateTaskMessage(
+                userId = userContext.id,
                 taskMessageId = taskMessageId,
                 messageContent = updateTaskMsgInput.msg,
                 status = updateTaskMsgInput.status,

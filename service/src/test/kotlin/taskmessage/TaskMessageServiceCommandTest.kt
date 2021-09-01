@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
+import waffle.guam.InvalidRequestException
 import waffle.guam.NotAllowedException
 import waffle.guam.annotation.DatabaseTest
 import waffle.guam.task.TaskRepository
@@ -68,12 +69,12 @@ class TaskMessageServiceCommandTest @Autowired constructor(
         }
     }
 
-    // TODO(게스트도 자유롭게 기존 작업현황 수정 가능한 상황. DONE으로든 DELETED으로든 전부 수정 가능?)
-    @DisplayName("작업현황 수정 : 누구나 기존 작업현황의 내용과 상태를 수정할 수 있다.")
+    @DisplayName("작업현황 수정 : 자신의 기존 작업현황의 내용과 상태를 수정할 수 있다.")
     @Transactional
     @Test
     fun updateTaskMessageOK() {
         val command = UpdateTaskMessage(
+            userId = 1,
             taskMessageId = 1,
             messageContent = "task 10의 완료된 작업현황 - 수정본",
             status = TaskStatus.ONGOING
@@ -96,6 +97,38 @@ class TaskMessageServiceCommandTest @Autowired constructor(
         updatedTaskMessage.taskId shouldBe 10
         updatedTaskMessage.content shouldBe "task 10의 완료된 작업현황 - 수정본"
         updatedTaskMessage.status shouldBe TaskStatus.ONGOING.name
+    }
+
+    @DisplayName("작업현황 수정 예외 : 타인의 기존 작업현황의 내용과 상태를 수정할 수 없다.")
+    @Transactional
+    @Test
+    fun updateTaskMessageNotAllowedException() {
+        shouldThrowExactly<NotAllowedException> {
+            taskMessageService.updateTaskMessage(
+                command = UpdateTaskMessage(
+                    userId = 9999,
+                    taskMessageId = 1,
+                    messageContent = "타인의 작업현황 수정 시도",
+                    status = TaskStatus.DONE
+                )
+            )
+        }
+    }
+
+    @DisplayName("작업현황 수정 예외 : 기존 작업현황의 내용과 동일하면 수정될 수 없다.")
+    @Transactional
+    @Test
+    fun updateTaskMessageInvalidRequestException() {
+        shouldThrowExactly<InvalidRequestException> {
+            taskMessageService.updateTaskMessage(
+                command = UpdateTaskMessage(
+                    userId = 1,
+                    taskMessageId = 1,
+                    messageContent = "task 10의 완료된 작업현황",
+                    status = TaskStatus.DONE
+                )
+            )
+        }
     }
 
     @DisplayName("작업현황 삭제 : 본인에 대해 생성한 작업현황을 본인은 삭제할 수 있다.")
