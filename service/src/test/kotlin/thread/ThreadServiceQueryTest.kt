@@ -1,8 +1,9 @@
 package waffle.guam.thread
 
+import com.amazonaws.services.s3.AmazonS3Client
 import io.kotest.matchers.comparables.shouldBeLessThan
-import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,6 +12,8 @@ import org.springframework.data.domain.Sort
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.annotation.DatabaseTest
 import waffle.guam.comment.CommentRepository
+import waffle.guam.image.ImageRepository
+import waffle.guam.image.ImageServiceImpl
 import waffle.guam.project.ProjectRepository
 import waffle.guam.task.TaskCandidateRepository
 import waffle.guam.task.TaskHandler
@@ -29,7 +32,17 @@ class ThreadServiceQueryTest @Autowired constructor(
     taskCandidateRepository: TaskCandidateRepository,
     taskHistoryRepository: TaskHistoryRepository,
     userRepository: UserRepository,
+    imageRepository: ImageRepository,
 ) {
+    private val mockAwsClient: AmazonS3Client = mockk()
+
+    private val imageService = ImageServiceImpl(
+        imageRepository = imageRepository,
+        projectRepository = projectRepository,
+        userRepository = userRepository,
+        client = mockAwsClient
+    )
+
     private val taskHandler = TaskHandler(
         taskRepository,
         taskCandidateRepository,
@@ -49,21 +62,9 @@ class ThreadServiceQueryTest @Autowired constructor(
         threadViewRepository,
         projectRepository,
         taskService,
-        commentRepository
+        commentRepository,
+        imageService,
     )
-
-    @DisplayName("쓰레드 단순 조회 : 쓰레드 테이블의 정보만 조회한다.")
-    @Transactional
-    @Test
-    fun getThreadOK() {
-        val result = threadService.getThread(1L)
-
-        result.id shouldBe 1L
-        result.content shouldBe "쓰레드 내용 1"
-        result.isEdited shouldBe false
-        result.creatorId shouldBe 1
-        result.createdAt shouldBeLessThanOrEqualTo result.modifiedAt
-    }
 
     @DisplayName("복수 쓰레드 조회 : 프로젝트에 달린 일부 쓰레드들의 정보만 조회한다.")
     @Transactional

@@ -8,12 +8,15 @@ import waffle.guam.DataNotFoundException
 import waffle.guam.InvalidRequestException
 import waffle.guam.NotAllowedException
 import waffle.guam.comment.CommentRepository
+import waffle.guam.image.ImageService
+import waffle.guam.image.command.DeleteImages
 import waffle.guam.project.ProjectRepository
 import waffle.guam.task.TaskService
 import waffle.guam.task.query.SearchTask
 import waffle.guam.thread.command.CreateJoinThread
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
+import waffle.guam.thread.command.DeleteThreadImage
 import waffle.guam.thread.command.EditJoinThreadType
 import waffle.guam.thread.command.EditThreadContent
 import waffle.guam.thread.command.SetNoticeThread
@@ -23,8 +26,8 @@ import waffle.guam.thread.event.NoticeThreadSet
 import waffle.guam.thread.event.ThreadContentEdited
 import waffle.guam.thread.event.ThreadCreated
 import waffle.guam.thread.event.ThreadDeleted
+import waffle.guam.thread.event.ThreadImageDeleted
 import waffle.guam.thread.model.ThreadDetail
-import waffle.guam.thread.model.ThreadInfo
 import waffle.guam.thread.model.ThreadOverView
 import waffle.guam.thread.model.ThreadType
 import java.time.Instant
@@ -36,12 +39,8 @@ class ThreadServiceImpl(
     private val projectRepository: ProjectRepository,
     private val taskService: TaskService,
     private val commentRepository: CommentRepository,
+    private val imageService: ImageService,
 ) : ThreadService {
-
-    override fun getThread(threadId: Long): ThreadInfo =
-        threadRepository.findById(threadId).orElseThrow(::DataNotFoundException).let {
-            ThreadInfo.of(it)
-        }
 
     override fun getThreads(projectId: Long, pageable: Pageable): Page<ThreadOverView> =
         threadViewRepository.findByProjectId(projectId, pageable).map {
@@ -120,6 +119,18 @@ class ThreadServiceImpl(
         threadRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::DataNotFoundException).let {
             threadRepository.save(it.copy(type = command.type.name, modifiedAt = Instant.now()))
             return JoinThreadTypeEdited(it.id, command.type)
+        }
+
+    @Transactional
+    override fun deleteThreadImage(command: DeleteThreadImage): ThreadImageDeleted =
+        threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
+            if (it.userId != command.userId) {
+                throw NotAllowedException("타인이 업로드한 이미지를 삭제할 수는 없습니다.")
+            }
+
+            imageService.deleteImages(DeleteImages.ById(listOf(command.imageId)))
+
+            return ThreadImageDeleted(threadId = it.id, deletedImageId = command.imageId, projectId = it.projectId)
         }
 
     @Transactional

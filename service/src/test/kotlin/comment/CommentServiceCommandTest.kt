@@ -1,8 +1,10 @@
 package waffle.guam.comment
 
+import com.amazonaws.services.s3.AmazonS3Client
 import io.kotest.assertions.throwables.shouldThrowExactly
 import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,6 +16,8 @@ import waffle.guam.annotation.DatabaseTest
 import waffle.guam.comment.command.CreateComment
 import waffle.guam.comment.command.DeleteComment
 import waffle.guam.comment.command.EditCommentContent
+import waffle.guam.image.ImageRepository
+import waffle.guam.image.ImageServiceImpl
 import waffle.guam.project.ProjectRepository
 import waffle.guam.task.TaskCandidateRepository
 import waffle.guam.task.TaskHandler
@@ -33,7 +37,17 @@ class CommentServiceCommandTest @Autowired constructor(
     taskRepository: TaskRepository,
     taskCandidateRepository: TaskCandidateRepository,
     taskHistoryRepository: TaskHistoryRepository,
+    imageRepository: ImageRepository,
 ) {
+    private val mockAwsClient: AmazonS3Client = mockk()
+
+    private val imageService = ImageServiceImpl(
+        imageRepository = imageRepository,
+        projectRepository = projectRepository,
+        userRepository = userRepository,
+        client = mockAwsClient
+    )
+
     private val taskHandler = TaskHandler(
         taskRepository,
         taskCandidateRepository,
@@ -52,10 +66,10 @@ class CommentServiceCommandTest @Autowired constructor(
         commentRepository,
         threadRepository,
         taskService,
-        userRepository
+        userRepository,
+        imageService
     )
 
-    // 주의: mocking 없이 MockMultipartFile 리스트 대입하면 S3에 그대로 업로드됨
     @DisplayName("댓글 생성 : 특정 쓰레드에 content 정보로 댓글을 생성한다.")
     @Transactional
     @Test
@@ -238,7 +252,7 @@ class CommentServiceCommandTest @Autowired constructor(
         val event = commentService.deleteComment(command)
 
         event.commentId shouldBe command.commentId
-        event.threadId shouldBe 1
+        event.parentThreadId shouldBe 1
 
         val deletedComment = commentRepository.findById(3L)
 

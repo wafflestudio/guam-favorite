@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import waffle.guam.NotAllowedException
 import waffle.guam.api.request.ContentInput
 import waffle.guam.api.request.CreateFullInfoInput
 import waffle.guam.api.response.PageableResponse
@@ -20,11 +19,10 @@ import waffle.guam.api.response.SuccessResponse
 import waffle.guam.api.response.ThreadDetailResponse
 import waffle.guam.api.response.ThreadOverViewResponse
 import waffle.guam.common.UserContext
-import waffle.guam.image.ImageService
-import waffle.guam.image.command.DeleteImages
 import waffle.guam.thread.ThreadService
 import waffle.guam.thread.command.CreateThread
 import waffle.guam.thread.command.DeleteThread
+import waffle.guam.thread.command.DeleteThreadImage
 import waffle.guam.thread.command.EditThreadContent
 import waffle.guam.thread.command.SetNoticeThread
 
@@ -32,7 +30,6 @@ import waffle.guam.thread.command.SetNoticeThread
 @RequestMapping
 class ThreadController(
     private val threadService: ThreadService,
-    private val imageService: ImageService
 ) {
 
     @GetMapping("/project/{projectId}/threads")
@@ -111,15 +108,14 @@ class ThreadController(
         @PathVariable threadId: Long,
         @PathVariable imageId: Long,
         userContext: UserContext
-    ): SuccessResponse<Unit> {
-        threadService.getThread(threadId).let {
-            if (it.creatorId != userContext.id) {
-                throw NotAllowedException("타인이 업로드한 이미지를 삭제할 수는 없습니다.")
-            }
-        }
-        imageService.deleteImages(DeleteImages.ById(listOf(imageId)))
-        return SuccessResponse(Unit)
-    }
+    ): SuccessResponse<Unit> =
+        threadService.deleteThreadImage(
+            command = DeleteThreadImage(
+                threadId = threadId,
+                imageId = imageId,
+                userId = userContext.id
+            )
+        ).let { SuccessResponse(Unit) }
 
     @DeleteMapping("/thread/{threadId}")
     fun deleteThread(

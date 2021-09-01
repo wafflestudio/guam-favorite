@@ -5,6 +5,6 @@ import java.time.Instant
 
 data class CommentDeleted(
     val commentId: Long,
-    val threadId: Long,
+    val parentThreadId: Long,
     override val timestamp: Instant = Instant.now(),
 ) : ThreadEvent(timestamp)

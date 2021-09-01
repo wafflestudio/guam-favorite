@@ -3,13 +3,16 @@ package waffle.guam.comment.event
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
+import waffle.guam.DataNotFoundException
 import waffle.guam.comment.CommentRepository
+import waffle.guam.image.ImageRepository
 import waffle.guam.image.ImageService
 import waffle.guam.image.command.CreateImages
 import waffle.guam.image.command.DeleteImages
 import waffle.guam.image.model.ImageType
 import waffle.guam.thread.ThreadRepository
 import waffle.guam.thread.ThreadService
+import waffle.guam.thread.model.ThreadType
 
 @Component
 class CommentEventHandler(
@@ -17,6 +20,7 @@ class CommentEventHandler(
     private val threadService: ThreadService,
     private val threadRepository: ThreadRepository,
     private val commentRepository: CommentRepository,
+    private val imageRepository: ImageRepository,
     // private val messageService: MessageService,
 ) {
     private val logger = LoggerFactory.getLogger(this::javaClass.name)
@@ -55,16 +59,33 @@ class CommentEventHandler(
     }
 
     @EventListener
+    fun handle(event: CommentImageDeleted) {
+        logger.info("$event")
+
+        commentRepository.findById(event.commentId).orElseThrow(::DataNotFoundException).let {
+
+            if (imageRepository.findByParentIdAndType(it.id, ImageType.COMMENT.name).isNotEmpty()) return
+
+            commentRepository.delete(it)
+
+            this.deleteThreadIfEmpty(event.parentThreadId)
+        }
+    }
+
+    @EventListener
     fun handle(event: CommentDeleted) {
         imageService.deleteImages(DeleteImages.ByParentId(event.commentId, ImageType.COMMENT))
-        this.deleteThreadIfEmpty(event.threadId)
+        this.deleteThreadIfEmpty(event.parentThreadId)
 
         logger.info("$event")
     }
 
     private fun deleteThreadIfEmpty(threadId: Long) {
         threadService.getFullThread(threadId).let {
-            if (it.comments.isEmpty() && it.content.isNullOrBlank() && it.threadImages.isEmpty()) {
+
+            if (it.type == ThreadType.JOIN) return
+
+            if (it.comments.isEmpty() && it.content.isBlank() && it.threadImages.isEmpty()) {
                 threadRepository.deleteById(threadId)
             }
         }
