@@ -7,11 +7,15 @@ import waffle.guam.InvalidRequestException
 import waffle.guam.NotAllowedException
 import waffle.guam.comment.command.CreateComment
 import waffle.guam.comment.command.DeleteComment
+import waffle.guam.comment.command.DeleteCommentImage
 import waffle.guam.comment.command.EditCommentContent
 import waffle.guam.comment.event.CommentContentEdited
 import waffle.guam.comment.event.CommentCreated
 import waffle.guam.comment.event.CommentDeleted
+import waffle.guam.comment.event.CommentImageDeleted
 import waffle.guam.comment.model.Comment
+import waffle.guam.image.ImageService
+import waffle.guam.image.command.DeleteImages
 import waffle.guam.task.TaskService
 import waffle.guam.thread.ThreadEntity
 import waffle.guam.thread.ThreadRepository
@@ -25,6 +29,7 @@ class CommentServiceImpl(
     private val threadRepository: ThreadRepository,
     private val taskService: TaskService,
     private val userRepository: UserRepository,
+    private val imageService: ImageService,
 ) : CommentService {
 
     override fun getComment(commentId: Long): Comment =
@@ -62,6 +67,18 @@ class CommentServiceImpl(
         }
 
     @Transactional
+    override fun deleteCommentImage(command: DeleteCommentImage): CommentImageDeleted {
+        commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
+            if (it.user.id != command.userId) {
+                throw NotAllowedException("타인이 업로드한 이미지를 삭제할 수는 없습니다.")
+            }
+
+            imageService.deleteImages(DeleteImages.ById(listOf(command.imageId)))
+            return CommentImageDeleted(imageId = command.imageId, commentId = command.commentId, parentThreadId = it.threadId)
+        }
+    }
+
+    @Transactional
     override fun deleteComment(command: DeleteComment): CommentDeleted =
         commentRepository.findById(command.commentId).orElseThrow(::DataNotFoundException).let {
             if (it.user.id != command.userId) {
@@ -69,7 +86,7 @@ class CommentServiceImpl(
             }
 
             commentRepository.delete(it)
-            return CommentDeleted(commentId = command.commentId, threadId = it.threadId)
+            return CommentDeleted(commentId = command.commentId, parentThreadId = it.threadId)
         }
 
     protected fun validateCommentCreator(command: CreateComment, parentThread: ThreadEntity) {
