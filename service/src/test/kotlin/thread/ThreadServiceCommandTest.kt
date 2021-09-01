@@ -12,6 +12,7 @@ import waffle.guam.InvalidRequestException
 import waffle.guam.NotAllowedException
 import waffle.guam.annotation.DatabaseTest
 import waffle.guam.comment.CommentRepository
+import waffle.guam.image.ImageService
 import waffle.guam.project.ProjectRepository
 import waffle.guam.task.TaskCandidateRepository
 import waffle.guam.task.TaskHandler
@@ -38,6 +39,7 @@ class ThreadServiceCommandTest @Autowired constructor(
     taskCandidateRepository: TaskCandidateRepository,
     taskHistoryRepository: TaskHistoryRepository,
     userRepository: UserRepository,
+    imageService: ImageService,
 ) {
     private val taskHandler = TaskHandler(
         taskRepository,
@@ -58,7 +60,8 @@ class ThreadServiceCommandTest @Autowired constructor(
         threadViewRepository,
         projectRepository,
         taskService,
-        commentRepository
+        commentRepository,
+        imageService,
     )
 
     @DisplayName("공지 쓰레드 설정 : 리더와 멤버는 특정 쓰레드를 공지로 지정할 수 있다.")

@@ -3,6 +3,7 @@ package waffle.guam.thread.event
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
+import waffle.guam.DataNotFoundException
 import waffle.guam.comment.CommentRepository
 import waffle.guam.image.ImageRepository
 import waffle.guam.image.ImageService
@@ -12,6 +13,8 @@ import waffle.guam.image.model.ImageType
 import waffle.guam.task.TaskService
 import waffle.guam.task.query.SearchTask.Companion.taskQuery
 import waffle.guam.thread.ThreadRepository
+import waffle.guam.thread.model.ThreadType
+import java.time.Instant
 
 @Component
 class ThreadEventHandler(
@@ -76,6 +79,22 @@ class ThreadEventHandler(
     @EventListener
     fun handle(event: JoinThreadTypeEdited) {
         logger.info("$event")
+    }
+
+    @EventListener
+    fun handle(event: ThreadImageDeleted) {
+        logger.info("$event")
+
+        threadRepository.findById(event.threadId).orElseThrow(::DataNotFoundException).let {
+            if (it.type != ThreadType.NORMAL.name) return
+
+            if (imageRepository.findByParentIdAndType(it.id, ImageType.THREAD.name).isNotEmpty()) return
+
+            when (commentRepository.existsByThreadId(event.threadId)) {
+                true -> threadRepository.save(it.copy(content = "", modifiedAt = Instant.now()))
+                false -> threadRepository.delete(it)
+            }
+        }
     }
 
     @EventListener
