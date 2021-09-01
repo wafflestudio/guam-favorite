@@ -1,7 +1,9 @@
 package waffle.guam.thread
 
+import com.amazonaws.services.s3.AmazonS3Client
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -10,7 +12,8 @@ import org.springframework.data.domain.Sort
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.annotation.DatabaseTest
 import waffle.guam.comment.CommentRepository
-import waffle.guam.image.ImageService
+import waffle.guam.image.ImageRepository
+import waffle.guam.image.ImageServiceImpl
 import waffle.guam.project.ProjectRepository
 import waffle.guam.task.TaskCandidateRepository
 import waffle.guam.task.TaskHandler
@@ -29,8 +32,17 @@ class ThreadServiceQueryTest @Autowired constructor(
     taskCandidateRepository: TaskCandidateRepository,
     taskHistoryRepository: TaskHistoryRepository,
     userRepository: UserRepository,
-    imageService: ImageService,
+    imageRepository: ImageRepository,
 ) {
+    private val mockAwsClient: AmazonS3Client = mockk()
+
+    private val imageService = ImageServiceImpl(
+        imageRepository = imageRepository,
+        projectRepository = projectRepository,
+        userRepository = userRepository,
+        client = mockAwsClient
+    )
+
     private val taskHandler = TaskHandler(
         taskRepository,
         taskCandidateRepository,

@@ -1,12 +1,16 @@
 package waffle.guam.project
 
+import com.amazonaws.services.s3.AmazonS3Client
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.annotation.DatabaseTest
 import waffle.guam.comment.CommentRepository
+import waffle.guam.image.ImageRepository
+import waffle.guam.image.ImageServiceImpl
 import waffle.guam.project.command.UpdateProject
 import waffle.guam.project.model.ProjectState
 import waffle.guam.projectstack.PrjStackServiceImpl
@@ -33,8 +37,17 @@ class ProjectServiceCommandTest @Autowired constructor(
     private val threadViewRepository: ThreadViewRepository,
     private val commentRepository: CommentRepository,
     private val projectStackRepository: ProjectStackRepository,
-    private val stackRepository: StackRepository
+    private val stackRepository: StackRepository,
+    imageRepository: ImageRepository,
 ) {
+    private val mockAwsClient: AmazonS3Client = mockk()
+
+    private val imageService = ImageServiceImpl(
+        imageRepository = imageRepository,
+        projectRepository = projectRepository,
+        userRepository = userRepository,
+        client = mockAwsClient
+    )
 
     private val taskHandler = TaskHandler(
         taskRepository,
@@ -55,7 +68,8 @@ class ProjectServiceCommandTest @Autowired constructor(
         threadViewRepository,
         projectRepository,
         taskService,
-        commentRepository
+        commentRepository,
+        imageService
     )
 
     private val projectStackService = PrjStackServiceImpl(

@@ -1,12 +1,16 @@
 package waffle.guam.comment
 
+import com.amazonaws.services.s3.AmazonS3Client
 import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.annotation.DatabaseTest
+import waffle.guam.image.ImageRepository
+import waffle.guam.image.ImageServiceImpl
 import waffle.guam.project.ProjectRepository
 import waffle.guam.task.TaskCandidateRepository
 import waffle.guam.task.TaskHandler
@@ -25,7 +29,17 @@ class CommentServiceQueryTest @Autowired constructor(
     taskRepository: TaskRepository,
     taskCandidateRepository: TaskCandidateRepository,
     taskHistoryRepository: TaskHistoryRepository,
+    imageRepository: ImageRepository,
 ) {
+    private val mockAwsClient: AmazonS3Client = mockk()
+
+    private val imageService = ImageServiceImpl(
+        imageRepository = imageRepository,
+        projectRepository = projectRepository,
+        userRepository = userRepository,
+        client = mockAwsClient
+    )
+
     private val taskHandler = TaskHandler(
         taskRepository,
         taskCandidateRepository,
@@ -44,7 +58,8 @@ class CommentServiceQueryTest @Autowired constructor(
         commentRepository,
         threadRepository,
         taskService,
-        userRepository
+        userRepository,
+        imageService,
     )
 
     @DisplayName("댓글 조회 : 댓글에 담긴 모든 정보들을 조회한다.")

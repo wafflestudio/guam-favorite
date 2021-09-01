@@ -8,23 +8,20 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import waffle.guam.NotAllowedException
 import waffle.guam.api.request.ContentInput
 import waffle.guam.api.request.CreateFullInfoInput
 import waffle.guam.api.response.SuccessResponse
 import waffle.guam.comment.CommentService
 import waffle.guam.comment.command.CreateComment
 import waffle.guam.comment.command.DeleteComment
+import waffle.guam.comment.command.DeleteCommentImage
 import waffle.guam.comment.command.EditCommentContent
 import waffle.guam.common.UserContext
-import waffle.guam.image.ImageService
-import waffle.guam.image.command.DeleteImages
 
 @RestController
 @RequestMapping("comment")
 class CommentController(
     private val commentService: CommentService,
-    private val imageService: ImageService
 ) {
 
     @PostMapping("/create/{threadId}")
@@ -62,13 +59,9 @@ class CommentController(
         @PathVariable imageId: Long,
         userContext: UserContext
     ): SuccessResponse<Unit> =
-        commentService.getComment(commentId).let {
-            if (it.creatorId != userContext.id) {
-                throw NotAllowedException("타인이 업로드한 이미지를 삭제할 수는 없습니다.")
-            }
-            imageService.deleteImages(DeleteImages.ById(listOf(imageId)))
-            return SuccessResponse(Unit)
-        }
+        commentService.deleteCommentImage(
+            command = DeleteCommentImage(commentId = commentId, userId = userContext.id, imageId = imageId)
+        ).let { SuccessResponse(Unit) }
 
     @DeleteMapping("/{commentId}")
     fun deleteComment(
