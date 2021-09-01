@@ -4,6 +4,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import waffle.guam.DataNotFoundException
+import waffle.guam.InvalidRequestException
 import waffle.guam.NotAllowedException
 import waffle.guam.task.TaskRepository
 import waffle.guam.taskmessage.command.CreateTaskMessage
@@ -24,7 +25,7 @@ class TaskMessageServiceImpl(
     override fun createTaskMessage(command: CreateTaskMessage): TaskMessageCreated =
         taskRepository.findById(command.taskId).orElseThrow(::DataNotFoundException).let {
             if (it.user?.id != command.userId) {
-                throw NotAllowedException("이곳에는 작업 현황을 생성할 수 없습니다.")
+                throw NotAllowedException("본인의 작업 현황만 생성할 수 없습니다.")
             }
 
             return TaskMessageCreated(
@@ -36,12 +37,23 @@ class TaskMessageServiceImpl(
     @Transactional
     override fun updateTaskMessage(command: UpdateTaskMessage): TaskMessageUpdated =
         taskMessageRepository.findById(command.taskMessageId).orElseThrow(::DataNotFoundException).let {
+            taskRepository.findByIdOrNull(it.taskId)?.let { taskMessageCreator ->
+                if (taskMessageCreator.user?.id != command.userId) {
+                    throw NotAllowedException("해당 작업 현황을 수정할 권한이 없습니다.")
+                }
+            }
+
+            if (command.messageContent == it.content && command.status?.name == it.status) {
+                throw InvalidRequestException("수정 전과 동일한 내용입니다")
+            }
+
             taskMessageRepository.save(
                 it.copy(
                     content = command.messageContent ?: it.content,
                     status = command.status?.name ?: it.status
                 )
             )
+
             return TaskMessageUpdated(command.taskMessageId)
         }
 
@@ -49,7 +61,7 @@ class TaskMessageServiceImpl(
     override fun deleteTaskMessage(command: DeleteTaskMessage): TaskMessageDeleted =
         taskMessageRepository.findById(command.taskMessageId).orElseThrow(::DataNotFoundException).let {
             taskRepository.findByIdOrNull(it.taskId)?.let { taskMessageCreator ->
-                if (taskMessageCreator.id != command.userId) {
+                if (taskMessageCreator.user?.id != command.userId) {
                     throw NotAllowedException("해당 작업 현황을 삭제할 권한이 없습니다.")
                 }
             }
