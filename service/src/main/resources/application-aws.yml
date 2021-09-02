@@ -1,3 +1,7 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
 cloud:
   aws:
     credentials:
@@ -9,3 +13,43 @@ cloud:
       static: ap-northeast-2
     stack:
       auto: false
+image:
+  root:
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+cloud:
+  aws:
+    credentials:
+      accessKey: ${AWS_ACCESSKEY}
+      secretKey: ${AWS_SECRETKEY}
+    s3:
+      bucket: guam
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
+image:
+  root: DEV
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+cloud:
+  aws:
+    credentials:
+      accessKey: ${AWS_ACCESSKEY}
+      secretKey: ${AWS_SECRETKEY}
+    s3:
+      bucket: guam
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
+image:
+  root: TEST
