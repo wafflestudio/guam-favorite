@@ -3,6 +3,7 @@ package waffle.guam.image
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.amazonaws.services.s3.model.PutObjectRequest
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
@@ -18,12 +19,14 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 
+@EnableConfigurationProperties(ImageProperties::class)
 @Service
 class ImageServiceImpl(
     private val imageRepository: ImageRepository,
     private val projectRepository: ProjectRepository,
     private val userRepository: UserRepository,
     private val client: AmazonS3Client,
+    private val imageProperties: ImageProperties = ImageProperties()
 ) : ImageService {
     companion object {
         private const val BUCKET_NAME = "guam"
@@ -90,7 +93,7 @@ class ImageServiceImpl(
             ImagesDeleted(imageIds = images.map { it.id })
         }
 
-    private fun ImageEntity.getPath() = "$type/$id"
+    private fun ImageEntity.getPath(): String = "${imageProperties.root}/$type/$id"
 
     private fun MultipartFile.getFile(): File = inputStream.use { inputStream ->
         imageLocation.resolve(originalFilename).let {
