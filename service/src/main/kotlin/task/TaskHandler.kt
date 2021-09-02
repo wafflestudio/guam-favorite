@@ -23,6 +23,7 @@ import waffle.guam.task.event.TaskCreated
 import waffle.guam.task.event.TaskDeclined
 import waffle.guam.task.event.TaskEvent
 import waffle.guam.task.event.TaskLeft
+import waffle.guam.task.model.UserHistoryState
 import waffle.guam.task.model.UserState
 import waffle.guam.user.UserRepository
 
@@ -184,7 +185,7 @@ class TaskHandler(
         val targetTask = taskRepository.findByProjectIdAndUserId(projectId = command.projectId, userId = command.userId)
             ?: throw RuntimeException("해당 프로젝트에 참여하고 있지 않습니다.")
 
-        taskHistoryRepository.save(targetTask.toHistory("QUIT"))
+        taskHistoryRepository.save(targetTask.toHistory(UserHistoryState.QUIT))
 
         targetTask.user = null
         targetTask.userState = null
@@ -200,7 +201,7 @@ class TaskHandler(
         val activeTasks = tasks.filter { it.user != null }
 
         taskHistoryRepository.saveAll(
-            activeTasks.map { it.toHistory("CANCELED") }
+            activeTasks.map { it.toHistory(UserHistoryState.CANCELED) }
         )
 
         return TaskCanceled(projectId = command.projectId)
@@ -214,7 +215,7 @@ class TaskHandler(
         val activeTasks = tasks.filter { it.user != null }
 
         taskHistoryRepository.saveAll(
-            activeTasks.map { it.toHistory("COMPLETED") }
+            activeTasks.map { it.toHistory(UserHistoryState.COMPLETED) }
         )
 
         return TaskCompleted(projectId = command.projectId)
@@ -248,12 +249,12 @@ class TaskHandler(
         taskRepository.findAllByProjectIdAndPosition(projectId = projectId, position = position)
             .firstOrNull { it.user == null }
 
-    private fun TaskEntity.toHistory(description: String): TaskHistoryEntity =
+    private fun TaskEntity.toHistory(description: UserHistoryState): TaskHistoryEntity =
         TaskHistoryEntity(
             project = project,
             user = user!!,
             userState = userState!!,
             position = position,
-            description = description,
+            description = description.name,
         )
 }
