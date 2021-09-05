@@ -10,6 +10,7 @@ import waffle.guam.image.ImageService
 import waffle.guam.image.command.CreateImages
 import waffle.guam.image.command.DeleteImages
 import waffle.guam.image.model.ImageType
+import waffle.guam.message.MessageService
 import waffle.guam.task.TaskService
 import waffle.guam.task.query.SearchTask.Companion.taskQuery
 import waffle.guam.thread.ThreadRepository
@@ -22,8 +23,8 @@ class ThreadEventHandler(
     private val taskService: TaskService,
     private val threadRepository: ThreadRepository,
     private val commentRepository: CommentRepository,
-    private val imageRepository: ImageRepository
-    // private val messageService: MessageService,
+    private val imageRepository: ImageRepository,
+    private val messageService: MessageService,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass.name)
 
@@ -49,11 +50,12 @@ class ThreadEventHandler(
         val targetIds = taskService.getTasks(taskQuery().projectIds(event.projectId))
             .mapNotNull { it.user?.id }
             .filter { event.creatorId != it }
-        //    messageService.sendMessage(
-        //        ids = targetIds,
-        //        title = "새로운 쓰레드가 작성되었습니다.",
-        //        body = "${event.creatorName}: ${event.content}"
-        //    )
+
+        messageService.sendMessage(
+            ids = targetIds,
+            title = "새로운 쓰레드가 작성되었습니다.",
+            body = "${event.creatorName}: ${event.content}"
+        )
     }
 
     @EventListener
