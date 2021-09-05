@@ -17,4 +17,6 @@ interface TaskRepository : JpaRepository<TaskEntity, Long> {
     fun findUserProjectIds(userId: Long, projectStates: List<String>): List<Long>
 
     fun findByProjectIdAndUserId(projectId: Long, userId: Long): TaskEntity?
+
+    fun findByProjectIdAndUserState(projectId: Long, userState: String): TaskEntity?
 }
