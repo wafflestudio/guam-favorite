@@ -93,7 +93,9 @@ class ImageServiceImpl(
             ImagesDeleted(imageIds = images.map { it.id })
         }
 
-    private fun ImageEntity.getPath(): String = "${imageProperties.root}/$type/$id"
+    private fun ImageEntity.getPath(): String =
+        if (imageProperties.root.isNullOrEmpty()) "$type/$id"
+        else "${imageProperties.root}/$type/$id"
 
     private fun MultipartFile.getFile(): File = inputStream.use { inputStream ->
         imageLocation.resolve(originalFilename).let {
