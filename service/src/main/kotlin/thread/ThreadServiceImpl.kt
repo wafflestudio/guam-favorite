@@ -139,7 +139,7 @@ class ThreadServiceImpl(
     override fun deleteThread(command: DeleteThread): ThreadDeleted =
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
             if (it.type != ThreadType.NORMAL.name) {
-                throw NotAllowedException("해당 쓰레드는 삭제할 수 없습니다.")
+                throw NotAllowedException("참가 신청 쓰레드는 삭제할 수 없습니다")
             }
 
             if (it.userId != command.userId) {
