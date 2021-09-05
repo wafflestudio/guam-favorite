@@ -10,6 +10,7 @@ import waffle.guam.image.ImageService
 import waffle.guam.image.command.CreateImages
 import waffle.guam.image.command.DeleteImages
 import waffle.guam.image.model.ImageType
+import waffle.guam.message.MessageService
 import waffle.guam.thread.ThreadRepository
 import waffle.guam.thread.ThreadService
 import waffle.guam.thread.model.ThreadType
@@ -21,7 +22,7 @@ class CommentEventHandler(
     private val threadRepository: ThreadRepository,
     private val commentRepository: CommentRepository,
     private val imageRepository: ImageRepository,
-    // private val messageService: MessageService,
+    private val messageService: MessageService,
 ) {
     private val logger = LoggerFactory.getLogger(this::javaClass.name)
 
@@ -39,13 +40,13 @@ class CommentEventHandler(
 
         logger.info("$event")
 
-        // if (event.threadCreatorId == event.commentCreatorId) return
+        if (event.threadCreatorId == event.commentCreatorId) return
 
-        // messageService.sendMessage(
-        //     ids = listOf(event.threadCreatorId),
-        //     title = "새로운 댓글이 달렸습니다.",
-        //     body = "${event.commentCreatorName}: ${event.content}"
-        // )
+        messageService.sendMessage(
+            ids = listOf(event.threadCreatorId),
+            title = "새로운 댓글이 달렸습니다.",
+            body = "${event.commentCreatorName}: ${event.content}"
+        )
     }
 
     @EventListener
@@ -83,7 +84,7 @@ class CommentEventHandler(
     private fun deleteThreadIfEmpty(threadId: Long) {
         threadService.getFullThread(threadId).let {
 
-            if (it.type == ThreadType.JOIN) return
+            if (it.type != ThreadType.NORMAL) return
 
             if (it.comments.isEmpty() && it.content.isBlank() && it.threadImages.isEmpty()) {
                 threadRepository.deleteById(threadId)

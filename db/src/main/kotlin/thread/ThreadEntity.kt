@@ -49,7 +49,7 @@ data class ThreadView(
     @JoinColumn(name = "user_id")
     val user: UserEntity,
 
-    @OneToMany(mappedBy = "threadId", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "threadId", fetch = FetchType.LAZY, orphanRemoval = true)
     val comments: List<CommentEntity>,
 
     @OneToMany(mappedBy = "parentId", fetch = FetchType.LAZY)

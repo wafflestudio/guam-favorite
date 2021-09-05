@@ -145,7 +145,7 @@ class ProjectServiceImpl(
             /**
              *  nothing is used
              */
-            ?: projectRepository.findAll(pageable)
+            ?: projectRepository.findAll(ProjectSpec.search(), pageable)
 
     @Transactional
     override fun createProject(command: CreateProject, userId: Long): ProjectCreated {

@@ -14,6 +14,19 @@ spring:
 spring:
   config:
     activate:
+      on-profile: dev
+  datasource:
+    url: ${DEV_DB_URL}?serverTimezone=UTC&characterEncoding=UTF-8
+    username: ${DEV_DB_USERNAME}
+    password: ${DEV_DB_PASSWORD}
+  jpa:
+    properties:
+      hibernate:
+        show_sql: false
+---
+spring:
+  config:
+    activate:
       on-profile: test
   jpa:
     properties:

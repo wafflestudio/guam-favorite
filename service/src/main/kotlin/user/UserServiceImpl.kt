@@ -92,7 +92,7 @@ class UserServiceImpl(
         }
 
         val userHistoryProjects = taskHistoryRepository.findAllByUserId(userId)
-            .filter { it.userState == UserHistoryState.COMPLETED.name }
+            .filter { it.description == UserHistoryState.COMPLETED.name }
             .map { UserProject.of(it) }
 
         return userProjects.plus(userHistoryProjects)

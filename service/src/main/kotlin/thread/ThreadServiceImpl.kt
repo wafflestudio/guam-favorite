@@ -106,20 +106,22 @@ class ThreadServiceImpl(
             if (it.content == command.content) {
                 throw InvalidRequestException("수정 전과 동일한 내용입니다.")
             }
-            if (command.content.isEmpty() && it.type == ThreadType.JOIN.name) {
+            if (command.content.isEmpty() && it.type != ThreadType.NORMAL.name) {
                 throw InvalidRequestException("참가 신청서는 내용이 비어있을 수 없습니다.")
             }
 
-            val editedThread = threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
+            val editedThread =
+                threadRepository.save(it.copy(content = command.content.trim(), modifiedAt = Instant.now()))
             return ThreadContentEdited(it.id, editedThread.content)
         }
 
     @Transactional
     override fun editJoinThreadType(command: EditJoinThreadType): JoinThreadTypeEdited =
-        threadRepository.findByUserIdAndProjectId(command.userId, command.projectId).orElseThrow(::DataNotFoundException).let {
-            threadRepository.save(it.copy(type = command.type.name, modifiedAt = Instant.now()))
-            return JoinThreadTypeEdited(it.id, command.type)
-        }
+        threadRepository.findByUserIdAndProjectId(command.userId, command.projectId)
+            .orElseThrow(::DataNotFoundException).let {
+                threadRepository.save(it.copy(type = command.type.name, modifiedAt = Instant.now()))
+                return JoinThreadTypeEdited(it.id, command.type)
+            }
 
     @Transactional
     override fun deleteThreadImage(command: DeleteThreadImage): ThreadImageDeleted =
@@ -136,6 +138,10 @@ class ThreadServiceImpl(
     @Transactional
     override fun deleteThread(command: DeleteThread): ThreadDeleted =
         threadRepository.findById(command.threadId).orElseThrow(::DataNotFoundException).let {
+            if (it.type != ThreadType.NORMAL.name) {
+                throw NotAllowedException("참가 신청 쓰레드는 삭제할 수 없습니다")
+            }
+
             if (it.userId != command.userId) {
                 throw NotAllowedException("타인이 작성한 쓰레드를 삭제할 수는 없습니다.")
             }

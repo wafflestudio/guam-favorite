@@ -135,7 +135,7 @@ class ProjectController(
             SuccessResponse(Unit)
         }
 
-    @PutMapping("/project/{projectId}/")
+    @PutMapping("/project/{projectId}")
     fun completeProject(
         @PathVariable projectId: Long,
         userContext: UserContext,
@@ -183,13 +183,10 @@ class ProjectController(
 
     private fun getQuitCommand(projectId: Long, userId: Long): TaskCommand =
         if (taskService.isLeader(projectId = projectId, userId = userId)) {
-            println("is Leader")
             CancelTask(projectId = projectId)
         } else if (taskService.isMember(projectId = projectId, userId = userId)) {
-            println("is Member")
             LeaveTask(projectId = projectId, userId = userId)
         } else {
-            println("is Guest or Nothing")
             CancelApplyTask(projectId = projectId, userId = userId)
         }
 }

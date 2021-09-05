@@ -232,7 +232,7 @@ class TaskHandler(
 
     private fun verifyProjectLeader(projectId: Long, leaderId: Long) {
         val leader = taskRepository.findByProjectIdAndUserId(projectId = projectId, userId = leaderId)
-            ?: throw RuntimeException("해당 유저를 찾을 수 없습니다.")
+            ?: throw RuntimeException("리더만 해당 작업을 수행할 수 있습니다.")
 
         if (leader.userState!! != UserState.LEADER.name) {
             throw RuntimeException("리더만 해당 작업을 수행할 수 있습니다.")
@@ -240,8 +240,11 @@ class TaskHandler(
     }
 
     private fun verifyUserQuota(userId: Long) {
-        if (taskRepository.findAllByUserId(userId).size >= 3) {
-            throw RuntimeException("프로젝트를 더 이상 참여할 수 없습니다.")
+        val taskOrTaskCandidatesSize =
+            taskRepository.findAllByUserId(userId).size + taskCandidateRepository.findAllByUserId(userId).size
+
+        if (taskOrTaskCandidatesSize >= 3) {
+            throw RuntimeException("프로젝트는 최대 3개까지만 참여할 수 있습니다")
         }
     }
 
