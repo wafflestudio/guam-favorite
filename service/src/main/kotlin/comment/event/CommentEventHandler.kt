@@ -83,7 +83,7 @@ class CommentEventHandler(
     private fun deleteThreadIfEmpty(threadId: Long) {
         threadService.getFullThread(threadId).let {
 
-            if (it.type == ThreadType.JOIN) return
+            if (it.type != ThreadType.NORMAL) return
 
             if (it.comments.isEmpty() && it.content.isBlank() && it.threadImages.isEmpty()) {
                 threadRepository.deleteById(threadId)
