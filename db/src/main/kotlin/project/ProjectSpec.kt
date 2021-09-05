@@ -29,12 +29,13 @@ object ProjectSpec {
             root.get<Any>("due").`in`(due)
         }
 
-    fun stateLike(state: String): Specification<ProjectEntity> =
+    fun stateLike(state: List<String>): Specification<ProjectEntity> =
         Specification { root, _, _: CriteriaBuilder ->
             root.get<Any>("state").`in`(state)
         }
 
-    fun search(due: String?): Specification<ProjectEntity> =
+    fun search(due: String? = null): Specification<ProjectEntity> =
         fetchImages()
             .and(due?.let { dueLike(due) })
+            .and(stateLike(listOf("RECRUITING", "ONGOING")))
 }
