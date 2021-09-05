@@ -21,7 +21,7 @@ interface ProjectRepository : JpaRepository<ProjectEntity, Long>, JpaSpecificati
 
     @Query(
         "select distinct p from ProjectEntity p left join fetch p.thumbnail i " +
-            "where p.due = :due and " +
+            "where p.state in ('RECRUITING', 'ONGOING') and p.due = :due and " +
             "  ( case when :position = 'FRONTEND' THEN p.frontHeadcount " +
             "           when :position = 'BACKEND' THEN p.backHeadcount " +
             "           when :position = 'DESIGNER' THEN p.designerHeadcount " +
@@ -34,7 +34,7 @@ interface ProjectRepository : JpaRepository<ProjectEntity, Long>, JpaSpecificati
 
     @Query(
         "select distinct p from ProjectEntity p left join fetch p.thumbnail i " +
-            "    where  ( case when :position = 'FRONTEND' THEN p.frontHeadcount " +
+            "    where p.state in ('RECRUITING', 'ONGOING') and ( case when :position = 'FRONTEND' THEN p.frontHeadcount " +
             "           when :position = 'BACKEND' THEN p.backHeadcount " +
             "           when :position = 'DESIGNER' THEN p.designerHeadcount " +
             "           else 0 " +

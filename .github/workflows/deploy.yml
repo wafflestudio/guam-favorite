@@ -34,7 +34,7 @@ jobs:
 
 
   deploy:
-
+    needs: build
     runs-on: [ self-hosted, guam ]
 
     steps:
