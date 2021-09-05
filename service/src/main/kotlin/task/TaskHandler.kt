@@ -23,6 +23,7 @@ import waffle.guam.task.event.TaskCreated
 import waffle.guam.task.event.TaskDeclined
 import waffle.guam.task.event.TaskEvent
 import waffle.guam.task.event.TaskLeft
+import waffle.guam.task.model.UserHistoryState
 import waffle.guam.task.model.UserState
 import waffle.guam.user.UserRepository
 
@@ -184,7 +185,7 @@ class TaskHandler(
         val targetTask = taskRepository.findByProjectIdAndUserId(projectId = command.projectId, userId = command.userId)
             ?: throw RuntimeException("해당 프로젝트에 참여하고 있지 않습니다.")
 
-        taskHistoryRepository.save(targetTask.toHistory("QUIT"))
+        taskHistoryRepository.save(targetTask.toHistory(UserHistoryState.QUIT))
 
         targetTask.user = null
         targetTask.userState = null
@@ -200,7 +201,7 @@ class TaskHandler(
         val activeTasks = tasks.filter { it.user != null }
 
         taskHistoryRepository.saveAll(
-            activeTasks.map { it.toHistory("CANCELED") }
+            activeTasks.map { it.toHistory(UserHistoryState.CANCELED) }
         )
 
         return TaskCanceled(projectId = command.projectId)
@@ -214,7 +215,7 @@ class TaskHandler(
         val activeTasks = tasks.filter { it.user != null }
 
         taskHistoryRepository.saveAll(
-            activeTasks.map { it.toHistory("COMPLETED") }
+            activeTasks.map { it.toHistory(UserHistoryState.COMPLETED) }
         )
 
         return TaskCompleted(projectId = command.projectId)
@@ -231,7 +232,7 @@ class TaskHandler(
 
     private fun verifyProjectLeader(projectId: Long, leaderId: Long) {
         val leader = taskRepository.findByProjectIdAndUserId(projectId = projectId, userId = leaderId)
-            ?: throw RuntimeException("해당 유저를 찾을 수 없습니다.")
+            ?: throw RuntimeException("리더만 해당 작업을 수행할 수 있습니다.")
 
         if (leader.userState!! != UserState.LEADER.name) {
             throw RuntimeException("리더만 해당 작업을 수행할 수 있습니다.")
@@ -239,8 +240,11 @@ class TaskHandler(
     }
 
     private fun verifyUserQuota(userId: Long) {
-        if (taskRepository.findAllByUserId(userId).size >= 3) {
-            throw RuntimeException("프로젝트를 더 이상 참여할 수 없습니다.")
+        val taskOrTaskCandidatesSize =
+            taskRepository.findAllByUserId(userId).size + taskCandidateRepository.findAllByUserId(userId).size
+
+        if (taskOrTaskCandidatesSize >= 3) {
+            throw RuntimeException("프로젝트는 최대 3개까지만 참여할 수 있습니다")
         }
     }
 
@@ -248,12 +252,12 @@ class TaskHandler(
         taskRepository.findAllByProjectIdAndPosition(projectId = projectId, position = position)
             .firstOrNull { it.user == null }
 
-    private fun TaskEntity.toHistory(description: String): TaskHistoryEntity =
+    private fun TaskEntity.toHistory(description: UserHistoryState): TaskHistoryEntity =
         TaskHistoryEntity(
             project = project,
             user = user!!,
             userState = userState!!,
             position = position,
-            description = description,
+            description = description.name,
         )
 }

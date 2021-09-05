@@ -5,8 +5,8 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import waffle.guam.api.response.SuccessResponse
+import waffle.guam.api.response.TaskResponse
 import waffle.guam.task.TaskService
-import waffle.guam.task.model.Task
 
 @RestController
 @RequestMapping
@@ -16,8 +16,8 @@ class TaskController(
     @GetMapping("/task/{taskId}")
     fun getTaskWithMessages(
         @PathVariable taskId: Long,
-    ): SuccessResponse<Task> =
+    ): SuccessResponse<TaskResponse> =
         SuccessResponse(
-            data = taskService.getTask(taskId)
+            data = TaskResponse.of(taskService.getTask(taskId))
         )
 }

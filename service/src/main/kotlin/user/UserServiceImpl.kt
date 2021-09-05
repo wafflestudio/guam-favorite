@@ -7,6 +7,7 @@ import waffle.guam.task.TaskCandidateRepository
 import waffle.guam.task.TaskHistoryRepository
 import waffle.guam.task.TaskRepository
 import waffle.guam.task.TaskSpec
+import waffle.guam.task.model.UserHistoryState
 import waffle.guam.user.command.UpdateUser
 import waffle.guam.user.command.UserExtraInfo
 import waffle.guam.user.event.DeviceUpdated
@@ -91,6 +92,7 @@ class UserServiceImpl(
         }
 
         val userHistoryProjects = taskHistoryRepository.findAllByUserId(userId)
+            .filter { it.userState == UserHistoryState.COMPLETED.name }
             .map { UserProject.of(it) }
 
         return userProjects.plus(userHistoryProjects)
