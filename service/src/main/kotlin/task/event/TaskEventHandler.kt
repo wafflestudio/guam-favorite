@@ -3,24 +3,22 @@ package waffle.guam.task.event
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
-import waffle.guam.task.TaskRepository
 import waffle.guam.thread.ThreadService
+import waffle.guam.thread.ThreadViewRepository
 import waffle.guam.thread.command.CreateJoinThread
 import waffle.guam.thread.command.EditJoinThreadType
+import waffle.guam.thread.model.ThreadType
 
 @Component
 class TaskEventHandler(
-    private val taskRepository: TaskRepository,
-    private val threadService: ThreadService
+    private val threadService: ThreadService,
+    private val threadViewRepository: ThreadViewRepository
 ) {
     private val logger = LoggerFactory.getLogger(this.javaClass.name)
 
     @EventListener
     fun handle(event: TaskCreated) {
         logger.info("$event")
-//        taskRepository.findAll().forEach {
-//            println(it)
-//        }
     }
 
     @EventListener
@@ -33,50 +31,46 @@ class TaskEventHandler(
                 content = event.introduction
             )
         )
-//        taskRepository.findAll().forEach {
-//            println(it)
-//        }
     }
 
     @EventListener
     fun handle(event: TaskLeft) {
         logger.info("$event")
-        threadService.editJoinThreadType(
-            command = EditJoinThreadType.toNormal(
-                projectId = event.projectId,
-                userId = event.userId
-            )
-        )
-//        taskRepository.findAll().forEach {
-//            println(it)
-//        }
     }
 
     @EventListener
     fun handle(event: TaskAccepted) {
         logger.info("$event")
         threadService.editJoinThreadType(
-            command = EditJoinThreadType.toNormal(
+            command = EditJoinThreadType(
                 projectId = event.projectId,
-                userId = event.userId
+                userId = event.userId,
+                type = ThreadType.ACCEPTED
             )
         )
-//        taskRepository.findAll().forEach {
-//            println(it)
-//        }
     }
 
     @EventListener
     fun handle(event: TaskDeclined) {
         logger.info("$event")
         threadService.editJoinThreadType(
-            command = EditJoinThreadType.toNormal(
+            command = EditJoinThreadType(
                 projectId = event.projectId,
-                userId = event.userId
+                userId = event.userId,
+                type = ThreadType.DECLINED
             )
         )
-//        taskRepository.findAll().forEach {
-//            println(it)
-//        }
+    }
+
+    @EventListener
+    fun handle(event: TaskApplyCanceled) {
+        logger.info("$event")
+        threadViewRepository.findByProjectIdAndUserIdAndType(
+            projectId = event.projectId,
+            userId = event.userId,
+            type = ThreadType.JOIN.name
+        ).ifPresent {
+            threadViewRepository.delete(it)
+        }
     }
 }
