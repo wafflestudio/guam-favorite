@@ -240,7 +240,10 @@ class TaskHandler(
     }
 
     private fun verifyUserQuota(userId: Long) {
-        if (taskRepository.findAllByUserId(userId).size >= 3) {
+        val taskOrTaskCandidatesSize =
+            taskRepository.findAllByUserId(userId).size + taskCandidateRepository.findAllByUserId(userId).size
+
+        if (taskOrTaskCandidatesSize >= 3) {
             throw RuntimeException("프로젝트를 더 이상 참여할 수 없습니다.")
         }
     }
