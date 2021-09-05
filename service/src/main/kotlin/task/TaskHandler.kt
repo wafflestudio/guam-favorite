@@ -232,7 +232,7 @@ class TaskHandler(
 
     private fun verifyProjectLeader(projectId: Long, leaderId: Long) {
         val leader = taskRepository.findByProjectIdAndUserId(projectId = projectId, userId = leaderId)
-            ?: throw RuntimeException("해당 유저를 찾을 수 없습니다.")
+            ?: throw RuntimeException("리더만 해당 작업을 수행할 수 있습니다.")
 
         if (leader.userState!! != UserState.LEADER.name) {
             throw RuntimeException("리더만 해당 작업을 수행할 수 있습니다.")
