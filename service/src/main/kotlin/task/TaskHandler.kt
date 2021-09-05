@@ -244,7 +244,7 @@ class TaskHandler(
             taskRepository.findAllByUserId(userId).size + taskCandidateRepository.findAllByUserId(userId).size
 
         if (taskOrTaskCandidatesSize >= 3) {
-            throw RuntimeException("프로젝트를 더 이상 참여할 수 없습니다.")
+            throw RuntimeException("프로젝트는 최대 3개까지만 참여할 수 있습니다")
         }
     }
 
