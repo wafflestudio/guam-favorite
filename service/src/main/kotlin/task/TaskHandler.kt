@@ -161,9 +161,9 @@ class TaskHandler(
         val taskToAssign = getUnClaimedTaskOrNull(projectId, candidate.position)
             ?: throw RuntimeException("해당 포지션에 더 이상 자리가 없습니다.")
 
-        verifyUserQuota(guestId)
-
         taskCandidateRepository.delete(candidate)
+
+        verifyUserQuota(guestId)
 
         taskToAssign.user = userRepository.findById(guestId).get()
         taskToAssign.userState = UserState.MEMBER.name
