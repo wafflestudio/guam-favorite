@@ -194,8 +194,10 @@ class TaskHandler(
     }
 
     private fun cancel(command: CancelTask): TaskCanceled {
-        val tasks = taskRepository.findAllByProjectId(command.projectId)
+        val taskCandidates = taskCandidateRepository.findAllByProjectId(command.projectId)
+        taskCandidateRepository.deleteAllInBatch(taskCandidates)
 
+        val tasks = taskRepository.findAllByProjectId(command.projectId)
         taskRepository.deleteAllInBatch(tasks)
 
         val activeTasks = tasks.filter { it.user != null }
