@@ -33,8 +33,8 @@ class ErrorHandler {
 
     @ExceptionHandler(value = [Exception::class])
     fun internalError(e: Exception) =
-        ResponseEntity(ErrorResponse(e.message ?: "알 수 없는 문제가 발생하였습니다."), HttpStatus.INTERNAL_SERVER_ERROR).also {
-            logger.error("", e)
+        ResponseEntity(ErrorResponse("알 수 없는 문제가 발생하였습니다."), HttpStatus.INTERNAL_SERVER_ERROR).also {
+            logger.error(e.message, e)
         }
 }
 
