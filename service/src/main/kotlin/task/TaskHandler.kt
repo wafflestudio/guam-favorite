@@ -161,9 +161,9 @@ class TaskHandler(
         val taskToAssign = getUnClaimedTaskOrNull(projectId, candidate.position)
             ?: throw RuntimeException("해당 포지션에 더 이상 자리가 없습니다.")
 
-        verifyUserQuota(guestId)
-
         taskCandidateRepository.delete(candidate)
+
+        verifyUserQuota(guestId)
 
         taskToAssign.user = userRepository.findById(guestId).get()
         taskToAssign.userState = UserState.MEMBER.name
@@ -194,8 +194,10 @@ class TaskHandler(
     }
 
     private fun cancel(command: CancelTask): TaskCanceled {
-        val tasks = taskRepository.findAllByProjectId(command.projectId)
+        val taskCandidates = taskCandidateRepository.findAllByProjectId(command.projectId)
+        taskCandidateRepository.deleteAllInBatch(taskCandidates)
 
+        val tasks = taskRepository.findAllByProjectId(command.projectId)
         taskRepository.deleteAllInBatch(tasks)
 
         val activeTasks = tasks.filter { it.user != null }
