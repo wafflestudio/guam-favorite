@@ -6,6 +6,8 @@ spring:
       url: ${DB_URL}?serverTimezone=UTC&characterEncoding=UTF-8
       username: ${DB_USERNAME}
       password: ${DB_PASSWORD}
+      hikari:
+        connection-init-sql: "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;"
   jpa:
     properties:
       hibernate:
@@ -19,6 +21,8 @@ spring:
     url: ${DEV_DB_URL}?serverTimezone=UTC&characterEncoding=UTF-8
     username: ${DEV_DB_USERNAME}
     password: ${DEV_DB_PASSWORD}
+    hikari:
+      connection-init-sql: "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;"
   jpa:
     properties:
       hibernate:
