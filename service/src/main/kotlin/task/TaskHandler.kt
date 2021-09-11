@@ -1,6 +1,10 @@
 package waffle.guam.task
 
 import org.springframework.stereotype.Service
+import waffle.guam.ConflictException
+import waffle.guam.DataNotFoundException
+import waffle.guam.InvalidRequestException
+import waffle.guam.NotAllowedException
 import waffle.guam.project.ProjectRepository
 import waffle.guam.project.model.ProjectState
 import waffle.guam.task.command.AcceptTask
@@ -46,14 +50,14 @@ class TaskHandler(
             is LeaveTask -> leave(command)
             is CancelTask -> cancel(command)
             is CompleteTask -> complete(command)
-            else -> throw Exception()
+            else -> throw Exception("서버에서 처리할 수 없는 요청입니다.")
         }
 
     private fun createProjectTasks(command: CreateProjectTasks): TaskCreated {
         val (projectId, leaderId, leaderPosition, quotas) = command
 
         val project = projectRepository.findById(projectId).orElseThrow {
-            throw RuntimeException("해당 프로젝트를 찾을 수 없습니다.")
+            throw DataNotFoundException("해당 프로젝트를 찾을 수 없습니다.")
         }
 
         verifyUserQuota(leaderId)
@@ -63,7 +67,7 @@ class TaskHandler(
         )
 
         val taskToAssign = getUnClaimedTaskOrNull(projectId, leaderPosition.name)
-            ?: throw RuntimeException("해당 포지션에 더 이상 자리가 없습니다.")
+            ?: throw ConflictException("해당 포지션에 더 이상 자리가 없습니다.")
 
         taskToAssign.user = userRepository.findById(leaderId).get()
         taskToAssign.userState = UserState.LEADER.name
@@ -88,7 +92,7 @@ class TaskHandler(
             }
 
             if (diff > 0) {
-                val project = projectRepository.findById(projectId).orElseThrow { RuntimeException("") }
+                val project = projectRepository.findById(projectId).orElseThrow(::DataNotFoundException)
                 val newTasks = (1..diff).map { TaskEntity(project = project, position = position.name) }
 
                 taskRepository.saveAll(newTasks)
@@ -99,7 +103,7 @@ class TaskHandler(
             val unclaimedTasks = tasks.filter { it.user == null }
 
             if (-diff > unclaimedTasks.size) {
-                throw RuntimeException("현재 참여 중인 인원보다 적은 수로 조정할 수 없습니다.")
+                throw ConflictException("현재 참여 중인 인원보다 적은 수로 조정할 수 없습니다.")
             }
 
             taskRepository.deleteAllInBatch(unclaimedTasks.take(-diff))
@@ -116,15 +120,15 @@ class TaskHandler(
         verifyProjectState(projectId)
 
         taskCandidateRepository.findByProjectIdAndUserId(projectId = projectId, userId = userId)?.let {
-            throw RuntimeException("이미 지원한 상태입니다.")
+            throw InvalidRequestException("이미 지원한 상태입니다.")
         }
 
         taskRepository.findByProjectIdAndUserId(projectId = projectId, userId = userId)?.let {
-            throw RuntimeException("이미 멤버입니다.")
+            throw InvalidRequestException("이미 멤버입니다.")
         }
 
         getUnClaimedTaskOrNull(projectId = projectId, position = position.name)
-            ?: throw RuntimeException("해당 포지션에 더 이상 자리가 없습니다.")
+            ?: throw NotAllowedException("해당 포지션에 더 이상 자리가 없습니다.")
 
         taskCandidateRepository.save(
             TaskCandidateEntity(
@@ -141,7 +145,7 @@ class TaskHandler(
         val (projectId, userId) = command
 
         val candidate = taskCandidateRepository.findByProjectIdAndUserId(projectId = projectId, userId = userId)
-            ?: throw RuntimeException("지원한 프로젝트가 아닙니다.")
+            ?: throw InvalidRequestException("지원한 프로젝트가 아닙니다.")
 
         taskCandidateRepository.delete(candidate)
 
@@ -156,10 +160,10 @@ class TaskHandler(
         verifyProjectState(projectId)
 
         val candidate = taskCandidateRepository.findByProjectIdAndUserId(projectId = projectId, userId = guestId)
-            ?: throw RuntimeException("지원한 적이 없는 사용자입니다.")
+            ?: throw InvalidRequestException("지원한 적이 없는 사용자입니다.")
 
         val taskToAssign = getUnClaimedTaskOrNull(projectId, candidate.position)
-            ?: throw RuntimeException("해당 포지션에 더 이상 자리가 없습니다.")
+            ?: throw NotAllowedException("해당 포지션에 더 이상 자리가 없습니다.")
 
         taskCandidateRepository.delete(candidate)
 
@@ -183,7 +187,7 @@ class TaskHandler(
 
     private fun leave(command: LeaveTask): TaskLeft {
         val targetTask = taskRepository.findByProjectIdAndUserId(projectId = command.projectId, userId = command.userId)
-            ?: throw RuntimeException("해당 프로젝트에 참여하고 있지 않습니다.")
+            ?: throw InvalidRequestException("해당 프로젝트에 참여하고 있지 않습니다.")
 
         taskHistoryRepository.save(targetTask.toHistory(UserHistoryState.QUIT))
 
@@ -225,19 +229,19 @@ class TaskHandler(
 
     private fun verifyProjectState(projectId: Long) {
         val project = projectRepository.findById(projectId)
-            .orElseThrow { throw RuntimeException("해당 프로젝트를 찾을 수 없습니다.") }
+            .orElseThrow { throw DataNotFoundException("해당 프로젝트를 찾을 수 없습니다.") }
 
         if (project.state != ProjectState.RECRUITING.name) {
-            throw RuntimeException("해당 프로젝트의 인원 모집이 마감되었습니다.")
+            throw NotAllowedException("해당 프로젝트의 인원 모집이 마감되었습니다.")
         }
     }
 
     private fun verifyProjectLeader(projectId: Long, leaderId: Long) {
         val leader = taskRepository.findByProjectIdAndUserId(projectId = projectId, userId = leaderId)
-            ?: throw RuntimeException("리더만 해당 작업을 수행할 수 있습니다.")
+            ?: throw NotAllowedException("리더만 해당 작업을 수행할 수 있습니다.")
 
         if (leader.userState!! != UserState.LEADER.name) {
-            throw RuntimeException("리더만 해당 작업을 수행할 수 있습니다.")
+            throw NotAllowedException("리더만 해당 작업을 수행할 수 있습니다.")
         }
     }
 
@@ -246,7 +250,7 @@ class TaskHandler(
             taskRepository.findAllByUserId(userId).size + taskCandidateRepository.findAllByUserId(userId).size
 
         if (taskOrTaskCandidatesSize >= 3) {
-            throw RuntimeException("프로젝트는 최대 3개까지만 참여할 수 있습니다")
+            throw ConflictException("프로젝트는 최대 3개까지만 참여할 수 있습니다")
         }
     }
 

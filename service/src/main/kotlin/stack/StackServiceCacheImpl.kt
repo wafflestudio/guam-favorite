@@ -2,6 +2,7 @@ package waffle.guam.stack
 
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import waffle.guam.DataNotFoundException
 import waffle.guam.stack.command.CreateStack
 import waffle.guam.stack.command.UpdateStack
 import waffle.guam.stack.event.StackCreated
@@ -27,7 +28,7 @@ class StackServiceCacheImpl(
     )
 
     override fun getStack(stackId: Long): TechStack =
-        stackListCache.get(STACKS_CACHE_KEY).find { it.id == stackId } ?: throw RuntimeException("")
+        stackListCache.get(STACKS_CACHE_KEY).find { it.id == stackId } ?: throw DataNotFoundException("해당 기술스택 정보를 찾을 수 없습니다.")
 
     override fun getAllStacks(): List<TechStack> =
         stackListCache.get(STACKS_CACHE_KEY)
