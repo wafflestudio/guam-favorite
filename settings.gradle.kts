@@ -1,14 +1,15 @@
 rootProject.name = "favorite"
 
 include(
-    "app:model",
     "app:api",
     "app:batch",
     "service",
+    "client",
+    "model"
 )
 
-include("client")
 project(":client").projectDir = file("app/client")
+project(":model").projectDir = file("app/model")
 
 include("data")
 include(":data-r2dbc")

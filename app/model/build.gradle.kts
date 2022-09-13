@@ -1,8 +1,3 @@
-dependencies {
-    implementation(project(":model"))
-    implementation("org.springframework.boot:spring-boot-starter-webflux")
-}
-
 publishing {
     publications {
         create<MavenPublication>("maven") {

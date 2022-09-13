@@ -25,6 +25,7 @@ allprojects {
         plugin("kotlin-allopen")
         plugin("kotlin-spring")
         plugin("org.jlleitschuh.gradle.ktlint")
+        plugin("org.gradle.maven-publish")
     }
 
     dependencyManagement {
