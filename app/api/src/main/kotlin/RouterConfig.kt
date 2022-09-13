@@ -48,11 +48,12 @@ class RouterConfig(
         // comment like
         POST("/api/v1/likes/comments/{postCommentId}", commentLike::create)
         DELETE("/api/v1/likes/comments/{postCommentId}", commentLike::delete)
-        GET("/api/v1/likes/comments/count", commentLike::gets)
 
         // views
-        GET("/api/v1/views", view::get)
-        GET("/api/v1/views/rank", view::getRank)
+        GET("/api/v1/views/posts", view::getPostInfos)
+        GET("/api/v1/views/posts/rank", view::getPostRank)
+        GET("/api/v1/views/comments", view::getCommentInfos)
+        GET("/api/v1/views/users/scrap", view::getScrappedPosts)
     }
 
     @Bean

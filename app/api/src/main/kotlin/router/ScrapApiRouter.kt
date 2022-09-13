@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
+import waffle.guam.favorite.api.model.SuccessResponse
 import waffle.guam.favorite.service.command.ScrapCreateHandler
 import waffle.guam.favorite.service.command.ScrapDeleteHandler
 import waffle.guam.favorite.service.model.Scrap

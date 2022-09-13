@@ -8,8 +8,13 @@ import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
 import org.springframework.web.reactive.function.server.queryParamOrNull
+import waffle.guam.favorite.api.model.CommentInfo
+import waffle.guam.favorite.api.model.PostInfo
+import waffle.guam.favorite.api.model.SuccessResponse
+import waffle.guam.favorite.data.redis.repository.CommentLikeCountRepository
 import waffle.guam.favorite.data.redis.repository.PostLikeCountRepository
 import waffle.guam.favorite.data.redis.repository.PostScrapCountRepository
+import waffle.guam.favorite.service.query.CommentLikeUserStore
 import waffle.guam.favorite.service.query.LikeUserStore
 import waffle.guam.favorite.service.query.ScrapUserStore
 
@@ -20,9 +25,11 @@ class ViewApiRouter(
     private val likeUserStore: LikeUserStore,
     private val scrapCountRepository: PostScrapCountRepository,
     private val scrapUserStore: ScrapUserStore,
+    private val commentLikeCountRepository: CommentLikeCountRepository,
+    private val commentLikeUserStore: CommentLikeUserStore,
 ) {
 
-    suspend fun get(request: ServerRequest): ServerResponse {
+    suspend fun getPostInfos(request: ServerRequest): ServerResponse = coroutineScope {
         val postIds = request.getParam("postIds")
             .takeIf { it.isNotBlank() }
             ?.split(",")
@@ -30,31 +37,13 @@ class ViewApiRouter(
             ?: emptyList()
         val userId = request.getParam("userId").toLong()
 
-        val response = getView(postIds, userId)
-
-        return ServerResponse.ok().bodyValueAndAwait(SuccessResponse(response))
-    }
-
-    suspend fun getRank(request: ServerRequest): ServerResponse {
-        val boardId = request.queryParamOrNull("boardId")?.toLong()
-        val from = request.getParam("from").toLong()
-        val to = request.getParam("to").toLong()
-        val userId = request.getParam("userId").toLong()
-
-        val rank = likeCountRepository.getRank(boardId = boardId, from = from, to = to)
-        val response = getView(postIds = rank, userId = userId)
-
-        return ServerResponse.ok().bodyValueAndAwait(SuccessResponse(response))
-    }
-
-    private suspend fun getView(postIds: List<Long>, userId: Long) = coroutineScope {
         val likeCntMap = async { likeCountRepository.gets(postIds) }
         val likeMap = async { likeUserStore.getLiked(postIds, userId) }
         val scrapCntMap = async { scrapCountRepository.gets(postIds) }
         val scrapMap = async { scrapUserStore.getScraped(postIds, userId) }
 
-        postIds.map {
-            LikeScrapResponse(
+        val response = postIds.map {
+            PostInfo(
                 postId = it,
                 likeCnt = likeCntMap.await()[it]!!,
                 scrapCnt = scrapCntMap.await()[it]!!,
@@ -62,13 +51,50 @@ class ViewApiRouter(
                 scrap = scrapMap.await()[it]!!,
             )
         }
+
+        ServerResponse.ok().bodyValueAndAwait(SuccessResponse(response))
     }
 
-    data class LikeScrapResponse(
-        val postId: Long,
-        val likeCnt: Long,
-        val scrapCnt: Long,
-        val like: Boolean,
-        val scrap: Boolean,
-    )
+    suspend fun getCommentInfos(request: ServerRequest): ServerResponse {
+        val postCommentIds = request.getParam("postCommentIds")
+            .takeIf { it.isNotBlank() }
+            ?.split(",")
+            ?.map { it.toLong() }
+            ?: emptyList()
+        val userId = request.getParam("userId").toLong()
+
+        val response = coroutineScope {
+            val countMap = async { commentLikeCountRepository.gets(postCommentIds) }
+            val likedMap = async { commentLikeUserStore.getLiked(postCommentIds, userId) }
+
+            postCommentIds.map {
+                CommentInfo(
+                    postCommentId = it,
+                    count = countMap.await()[it]!!,
+                    like = likedMap.await()[it]!!
+                )
+            }
+        }
+
+        return ServerResponse.ok().bodyValueAndAwait(SuccessResponse(response))
+    }
+
+    suspend fun getPostRank(request: ServerRequest): ServerResponse {
+        val boardId = request.queryParamOrNull("boardId")?.toLong()
+        val from = request.getParam("from").toLong()
+        val to = request.getParam("to").toLong()
+
+        val rank = likeCountRepository.getRank(boardId = boardId, from = from, to = to)
+
+        return ServerResponse.ok().bodyValueAndAwait(SuccessResponse(rank))
+    }
+
+    suspend fun getScrappedPosts(request: ServerRequest): ServerResponse {
+        val userId = request.getParam("userId").toLong()
+        val page = request.getParam("page").toInt()
+
+        val response = scrapUserStore.getScrappedPostIds(userId, page)
+
+        return ServerResponse.ok().bodyValueAndAwait(SuccessResponse(response))
+    }
 }

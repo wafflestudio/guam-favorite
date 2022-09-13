@@ -1,4 +1,4 @@
-package waffle.guam.favorite.api.router
+package waffle.guam.favorite.api.model
 
 data class SuccessResponse<T>(
     val data: T,

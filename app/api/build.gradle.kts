@@ -9,6 +9,7 @@ testSets {
 
 dependencies {
     implementation(project(":service"))
+    implementation(project(":app:model"))
 
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-actuator")

@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
+import waffle.guam.favorite.api.model.SuccessResponse
 import waffle.guam.favorite.service.command.LikeCreateHandler
 import waffle.guam.favorite.service.command.LikeDeleteHandler
 import waffle.guam.favorite.service.model.Like
