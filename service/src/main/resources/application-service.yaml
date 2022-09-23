@@ -4,7 +4,7 @@ spring:
       enabled: true
       uri: http://guam-vault.jon-snow-korea.com:8200
       authentication: TOKEN
-      token: s.53RQSdXUr77gqzLyuWRaY092
+      token: s.5T8EEGtEdcdgJNj7Z6qE8UIR
   r2dbc:
     url: # in vault
     username: # in vault
