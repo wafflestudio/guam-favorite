@@ -18,7 +18,7 @@ class GuamFavoriteAutoConfiguration {
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
     @ConditionalOnMissingBean(GuamFavoriteClient.Blocking::class)
     @Bean
-    fun blockingClient(
+    fun guamFavoriteBlockingClient(
         properties: GuamFavoriteProperties,
         builder: WebClient.Builder,
         env: Environment,
@@ -33,7 +33,7 @@ class GuamFavoriteAutoConfiguration {
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
     @ConditionalOnMissingBean(GuamFavoriteClient::class)
     @Bean
-    fun client(
+    fun guamFavoriteClient(
         properties: GuamFavoriteProperties,
         builder: WebClient.Builder,
         env: Environment,

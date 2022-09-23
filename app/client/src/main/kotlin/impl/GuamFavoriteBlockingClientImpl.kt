@@ -2,8 +2,8 @@ package waffle.guam.favorite.client.impl
 
 import kotlinx.coroutines.runBlocking
 import org.springframework.web.reactive.function.client.WebClient
-import waffle.guam.favorite.api.model.CommentInfo
-import waffle.guam.favorite.api.model.PostInfo
+import waffle.guam.favorite.api.model.CommentFavoriteInfo
+import waffle.guam.favorite.api.model.PostFavoriteInfo
 import waffle.guam.favorite.client.GuamFavoriteClient
 
 class GuamFavoriteBlockingClientImpl(
@@ -13,19 +13,19 @@ class GuamFavoriteBlockingClientImpl(
 ) : GuamFavoriteClient.Blocking {
     private val client = GuamFavoriteClientImpl(url, builder, fallback)
 
-    override fun getPostInfo(userId: Long, postId: Long): PostInfo = runBlocking {
+    override fun getPostInfo(userId: Long, postId: Long): PostFavoriteInfo = runBlocking {
         client.getPostInfo(userId, postId)
     }
 
-    override fun getPostInfos(userId: Long, postIds: List<Long>): List<PostInfo> = runBlocking {
+    override fun getPostInfos(userId: Long, postIds: List<Long>): Map<Long, PostFavoriteInfo> = runBlocking {
         client.getPostInfos(userId, postIds)
     }
 
-    override fun getCommentInfo(userId: Long, commentId: Long): CommentInfo = runBlocking {
+    override fun getCommentInfo(userId: Long, commentId: Long): CommentFavoriteInfo = runBlocking {
         client.getCommentInfo(userId, commentId)
     }
 
-    override fun getCommentInfos(userId: Long, commentIds: List<Long>): List<CommentInfo> = runBlocking {
+    override fun getCommentInfos(userId: Long, commentIds: List<Long>): Map<Long, CommentFavoriteInfo> = runBlocking {
         client.getCommentInfos(userId, commentIds)
     }
 

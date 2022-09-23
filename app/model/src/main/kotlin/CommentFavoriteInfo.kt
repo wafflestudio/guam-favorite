@@ -1,6 +1,6 @@
 package waffle.guam.favorite.api.model
 
-data class CommentInfo(
+data class CommentFavoriteInfo(
     val postCommentId: Long,
     val count: Long,
     val like: Boolean,

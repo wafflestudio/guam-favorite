@@ -8,8 +8,8 @@ import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
 import org.springframework.web.reactive.function.server.queryParamOrNull
-import waffle.guam.favorite.api.model.CommentInfo
-import waffle.guam.favorite.api.model.PostInfo
+import waffle.guam.favorite.api.model.CommentFavoriteInfo
+import waffle.guam.favorite.api.model.PostFavoriteInfo
 import waffle.guam.favorite.api.model.SuccessResponse
 import waffle.guam.favorite.data.redis.repository.CommentLikeCountRepository
 import waffle.guam.favorite.data.redis.repository.PostLikeCountRepository
@@ -43,7 +43,7 @@ class ViewApiRouter(
         val scrapMap = async { scrapUserStore.getScraped(postIds, userId) }
 
         val response = postIds.map {
-            PostInfo(
+            PostFavoriteInfo(
                 postId = it,
                 likeCnt = likeCntMap.await()[it]!!,
                 scrapCnt = scrapCntMap.await()[it]!!,
@@ -68,7 +68,7 @@ class ViewApiRouter(
             val likedMap = async { commentLikeUserStore.getLiked(postCommentIds, userId) }
 
             postCommentIds.map {
-                CommentInfo(
+                CommentFavoriteInfo(
                     postCommentId = it,
                     count = countMap.await()[it]!!,
                     like = likedMap.await()[it]!!

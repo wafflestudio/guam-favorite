@@ -1,6 +1,6 @@
 package waffle.guam.favorite.api.model
 
-data class PostInfo(
+data class PostFavoriteInfo(
     val postId: Long,
     val likeCnt: Long,
     val scrapCnt: Long,
