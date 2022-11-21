@@ -16,7 +16,7 @@ spring:
 favorite:
   infra:
     community:
-      url: http://guam-community.jon-snow-korea.com
+      url: http://guam-community-api.wafflestudio.com
     kafka:
       url: heywaffle.jon-snow-korea.com:9092
 ---
