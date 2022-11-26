@@ -1,6 +1,7 @@
 package waffle.guam.favorite.client.impl
 
 import org.slf4j.LoggerFactory
+import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import waffle.guam.favorite.api.model.CommentFavoriteInfo
@@ -29,7 +30,7 @@ internal class GuamFavoriteClientImpl(
     override suspend fun getPostInfos(userId: Long, postIds: List<Long>): Map<Long, PostFavoriteInfo> = runCatching {
         client.get()
             .uri("/api/v1/views/posts?postIds={postId}&userId={userId}", postIds.joinToString(","), userId)
-            .accept()
+            .accept(MediaType.APPLICATION_JSON)
             .retrieve()
             .awaitBody<SuccessResponse<List<PostFavoriteInfo>>>()
             .data
@@ -72,7 +73,7 @@ internal class GuamFavoriteClientImpl(
                     commentIds.joinToString(","),
                     userId
                 )
-                .accept()
+                .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .awaitBody<SuccessResponse<List<CommentFavoriteInfo>>>()
                 .data
@@ -107,7 +108,7 @@ internal class GuamFavoriteClientImpl(
                     .queryParam("to", rankTo)
                     .build()
             }
-            .accept()
+            .accept(MediaType.APPLICATION_JSON)
             .retrieve()
             .awaitBody<SuccessResponse<List<Long>>>()
             .data
@@ -123,7 +124,8 @@ internal class GuamFavoriteClientImpl(
     override suspend fun getScrappedPostIds(userId: Long, page: Int): List<Long> = runCatching {
         client.get()
             .uri("/api/v1/views/users/scrap?userId=$userId&page=$page")
-            .accept().retrieve()
+            .accept(MediaType.APPLICATION_JSON)
+            .retrieve()
             .awaitBody<SuccessResponse<List<Long>>>()
             .data
             .sortedDescending()
